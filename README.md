@@ -30,7 +30,7 @@ Databasfrågor och kontroller ligger i `app/api/` och `app/database.ts`; gränss
 
 ## Momentflikar
 
-Moment visas under System E2, System M och Lokalt. Befintliga moment får initialt System E2 och kan flyttas av instruktörer via Redigera moment. Uppdateringen kräver databasmigreringen `0003_moment_categories.sql` efter `0002_disable_users.sql`.
+Moment visas under System E2, System M och Övrigt. Befintliga moment får initialt System E2 och kan flyttas av instruktörer via Redigera moment. Uppdateringen kräver databasmigreringen `0003_moment_categories.sql` efter `0002_disable_users.sql`.
 
 ## Rollen Chef
 
@@ -39,3 +39,9 @@ Administratören kan skapa en användare med rollen Chef. Chef ser elevöversikt
 ## Om ändringarna inte syns
 
 Kontrollera på GitHub att `package.json`, `netlify.toml` och `app/` ligger i repositoryts rot och att den uppdaterade `app/workspace.tsx` innehåller `categorytabs`. Under Netlifys Deploys ska den senaste publicerade driftsättningen visa samma commit som ändringen på GitHub. Om en tidigare deploy fortfarande är publicerad, publicera den senaste lyckade deployen. Kontrollera också att projektets **Base directory** är repositoryts rot (tomt fält); en tidigare undermapp som bas gör att Netlify bygger äldre filer. Uppdatera sidan i webbläsaren efter publiceringen.
+
+## Utskrift av elev
+
+Instruktör och Chef kan öppna en elev och välja **Skriv ut A4**. Utskriften innehåller samtliga moment i System E2, System M och Övrigt, aktuella nivåer och bedömare samt alla kommentarer per moment. Utskriftsknappen blir aktiv när elevens uppgifter har lästs in. Webbläsarens utskriftsruta kan också spara resultatet som PDF.
+
+Fliken som tidigare hette Lokalt heter nu Övrigt. Kör `0005_rename_local_category.sql` efter `0004_chef_role.sql` på en egen PostgreSQL-databas; Netlify Database tillämpar filen automatiskt vid publicering. Redan placerade moment flyttas utan att bedömningar eller kommentarer ändras.
