@@ -10,3 +10,5 @@
 .studentarrow{margin-left:auto;color:#a90000;font-size:13px;font-weight:700;white-space:nowrap}
 
 .studententry{padding:0;gap:0}.studentopen{border:0;background:transparent;color:inherit;display:flex;align-items:center;gap:16px;text-align:left;padding:17px 22px;min-width:0;flex:1}.studentopen:hover{background:#f5faf7}.studentdelete{flex:none;margin-right:16px;color:#9b3131}.studentdelete:hover{color:#b40000;background:#fff0f0}
+
+.categorytabs{display:flex;gap:8px;margin:0 0 20px;flex-wrap:wrap}.categorytabs button{border:1px solid #d2dfd8;background:white;color:#315b4d;border-radius:9px;padding:10px 14px;font-weight:700}.categorytabs button.active{background:#a90000;border-color:#a90000;color:white}.categorytabs button span{font-size:12px;opacity:.75;margin-left:5px}.modal select{width:100%;padding:11px;border:1px solid #cbd7d0;border-radius:8px;background:white;color:#193c33}
