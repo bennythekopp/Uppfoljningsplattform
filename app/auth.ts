@@ -9,7 +9,7 @@ export function randomToken(){return hex(crypto.getRandomValues(new Uint8Array(3
 export async function currentUser(){
  const token=(await cookies()).get('tc_session')?.value;
  if(token&&/^[a-f0-9]{64}$/.test(token)){
-  const row=await db.prepare('SELECT u.email,u.name,u.role FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>?').bind(await sha256(token),Date.now()).first<{email:string,name:string,role:Role}>();
+  const row=await db.prepare('SELECT u.email,u.name,u.role FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>? AND u.disabled_at IS NULL').bind(await sha256(token),Date.now()).first<{email:string,name:string,role:Role}>();
   if(row&&['Administratör','Instruktör','Handledare'].includes(row.role))return row;
  }
  return null;

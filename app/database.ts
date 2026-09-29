@@ -13,6 +13,22 @@ function getPool() {
   }
   return pool;
 }
+export async function removeStudent(id:string) {
+  const client=await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const exists=await client.query('SELECT id FROM students WHERE id=$1 FOR UPDATE',[id]);
+    if (!exists.rowCount) { await client.query('ROLLBACK'); return false; }
+    await client.query('DELETE FROM comments WHERE student_id=$1',[id]);
+    await client.query('DELETE FROM assessments WHERE student_id=$1',[id]);
+    await client.query('DELETE FROM students WHERE id=$1',[id]);
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally { client.release(); }
+}
 function toPostgres(query:string) {
   let index=0;
   return query
