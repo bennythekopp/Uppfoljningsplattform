@@ -1,0 +1,5 @@
+import { db } from '../../database';
+import { currentUser,error } from '../../auth';
+export const dynamic='force-dynamic';
+export async function GET(){try{if(!await currentUser())return error('Behörighet saknas',403);const {results}=await db.prepare('SELECT id,name,created_at AS createdAt FROM students ORDER BY name COLLATE NOCASE').all();return Response.json(results);}catch{return error('Kunde inte läsa elever',503)}}
+export async function POST(req:Request){try{const user=await currentUser();if(!user||user.role==='Handledare')return error('Endast instruktörer och administratörer kan lägga till elever',403);const {name}=await req.json() as {name:unknown};if(typeof name!=='string'||!name.trim()||name.length>120)return error('Ange elevens namn',400);const id=crypto.randomUUID();await db.prepare('INSERT INTO students(id,name,created_at,created_by) VALUES(?,?,?,?)').bind(id,name.trim(),Date.now(),user.email).run();return Response.json({id,name:name.trim()});}catch{return error('Kunde inte spara eleven',503)}}
