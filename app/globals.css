@@ -16,3 +16,65 @@
 .studentactions{display:flex;align-items:center;gap:12px}.printbutton{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}.printreport{display:none}@media(max-width:650px){.studentactions{flex-wrap:wrap;justify-content:flex-end}.printbutton{font-size:12px;padding:10px}}
 @page{size:A4 portrait;margin:14mm 15mm}
 @media print{html,body{background:white!important;color:#111!important;margin:0!important;padding:0!important}.app,.main{display:block!important;min-height:0!important;width:auto!important;background:white!important}.sidebar,.topbar,.content,.modalback{display:none!important}.printreport{display:block!important;font-family:Arial,Helvetica,sans-serif;color:#111;font-size:10pt;line-height:1.35}.printhead{display:flex;justify-content:space-between;gap:15mm;border-bottom:2px solid #a90000;padding-bottom:5mm;margin-bottom:7mm}.printhead small{font-size:9pt;letter-spacing:.06em;color:#a90000;font-weight:bold}.printhead h1{font-size:23pt;margin:2mm 0}.printhead p{margin:0;color:#444}.printsummary{text-align:right;display:flex;flex-direction:column;gap:2mm;white-space:nowrap}.printcategory{break-before:page}.printcategory:first-of-type{break-before:auto}.printcategory h2{color:#a90000;font-size:17pt;border-bottom:1px solid #aaa;padding-bottom:2mm;margin:0 0 5mm}.printmoment{border:1px solid #bbb;border-radius:2mm;padding:4mm;margin-bottom:4mm;break-inside:avoid;page-break-inside:avoid}.printmomenthead{display:flex;justify-content:space-between;align-items:start;gap:6mm}.printmoment h3{font-size:12pt;margin:0}.printlevel{white-space:nowrap;border:1px solid #777;border-radius:2mm;padding:1mm 2mm;font-size:9pt}.printlevel.grön{background:#dff2e4;border-color:#7fba93}.printlevel.gul{background:#fff0c8;border-color:#d8b45c}.printlevel.röd{background:#fce4df;border-color:#d8978c}.printmeta{color:#555;font-size:9pt;margin:2mm 0}.printdescription,.printcomment p{white-space:pre-wrap;overflow-wrap:anywhere;margin:2mm 0}.printcomments{margin-top:3mm;border-top:1px solid #ddd;padding-top:2mm}.printcomments h4{margin:0 0 2mm;font-size:9pt}.printcomment{margin:2mm 0 3mm;font-size:9pt}.printcomment p{font-size:10pt}.printimages img{max-width:70mm;max-height:55mm;object-fit:contain;margin:2mm 3mm 2mm 0}.printempty{color:#777}}
+
+/* Small screens use a compact header and a horizontally scrollable student list. */
+.momentactions{display:flex;align-items:center;gap:2px;margin-left:auto;flex:none}.momentactions .editicon{margin-left:0}.deleteicon{color:#a70000}.deleteicon:hover{background:#fff0f0}
+@media screen and (max-width:650px){
+ html,body{overflow-x:hidden}
+ .app{display:block;min-width:0}
+ .sidebar{width:100%;min-height:0;padding:14px 15px 12px;display:block}
+ .brand{font-size:17px;justify-content:flex-start;gap:9px;padding:0 0 10px}
+ .brand>span:last-child{display:block;font-size:17px}
+ .brand small{display:block;font-size:10px}
+ .brandmark{width:36px;height:36px;flex:none}
+ .navlabel{display:block;margin:9px 0 6px;font-size:10px}
+ .sidebar .navitem{display:inline-flex;width:auto;margin:0 8px 8px 0;padding:10px 12px;font-size:13px;gap:7px;border-radius:8px}
+ .sidebar .navitem svg{width:17px;height:17px}
+ .sidelist{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;max-height:none;min-height:0;margin:0;padding:0 0 9px;scrollbar-width:thin}
+ .studentnav{display:block;flex:none;width:auto;white-space:nowrap;padding:9px 11px;font-size:13px;border:1px solid #ffffff35;border-radius:8px}
+ .sideempty{padding:7px 0}
+ .sidebottom{display:flex;justify-content:flex-start;gap:9px;margin:0;padding:9px 0 0;border-top:1px solid #ffffff35}
+ .sidebottom .who{display:block;min-width:0}
+ .sidebottom .who strong{font-size:12px}
+ .sidebottom .who small{font-size:11px}
+ .sidebottom button{flex:none}
+ .main{width:100%;min-width:0}
+ .topbar{display:none}
+ .content{padding:20px 14px 70px;max-width:none}
+ .pagehead{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:22px}
+ .pagehead h1{font-size:29px;line-height:1.15}
+ .pagehead p{font-size:14px;line-height:1.4}
+ .headbuttons{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+ .pagehead .primary{font-size:13px;padding:10px 12px}
+ .pagehead .primary svg{width:17px}
+ .overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:25px}
+ .overview>div{padding:14px;min-width:0}
+ .overview strong{font-size:26px}
+ .overviewnote{display:none!important}
+ .studentactions{display:flex;justify-content:space-between;width:100%;flex-wrap:wrap}
+ .summary{min-width:110px}
+ .statline{gap:6px;margin:0 0 17px}
+ .statline span{padding:8px 9px;font-size:12px}
+ .statline b{margin-left:3px}
+ .categorytabs{gap:6px;margin-bottom:16px}
+ .categorytabs button{min-width:0;min-height:62px;padding:9px 7px;font-size:12px;line-height:1.15;flex-direction:column;align-items:flex-start;justify-content:space-between}
+ .categorytabs button span{height:23px;min-width:24px;font-size:11px}
+ .search{margin-bottom:16px}
+ .student{padding:13px;gap:9px}
+ .studentavatar{width:36px;height:36px}
+ .studententry{padding:0}
+ .studentopen{padding:13px 8px 13px 12px;gap:8px;flex-wrap:wrap}
+ .studentname{min-width:120px}
+ .rowcounts{width:100%;margin:2px 0 0;gap:5px;flex-wrap:wrap;font-size:11px}
+ .studentgo{margin-left:auto}
+ .studentdelete{margin-right:7px}
+ .studentarrow{font-size:12px}
+ .momentactions{gap:0}
+ .momentactions .editicon{padding:7px}
+ .item{display:block}
+ .itemtitle{width:100%}
+ .levels{padding:0 12px 12px}
+ .level{flex:1;min-width:0}
+ .modalback{padding:12px}
+ .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
+}

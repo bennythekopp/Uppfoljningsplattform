@@ -45,3 +45,9 @@ Kontrollera på GitHub att `package.json`, `netlify.toml` och `app/` ligger i re
 Administratör, Instruktör och Chef kan öppna en elev och välja **Skriv ut**. Utskriften innehåller samtliga moment i System E2, System M och Övrigt, aktuella nivåer och bedömare samt alla kommentarer per moment, utan momentbeskrivningar. Utskriftsknappen blir aktiv när elevens uppgifter har lästs in. Webbläsarens utskriftsruta kan också spara resultatet som PDF.
 
 Fliken som tidigare hette Lokalt heter nu Övrigt. Kör `0005_rename_local_category.sql` efter `0004_chef_role.sql` på en egen PostgreSQL-databas; Netlify Database tillämpar filen automatiskt vid publicering. Redan placerade moment flyttas utan att bedömningar eller kommentarer ändras.
+
+## Ta bort moment och mobilvy
+
+Administratörer och instruktörer kan ta bort moment från instruktörsöversikten. Efter bekräftelse tas momentet och samtliga bedömningar och kommentarer för det momentet bort. Migreringen `0006_deleted_moments.sql` gör att även ursprungliga Excel-moment kan döljas permanent utan att ändra källunderlaget. Netlify Database kör migrationen vid publicering; använd egen PostgreSQL i nummerordning om du inte använder Netlify Database.
+
+Layouten anpassas automatiskt till telefonens skärmbredd. På smala skärmar visas navigationen överst, eleverna går att bläddra mellan horisontellt och formulär, moment och bedömningsknappar anpassas till skärmen. Ingen separat mobiladress eller app behövs.

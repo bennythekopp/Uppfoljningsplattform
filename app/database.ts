@@ -29,6 +29,26 @@ export async function removeStudent(id:string) {
     throw error;
   } finally { client.release(); }
 }
+export async function removeMoment(id:number,deletedBy:string) {
+  const client=await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    if(id>=1000000){
+      const found=await client.query('SELECT id FROM custom_moments WHERE id=$1 FOR UPDATE',[id-1000000]);
+      if(!found.rowCount){await client.query('ROLLBACK');return false}
+    }else{
+      const found=await client.query('SELECT item_id FROM deleted_moments WHERE item_id=$1',[id]);
+      if(found.rowCount){await client.query('ROLLBACK');return false}
+      await client.query('INSERT INTO deleted_moments(item_id,deleted_at,deleted_by) VALUES($1,$2,$3)',[id,Date.now(),deletedBy]);
+    }
+    await client.query('DELETE FROM comments WHERE item_id=$1',[id]);
+    await client.query('DELETE FROM assessments WHERE item_id=$1',[id]);
+    if(id>=1000000)await client.query('DELETE FROM custom_moments WHERE id=$1',[id-1000000]);
+    else await client.query('DELETE FROM moment_edits WHERE item_id=$1',[id]);
+    await client.query('COMMIT');
+    return true;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
+}
 function toPostgres(query:string) {
   let index=0;
   return query
