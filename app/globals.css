@@ -78,3 +78,6 @@
  .modalback{padding:12px}
  .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 }
+
+/* Shared branding uses the uploaded TC Boden logo. */
+.brandmark{background:#fff;flex:none;overflow:hidden}.brandmark img{display:block;width:100%;height:100%;object-fit:contain}.signin .logo{background:#fff;overflow:hidden}.signin .logo img{display:block;width:100%;height:100%;object-fit:contain}

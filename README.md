@@ -51,3 +51,6 @@ Fliken som tidigare hette Lokalt heter nu Övrigt. Kör `0005_rename_local_categ
 Administratörer och instruktörer kan ta bort moment från instruktörsöversikten. Efter bekräftelse tas momentet och samtliga bedömningar och kommentarer för det momentet bort. Migreringen `0006_deleted_moments.sql` gör att även ursprungliga Excel-moment kan döljas permanent utan att ändra källunderlaget. Netlify Database kör migrationen vid publicering; använd egen PostgreSQL i nummerordning om du inte använder Netlify Database.
 
 Layouten anpassas automatiskt till telefonens skärmbredd. På smala skärmar visas navigationen överst, eleverna går att bläddra mellan horisontellt och formulär, moment och bedömningsknappar anpassas till skärmen. Ingen separat mobiladress eller app behövs.
+
+## Logga och hemskärmsikon
+Den nya TC Boden-loggan används vid inloggning och i sidhuvudet. Paketet innehåller även favicon, Apple Touch-ikon och Android-ikoner med webbmanifest. På iPhone väljer du Dela → Lägg till på hemskärmen i Safari. På Android väljer du Lägg till på startskärmen i webbläsarens meny. Om en gammal genväg visar bokikonen, ta bort genvägen och lägg till sidan igen efter den nya Netlify-publiceringen.
