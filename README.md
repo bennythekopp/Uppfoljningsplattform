@@ -116,3 +116,9 @@ Instruktörsöversikten heter nu Instruktörspanel. Undermenyerna Översikt, Ele
 På skärmar upp till 900 px öppnas sidomenyn från vänster med menyknappen i den fasta toppraden. Den stängs vid menyval, med kryss, genom tryck utanför menyn eller Escape. Namn och roll ligger kvar i kontoraden längst ned. Menyn och personlistan scrollas utan att kontoraden försvinner. Handledare och Chef har fortsatt bara elevfunktionerna; administratörens Användare finns kvar.
 
 Ingen ytterligare databasmigrering krävs för dessa menyändringar. Inloggningsförstärkningen från föregående paket kräver fortsatt `0011_login_security.sql` om den inte redan har tillämpats.
+
+## Personregistrering och tidigare IU-kommentarer
+
+Nya elever och personal läggs endast till med Lägg till person i Instruktörspanelens översikt. Registreringsknappar och formulär har tagits bort från elev- och personalöversikterna.
+
+I varje öppnat IU-moment visas en separat läsruta med kommentaren från den senaste sparade uppföljningen för samma person och samma del, tillsammans med datum och ansvarig. Detta gäller operativa moment, Ämnen till chef och simulatorns moment. Rutan ändrar eller kopierar inte kommentaren till det nya protokollet. Om den senaste uppföljningen saknar kommentar visas detta. När ett sparat historiskt protokoll öppnas jämförs det med föregående protokoll, så att senare kommentarer inte visas som tidigare historik. Ingen ny databasmigrering behövs.
