@@ -1,0 +1,3 @@
+export const IDLE_TIMEOUT_MS=30*60*1000;
+export const SESSION_LIFETIME_MS=8*60*60*1000;
+export const SESSION_WARNING_MS=2*60*1000;

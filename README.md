@@ -100,3 +100,11 @@ Bredvid System E2, System M och Övrigt finns **Operativ IU** och **Simulator IU
 Migreringen `0010_iu_moments.sql` skapar det redigerbara IU-underlaget och sparar en kopia av det ursprungliga underlaget på tidigare protokoll. Netlify Database tillämpar den vid publicering. På en separat PostgreSQL-databas körs den efter `0009_followup_outcome.sql`.
 
 Inloggat namn och roll är alltid synliga i sidomenyns nederkant vid scrollning. På mobil ligger kontoraden fast längst ned på skärmen.
+
+## Förstärkt inloggning
+
+Publicera hela paketet och tillämpa `0011_login_security.sql` efter `0010_iu_moments.sql` innan den nya versionen används. Netlify Database tillämpar migreringarna vid publicering; på separat PostgreSQL körs filen manuellt. Migreringen loggar ut befintliga sessioner en gång. Användarna behåller sina lösenord. Äldre hashvärden uppgraderas automatiskt vid nästa lyckade inloggning till PBKDF2-SHA256 med 600 000 iterationer. Nya och ändrade lösenord använder direkt den nya metoden.
+
+Inloggningen gäller högst åtta timmar och upphör efter 30 minuters inaktivitet. En varning visas två minuter före utgången med knappen Fortsätt arbeta. Klick, tangenttryckningar och scrollning i en synlig flik räknas som aktivitet. Bakgrundshämtningar håller inte inloggningen vid liv. Servern kontrollerar tidsgränserna på varje skyddad begäran; utgångna sessioner kan inte återaktiveras. Spara arbete före utloggning.
+
+Inloggningsförsök begränsas atomiskt i databasen till sju per konto och 60 per IP-adress under 15 minuter. Lyckad inloggning återställer kontots räknare, men IP-räknaren består. IP-adressen hämtas endast från Netlifys anslutningsheader när Netlify-miljön känns igen (`NETLIFY`, `NETLIFY_DB_URL` eller `SITE_ID`). Vanliga X-Forwarded-For ignoreras. Om anslutningsadressen saknas används en gemensam reservräknare, så skyddet stängs inte av. På andra hostingplattformar behövs en anpassning till deras betrodda proxy. IP-adresser och kontonamn lagras hashade i spärrtabellen; utgångna räknare städas vid inloggningsförsök. Flera användare på samma nät delar IP-gränsen.
