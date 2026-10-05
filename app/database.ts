@@ -13,21 +13,48 @@ function getPool() {
   }
   return pool;
 }
-export async function removeStudent(id:string) {
+export async function removePerson(id:string,source:'students'|'personnel') {
   const client=await getPool().connect();
   try {
     await client.query('BEGIN');
-    const exists=await client.query('SELECT id FROM students WHERE id=$1 FOR UPDATE',[id]);
+    const exists=await client.query(`SELECT id FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
     if (!exists.rowCount) { await client.query('ROLLBACK'); return false; }
     await client.query('DELETE FROM comments WHERE student_id=$1',[id]);
     await client.query('DELETE FROM assessments WHERE student_id=$1',[id]);
     await client.query('DELETE FROM students WHERE id=$1',[id]);
+    await client.query('DELETE FROM personnel WHERE id=$1',[id]);
     await client.query('COMMIT');
     return true;
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
   } finally { client.release(); }
+}
+export async function renamePerson(id:string,source:'students'|'personnel',name:string) {
+  const client=await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const found=await client.query(`SELECT id FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
+    if(!found.rowCount){await client.query('ROLLBACK');return false}
+    await client.query('UPDATE students SET name=$2 WHERE id=$1',[id,name]);
+    await client.query('UPDATE personnel SET name=$2 WHERE id=$1',[id,name]);
+    await client.query('COMMIT');return true;
+  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
+export async function movePerson(id:string,source:'students'|'personnel',actor:string) {
+  const destination=source==='students'?'personnel':'students';
+  const client=await getPool().connect();
+  try{
+    await client.query('BEGIN');
+    const found=await client.query(`SELECT id,name FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
+    if(!found.rowCount){await client.query('ROLLBACK');return null}
+    const {name}=found.rows[0] as {name:string};
+    const existing=await client.query(`SELECT id FROM ${destination} WHERE id=$1 FOR UPDATE`,[id]);
+    if(existing.rowCount)await client.query(`UPDATE ${destination} SET name=$2,moved_at=NULL WHERE id=$1`,[id,name]);
+    else await client.query(`INSERT INTO ${destination}(id,name,created_at,created_by,moved_at) VALUES($1,$2,$3,$4,NULL)`,[id,name,Date.now(),actor]);
+    await client.query(`UPDATE ${source} SET moved_at=$2 WHERE id=$1`,[id,Date.now()]);
+    await client.query('COMMIT');return {id,name};
+  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 export async function removeMoment(id:number,deletedBy:string) {
   const client=await getPool().connect();

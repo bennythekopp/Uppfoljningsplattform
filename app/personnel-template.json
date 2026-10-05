@@ -1,0 +1,474 @@
+{
+  "op": [
+    {
+      "id": "op-1",
+      "title": "Avspärrning",
+      "description": "Korrekt avspärrat. Sista signalen får inte visa kör/lodrätt.\nExempel fråga: Om ett skydd använder medriktad signal som gränspunkt, hur avspärrar du? = Ej använda gränspunkt som spärråtgärd."
+    },
+    {
+      "id": "op-2",
+      "title": "Växling",
+      "description": "Muntlig överenskommelse. Korrekt starttillstånd samt dokumentation.\nExempel fråga: Om en växling vill utöka sitt växlingsområde, hur gör du då? = Ny avstämning och nytt starttillstånd för växlingen."
+    },
+    {
+      "id": "op-3",
+      "title": "Växling utanför växlingsgräns",
+      "description": "Korrekt dokumentation.\nExempel fråga: Vad blir skillnaden i dokumentation om växling utanför växlingsgränsen sker på kör/avspärrad bevakningssträcka? = Blyertsbåge vid kör, rött streck vid avspärrat."
+    },
+    {
+      "id": "op-4",
+      "title": "Spärrfärd",
+      "description": "Planering. Ev. samråd. Sträckorder. Korrekt starttillstånd samt dokumentation. Korrekt avspärrning.\nExempel fråga: Om du har en spärrfärd ute på en sträcka med mellanblocksignaler och ett A-skydd vill komma ut på samma sträcka, hur hanterar du det? = Efter OK av samråd – även LIS i andra änden."
+    },
+    {
+      "id": "op-5",
+      "title": "Skyddsformer",
+      "description": "Planering. Dokumentation. Samråd. Avstämning. Avspärrning. Bekr kortslutning. Starttillstånd.\nExempel fråga: Om du har fler än en anordning på samma sträcka, hur dokumenterar du det? = Båda ska finnas i skydd & färder."
+    },
+    {
+      "id": "op-6",
+      "title": "Småfordon",
+      "description": "Förstår risker med småfordon. Använder rätt skyddsåtgärder.\nExempel fråga: Om en spärrfärd småfordon vill starta från driftplats X hur gör du då? = Stäm av"
+    },
+    {
+      "id": "op-7",
+      "title": "Spärrfärd hjälpfordon",
+      "description": "Begäran på BL 22. Återkallar körtillstånd. Planerar på BL 29. Dokumentation. Korrekt avspärrning.\nExempel fråga: Får vi köra ut en spärrfärd hjälpfordon på kör i system H? = Ja, samma som vanlig spärrfärd."
+    },
+    {
+      "id": "op-8",
+      "title": "Ordergivning",
+      "description": "Dokumentation. Kvittera order. Ordergivnings driftplats. Tågorder med körplan.\nExempel fråga: Om det här vägskyddet börjar larma säkerhetsfel, hur gör du då? = Dokumenterar i graf. Orderger om felaktigt vägskyddsanläggning."
+    },
+    {
+      "id": "op-9",
+      "title": "HAU",
+      "description": "Tar reda på information. Påminnelseåtgärd. Dokumentation. Felanmälan. Ordergivning.\nExempel fråga: Tåg X ringer in om dåligt spårläge, bedömer ok att köra 45. Vad blir dina åtgärder? = Avspärra. Dokumentera HAU 40. Felanmälan. Ordergivning. Meddela info."
+    },
+    {
+      "id": "op-10",
+      "title": "Balisfel",
+      "description": "Felanmälan. Ordergivning.\nExempel fråga: Vad för balisfel finns det och i vilken riktning orderger vi? = Balisinformationsfel i båda riktningar, balisöverrensstämmelsefel i den riktning felet inträffade."
+    },
+    {
+      "id": "op-11",
+      "title": "Hjulskada/Varmgång",
+      "description": "Akut hantering. Detektorlarm. Manuellt upptäckt. HAU övriga färder. Avsyning.\nExempel fråga: Manuellt upptäckt hjulskada, vad blir omfattningen på HAU för andra färder? = 2+1"
+    },
+    {
+      "id": "op-12",
+      "title": "Backning",
+      "description": "Förstår risker med backning. Med eller utan uppsikt. Andra färder. Vägskyddsanläggningar. Linjen eller på driftplats.\nExempel fråga: Hur kan vi säkra backningssträckan på driftplats? = Tåg/växlingsväg eller avspärra."
+    },
+    {
+      "id": "op-13",
+      "title": "Stoppställa signal/Nödutlösa tågväg",
+      "description": "Fara. Stillastående färd. Ta tillbaka tågvägslåsning.\nExempel fråga: Hitta tåg operativt och fråga är det ok att stoppställa signal/nödutlösa tågväg = OK vid fara att stoppställa. Om föraren meddelar att hen hinner stanna. Ej ta tillbaka tågvägslåsning förens föraren bekräftar att hen står still/ej nåtts av beskedet."
+    },
+    {
+      "id": "op-14",
+      "title": "Ställverkskunskap",
+      "description": "Olikheter mellan ställverken. Enstaka objekt eller i grupp. Låsa växlar. Reservera spåravsnitt.\nExempel fråga: Är en magenta/rosa växel låst? = Nej, den är endast spärrad i manöversystemet för oss, ställverket kan ändå lägga om denna växel."
+    },
+    {
+      "id": "op-15",
+      "title": "Stoppkörning",
+      "description": "Kontroller. Växlars läge. Rätt ifylld blankett 21.\nExempel fråga: När får du kombinera msi + ublsi förr norrgående tåg i Hällnäs?  = När vi kan låsa växeln (så inte tåget kan komma ut på fel bevakningssträcka)."
+    },
+    {
+      "id": "op-16",
+      "title": "Stoppkörning spärrfärd",
+      "description": "Inte växling samtidigt. Kombinera flera signaler på samma blankett. Växlars läge vid samråd (enligt villkor från tsm/htsm).\nExempel fråga: Vilka signaler får du ge på samma blankett 21 för spärrfärd = Vid uppfyllda villkor ok att kombinera msi + ublsi. EJ efterföljande mellanblocksignaler."
+    },
+    {
+      "id": "op-17",
+      "title": "Stoppkörning växling",
+      "description": "Enstaka dvärgsignaler. Flera huvudsignaler.\nExempel fråga: Vad ska vara uppfyllt för att ge tillstånd att passera samtliga mellansignaler i stopp? = Lokalfrigivet hela driftplatsen och kan ske utan fara."
+    },
+    {
+      "id": "op-18",
+      "title": "Skred",
+      "description": "Nödanrop till tåg. Meddela tsm/htsm. Trafikstopp. Dokumentation. Felanmälan.\nExempel fråga: Skredlarm har gått med tåg på sträckan, efter kontroller beslutar vi att tåget får fortsätta till nästa driftplats. Vilken hastighet gäller? = 20 km/h"
+    },
+    {
+      "id": "op-19",
+      "title": "R-Växel",
+      "description": "Ur kontroll. Beläggning. Tsm på plats. Klovad.\nExempel fråga: Om en växel är vit för oss, behörig felavhjälpare är på plats som bekräftar att växeln ligger rätt, ej lokalt. Vad skriver vi på BL21 till färder som ska passera? = Kontrollera växlarna."
+    },
+    {
+      "id": "op-20",
+      "title": "Haparanda larm",
+      "description": "Larmhantering. Kodord Alfa, Bravo, Charlie. Egen checklista i BOTA.\nExempel fråga:  Om Finland ringer med kod Charlie till oss, vad betyder det? = Att de inte längre ser ett behov av trafikstopp på svenskt område (betyder inte att vi kan börja köra tåg i Haparanda)."
+    },
+    {
+      "id": "op-21",
+      "title": "Spärrfärd/Skydd efter tåg",
+      "description": "Planering. Ankomstanmälan. Slutsignal. Starttillstånd.\nExempel fråga: Får en spärrfärd gå som ”efter tåg” sträckan HLS – ÅM om tåget är ett resandetåg = Nej. Eftersom spärrfärd efter resande tåg endast får omfatta del av bevakningssträckan."
+    },
+    {
+      "id": "op-22",
+      "title": "Sena/Tidiga tåg (Nya k-möten)",
+      "description": "Exempel fråga: Om tåg 1 & 2 har k-möte i B men tåg 2 blir inställt, vad blir ordergivningen för tåg 1?  = Slopat k-möte för tåg 1."
+    },
+    {
+      "id": "op-23",
+      "title": "HAU system M",
+      "description": "Exempel fråga:  Om förare bedömer dåligt spårläge inne i Skl, går att trafikera 40. Hur blir ordergivningen då från Söv? = Söv-Ffs. Eftersom orsaken är inne i obevakad dp (eller lp) ska nedsättningssträckan omfatta också linjen fram till följande dp eller lp."
+    },
+    {
+      "id": "op-24",
+      "title": "Spärrfärd hjälpfordon system M",
+      "description": "Exempel fråga: Vad är skillnaden från system H? = Får ange var tåget befinner sig i större grad. Om tåget befinner sig i sin helhet inne på obevakad dp/lp får denna anges. Annars begränsa med närmaste dp/lp."
+    },
+    {
+      "id": "op-25",
+      "title": "K16 Gunsen",
+      "description": "Vad är risken? Var finns regeln beskriven. Ankomstanmälan Skellefteå. Samråd – inte OK ändå.\nExempel fråga: Får en spärrfärd befinna sig mellan Söv-Skl trots att K16 används i Gunsen av ett A-s om de haft samråd? = Nej."
+    },
+    {
+      "id": "op-26",
+      "title": "E2 spärråtgärder",
+      "description": "Spärra signalpunkter/dvsi. Spärra spåravsnitt. Låsa växlar i skyddande läge. Upplåsningspärrad tågväg\nExempel fråga: Om en spärrfärd på Haparandabanan ska anordnas för att förflytta sig från X – X. Hur kan vi avspärra för den? = Upplåsningspärrad tågväg. Sis i utfartssignalpunkterna."
+    },
+    {
+      "id": "op-27",
+      "title": "Nödstopp",
+      "description": "Exempel fråga: Vad får föraren inte göra innan vi skrivit blankett vid nödstopp? = Trycka start"
+    },
+    {
+      "id": "op-28",
+      "title": "Okänd position",
+      "description": "Exempel fråga: Vad ska vi kontrollera innan vi positionerar ett tåg? = Finns med i listan över tåg i okänd position, positionen föraren anger är rimlig."
+    },
+    {
+      "id": "op-29",
+      "title": "Muntligt körtillstånd i andra situationer",
+      "description": "Exempel fråga: Hur hanterar du en växel ur kontroll + stoppkörning i infsi/msi E2 = Förenklad tågväg+ kontroller: Sträckan fram till nästa signalpunkt ska vara – fri från andra trafikverksamheter, fri från andra fordon än avsiktligt uppställda, endast felaktiga beläggningar."
+    },
+    {
+      "id": "op-30",
+      "title": "Tappad kontakt med RBC",
+      "description": "Exempel fråga: Tappad kontakt, långt ifrån näsa signalpunkt, hur går du till väga? = Omstart av lok, lås upp väg under tåget, reservera med förenklad tågväg, BL 01, får gå fram till signalpunkt."
+    },
+    {
+      "id": "op-31",
+      "title": "Kvittera ”På-sikt”",
+      "description": "Exempel fråga: Nämn ett exempel då det kan vara aktuellt att medge driftläge på sikt? = Felaktig beläggning, hjälpfordon, tillkoppling."
+    },
+    {
+      "id": "op-32",
+      "title": "Förprojekterad akut nedsättning",
+      "description": "Exempel fråga: Hur gör du en akut nedsättning? = Klicka på en spårledning där nedsättningen ska gälla (blir hela dp eller linjen). Aktivera akut nedsättning. Orderge första tåget om att kontrollera att den ligger rätt. Fortsatt ordergivning om att det är en nedsättning där (om den inte finns i körorder)."
+    },
+    {
+      "id": "op-33",
+      "title": "Systemstopp",
+      "description": "Exempel fråga: Nämn en sak du ska kontrollera efter systemstopp = Kontrollera att samtliga är korrekt: Sträckor/objekt ska vara spärrade, områden som ska vara lokalreserverade, nödstoppsområden, särskilda och upplåsningspärrade tågvägar, positioner på tåg/spf, nedsättningar."
+    }
+  ],
+  "chef": [
+    {
+      "id": "chef-1",
+      "title": "Attityd/ Inställning. Följer regler, rapporterar olyckor/tillbud, samspel med andra funktioner."
+    },
+    {
+      "id": "chef-2",
+      "title": "Följer regler i styrande dokument, hittar styrande dokument. Var finns tdokar. Var finns säkerhetsplaner för olika driftplatser?"
+    },
+    {
+      "id": "chef-3",
+      "title": "Samtalsdisciplin. Korrekta termer, tydliga samtal, rätt identifikation."
+    },
+    {
+      "id": "chef-4",
+      "title": "Tekniska system. Hanterar de tekniska systemen korrekt. T. ex Opal, DPC, TAM2014, Trafikledningssystem."
+    },
+    {
+      "id": "chef-5",
+      "title": "Olyckshantering. Hantering olycka, tillbud, avvikelse. Vet var uppgift om farligt gods finns. Kan nödfrånkoppla kontaktledningen."
+    },
+    {
+      "id": "chef-6",
+      "title": "Dokumentation. Korrekt dokumentation med betydelse för säkerheten. Skrivit in sig i graf, tkl-bok."
+    }
+  ],
+  "simulator": [
+    {
+      "title": "Specialtransport",
+      "rows": [
+        {
+          "id": "sim-1",
+          "title": "Skriver in korrekt i graf med röd penna och stjärna",
+          "max": 1
+        },
+        {
+          "id": "sim-2",
+          "title": "Låter om möjligt annan tkl kontrollera uppgifterna",
+          "max": 1
+        },
+        {
+          "id": "sim-3",
+          "title": "Kvitterar i kvittera order",
+          "max": 1
+        },
+        {
+          "id": "sim-4",
+          "title": "Efterlever villkoren när tåget framförs",
+          "max": 2
+        }
+      ]
+    },
+    {
+      "title": "Småfordon växling",
+      "rows": [
+        {
+          "id": "sim-5",
+          "title": "Muntlig överenskommelse",
+          "max": 1
+        },
+        {
+          "id": "sim-6",
+          "title": "Antecknar uppgifter om växlingen i graf/skydd och färder",
+          "max": 1
+        },
+        {
+          "id": "sim-7",
+          "title": "Kopplar ur automater och tar bort magasineringar",
+          "max": 1
+        },
+        {
+          "id": "sim-8",
+          "title": "Skyddar med minst en åtgärd (− lokalfrige växlar − avspärrar berörda spår − lägger växlingsväg för växlingen)",
+          "max": 2
+        },
+        {
+          "id": "sim-9",
+          "title": "Ger korrekt starttillstånd",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "title": "Spärrfärd småfordon",
+      "rows": [
+        {
+          "id": "sim-10",
+          "title": "Kontrollerar aktuell sträckorder",
+          "max": 1
+        },
+        {
+          "id": "sim-11",
+          "title": "Antecknar uppgifter om spärrfärden i graf/skydd och färder",
+          "max": 1
+        },
+        {
+          "id": "sim-12",
+          "title": "Kopplar ur automater och tar bort magasineringar",
+          "max": 1
+        },
+        {
+          "id": "sim-13",
+          "title": "Ger korrekt starttillstånd",
+          "max": 1
+        },
+        {
+          "id": "sim-14",
+          "title": "Skyddar och spärrar av sträckan senast när Tsm ringer och meddelar att spärrfärden är ute",
+          "max": 2
+        }
+      ]
+    },
+    {
+      "title": "Egenskydd",
+      "rows": [
+        {
+          "id": "sim-15",
+          "title": "Planerar med föraren",
+          "max": 1
+        },
+        {
+          "id": "sim-16",
+          "title": "Avspärrar (dokumentation & spärråtgärd) på berört område",
+          "max": 2
+        },
+        {
+          "id": "sim-17",
+          "title": "Kontrollerar att föraren kortsluter på rätt spår",
+          "max": 1
+        },
+        {
+          "id": "sim-18",
+          "title": "Vid avslut dokumenterar och häver avspärrningen",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "title": "Evakuering",
+      "rows": [
+        {
+          "id": "sim-19",
+          "title": "Samråder med föraren om evakueringen",
+          "max": 1
+        },
+        {
+          "id": "sim-20",
+          "title": "Avspärrar spår",
+          "max": 2
+        },
+        {
+          "id": "sim-21",
+          "title": "Dokumenterar evakueringen i graf",
+          "max": 1
+        },
+        {
+          "id": "sim-22",
+          "title": "Meddelar förare att evakuering kan påbörjas",
+          "max": 1
+        },
+        {
+          "id": "sim-23",
+          "title": "Dokumenterar evakuering avslutad och häver avspärrning",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "title": "Spärrfärd hjälpfordon",
+      "rows": [
+        {
+          "id": "sim-24",
+          "title": "Blankett om begäran om hjälpfordon",
+          "max": 1
+        },
+        {
+          "id": "sim-25",
+          "title": "Blankett om återkallande av körtillstånd",
+          "max": 1
+        },
+        {
+          "id": "sim-26",
+          "title": "Blankett 29 planera spärrfärd hjälpfordon",
+          "max": 1
+        },
+        {
+          "id": "sim-27",
+          "title": "Dokumenterar spärrfärd hjälpfordon i graf",
+          "max": 1
+        },
+        {
+          "id": "sim-28",
+          "title": "Ger korrekt starttillstånd",
+          "max": 1
+        },
+        {
+          "id": "sim-29",
+          "title": "Korrekta kontroller för msi\n(går att reservera)\nGenom att granska tkl dokumentation och ställverksindikeringar –\n\nKontrollera att sträckan fram till nästa huvudsignal är fri från:\nTrafikverksamheter än de som är avsedda att pågå samtidigt.\nAndra fordon än avsiktligt uppställda\nBeläggningar än de som bedömt är felaktiga",
+          "max": 2
+        },
+        {
+          "id": "sim-30",
+          "title": "Korrekta kontroller ublsi\nSamma kontroller som för msi +\n\nKontrollera att bevakningssträckan är fri från tåg. För spärrfärd med hjälpfordon gäller dock andra villkor för tågklarerarens medgivande, enligt reglerna för spärrfärd med hjälpfordon.\n\nTågklareraren ska förvissa sig om vilka tåg som skulle kunna befinna sig på bevakningssträckan genom att först utföra följande åtgärder: \n\n1. Undersöka tågklarerardokumentationen över vilka tåg som planenligt ska befinna sig på eller i närheten av bevakningssträckan \n\n2. Undersöka vilka tåg som inkommit och fått körtillstånd från de driftplatser som gränsar till tågklarerarens eget övervakningsområde. \n\nTågklareraren ska sedan kontrollera var de tåg som skulle kunna befinna sig på bevakningssträckan verkligen befinner sig, genom att samtala med förarna och stämma av förarnas uppgift om position mot aktuella ställverksindikeringar samt tågklarerardokumentationen. Om en förare inte kan nås och tåget förväntas ha nått sin slutdestination, får tågklareraren säkerställa detta genom att ta kontakt med berört järnvägsföretag.",
+          "max": 2
+        },
+        {
+          "id": "sim-31",
+          "title": "Korrekt ifylld blankett 21",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "title": "Växling",
+      "rows": [
+        {
+          "id": "sim-32",
+          "title": "Muntlig överenskommelse",
+          "max": 1
+        },
+        {
+          "id": "sim-33",
+          "title": "Antecknar uppgifter om växlingen i graf/skydd och färder",
+          "max": 1
+        },
+        {
+          "id": "sim-34",
+          "title": "Ger korrekt starttillstånd",
+          "max": 1
+        },
+        {
+          "id": "sim-35",
+          "title": "Tillstånd att passera msi i stopp efter att hela driftplatsen har lokalfrigivits",
+          "max": 2
+        }
+      ]
+    },
+    {
+      "title": "Vägväxling",
+      "rows": [
+        {
+          "id": "sim-36",
+          "title": "Muntlig överenskommelse",
+          "max": 1
+        },
+        {
+          "id": "sim-37",
+          "title": "Antecknar uppgifter om växlingen i graf/skydd och färder",
+          "max": 1
+        },
+        {
+          "id": "sim-38",
+          "title": "Ger korrekt starttillstånd (tillstånd att växla på kör i huvudsignal)",
+          "max": 1
+        }
+      ]
+    },
+    {
+      "title": "Backning på linjen med uppsikt",
+      "rows": [
+        {
+          "id": "sim-39",
+          "title": "Kontrollera tågets längd",
+          "max": 1
+        },
+        {
+          "id": "sim-40",
+          "title": "Rätt ifylld blankett",
+          "max": 1
+        },
+        {
+          "id": "sim-41",
+          "title": "Fastställa backningssträcka",
+          "max": 1
+        },
+        {
+          "id": "sim-42",
+          "title": "Reservera backningssträckan",
+          "max": 2
+        }
+      ]
+    },
+    {
+      "title": "Stoppkörning infartssignal",
+      "rows": [
+        {
+          "id": "sim-43",
+          "title": "Korrekta kontroller för infsi\n(Går inte att reservera) \nGenom att granska tkl dokumentation och ställverksindikeringar –\n\nKontrollera att sträckan fram till nästa huvudsignal är fri från:\nTrafikverksamheter\nAndra fordon än avsiktligt uppställda\nBeläggningar än de som bedömt är felaktiga eller beror på avsiktlig uppställning\n\nVid fjärrbevakade driftplatser, kontrollera vilka tåg som fått körtillstånd från de driftplatser eller driftplatsdelar som gränsar till tågklarerarens eget övervakningsområde samt var de tågen befinner sig\n\nOm det är ett tåg som står vid signalen ska tågklareraren dessutom kontrollera att inga andra trafikverksamheter på sträckan fram till nästa huvudsignal har fått starttillstånd.\n\nTågklareraren får inte magasinera tåg- eller växlingsvägar. Tågklareraren ska förvissa sig om att den automatiserade läggningen av tåg- och växlingsvägar är urkopplad.",
+          "max": 2
+        },
+        {
+          "id": "sim-44",
+          "title": "Korrekt ifylld blankett 21",
+          "max": 1
+        },
+        {
+          "id": "sim-45",
+          "title": "Växlars läge korrekt",
+          "max": 1
+        }
+      ]
+    }
+  ],
+  "passingScore": 40,
+  "documentClaimedTotal": 56
+}

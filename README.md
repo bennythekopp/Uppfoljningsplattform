@@ -54,3 +54,25 @@ Layouten anpassas automatiskt till telefonens skärmbredd. På smala skärmar vi
 
 ## Logga och hemskärmsikon
 Den nya TC Boden-loggan används vid inloggning och i sidhuvudet. Paketet innehåller även favicon, Apple Touch-ikon och Android-ikoner med webbmanifest. På iPhone väljer du Dela → Lägg till på hemskärmen i Safari. På Android väljer du Lägg till på startskärmen i webbläsarens meny. Om en gammal genväg visar bokikonen, ta bort genvägen och lägg till sidan igen efter den nya Netlify-publiceringen.
+
+## Utbildad personal
+
+Instruktörer och administratörer har fliken **Utbildad personal**. Där finns en separat lista med personal och två formulär från de bifogade dokumenten: **Operativ del** med bedömningsområden, ämnen till chef, nyheter och provresultat, samt **Simulator** med poäng och kommentar per moment. En person kan ha flera daterade uppföljningar och tidigare sparade formulär kan öppnas och redigeras. Handledare och Chef har ingen åtkomst till fliken eller API:et. I Operativ del visas röd som **Komplettering krävs**, gul som **Anmärkning finns** och grön som **Utan anmärkning**. Klicka på samma val igen för att avmarkera det.
+
+Simulatordokumentet anger 56 som totalpoäng, men de listade maxpoängen summerar till 55. Webbformuläret summerar de faktiska momenten till 55 och använder dokumentets godkäntgräns 40. Databasmigreringen `0007_personnel_followups.sql` skapar tabellerna för personal och uppföljningar. Kör den efter `0006_deleted_moments.sql` om du använder en egen PostgreSQL-databas; Netlify Database kör den vid publicering.
+
+## Elevöversikt och individuell uppföljning
+
+Alla inloggade har fliken **Elever** med en sökbar elevlista och antalet elever. Handledare och Chef ser endast elevöversikten och sina vanliga elevfunktioner. Instruktörer och administratörer kan också lägga till och byta namn på elever direkt där, samt flytta eller ta bort dem från menyn på respektive rad. På elevöversikten visas inte längre antalet bedömningsmoment.
+
+**Utbildad personal** visas enbart för instruktörer och administratörer. Startsidan heter **Individuell uppföljning** med **TC Boden** under rubriken. Den har en sökbar lista, antalet personer och en diskret årssammanställning. Öppna en person för formulären Operativ del och Simulator. Knappen för ämnen till chef visar även nyheter och provresultat. Menyn på varje rad kan byta namn, flytta till Elever eller ta bort personen.
+
+Markera **Markera formuläret som genomfört** och spara för att räkna det som färdigt. En liten bock visas vid personens namn först när både Operativ del och Simulator är markerade som genomförda med uppföljningsdatum under innevarande år. Påbörjade formulär går fortfarande att spara och redigera via historiken utan att de räknas som genomförda.
+
+Flytt mellan grupperna bevarar personens tidigare elevbedömningar och personaluppföljningar. Historiken blir tillgänglig igen vid flytt tillbaka. Att ta bort en person tar däremot permanent bort både elevbedömningar, kommentarer och personaluppföljningar efter bekräftelse.
+
+Migreringen `0008_person_groups.sql` lägger till gruppstatus och markeringen för genomförda formulär. Netlify Database kör den vid publicering. För en separat PostgreSQL-databas, kör den efter `0007_personnel_followups.sql`. Tidigare sparade formulär får statusen påbörjad och kan öppnas och markeras som genomförda.
+
+## Skriv ut individuell uppföljning
+
+Instruktörer och administratörer kan öppna en person, välja **Operativ del** eller **Simulator** och klicka **Skriv ut**. Varje tidigare uppföljning har även en egen **Skriv ut**-knapp i historiken, som skriver ut just det sparade protokollet direkt. Utskriften är anpassad för A4 och visar endast den valda delen med datum, ansvarig, bedömningar och kommentarer. Operativ del tar även med ämnen till chef, nyheter och provresultat; Simulator tar med poäng per moment och totalsumman. Det öppna formuläret behöver vara sparat, och eventuella nya ändringar behöver sparas före utskrift med knappen vid sidans rubrik. Webbläsarens utskriftsruta kan även spara protokollet som PDF.
