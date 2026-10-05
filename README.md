@@ -76,3 +76,7 @@ Migreringen `0008_person_groups.sql` lägger till gruppstatus och markeringen f�
 ## Skriv ut individuell uppföljning
 
 Instruktörer och administratörer kan öppna en person, välja **Operativ del** eller **Simulator** och klicka **Skriv ut**. Varje tidigare uppföljning har även en egen **Skriv ut**-knapp i historiken, som skriver ut just det sparade protokollet direkt. Utskriften är anpassad för A4 och visar endast den valda delen med datum, ansvarig, bedömningar och kommentarer. Operativ del tar även med ämnen till chef, nyheter och provresultat; Simulator tar med poäng per moment och totalsumman. Det öppna formuläret behöver vara sparat, och eventuella nya ändringar behöver sparas före utskrift med knappen vid sidans rubrik. Webbläsarens utskriftsruta kan även spara protokollet som PDF.
+
+## Uppdatering av personlistornas utseende
+
+Elever och Utbildad personal använder gemensamma stilregler i `app/people.css`, som importeras från `app/layout.tsx`. Vid uppdatering behöver alla filer från ZIP-filen ersätta motsvarande filer i GitHub, inklusive den nya CSS-filen och layouten. Lägg till personal öppnar samma centrerade dialog som Lägg till elev.
