@@ -108,3 +108,11 @@ Publicera hela paketet och tillämpa `0011_login_security.sql` efter `0010_iu_mo
 Inloggningen gäller högst åtta timmar och upphör efter 30 minuters inaktivitet. En varning visas två minuter före utgången med knappen Fortsätt arbeta. Klick, tangenttryckningar och scrollning i en synlig flik räknas som aktivitet. Bakgrundshämtningar håller inte inloggningen vid liv. Servern kontrollerar tidsgränserna på varje skyddad begäran; utgångna sessioner kan inte återaktiveras. Spara arbete före utloggning.
 
 Inloggningsförsök begränsas atomiskt i databasen till sju per konto och 60 per IP-adress under 15 minuter. Lyckad inloggning återställer kontots räknare, men IP-räknaren består. IP-adressen hämtas endast från Netlifys anslutningsheader när Netlify-miljön känns igen (`NETLIFY`, `NETLIFY_DB_URL` eller `SITE_ID`). Vanliga X-Forwarded-For ignoreras. Om anslutningsadressen saknas används en gemensam reservräknare, så skyddet stängs inte av. På andra hostingplattformar behövs en anpassning till deras betrodda proxy. IP-adresser och kontonamn lagras hashade i spärrtabellen; utgångna räknare städas vid inloggningsförsök. Flera användare på samma nät delar IP-gränsen.
+
+## Instruktörspanel och mobilmeny
+
+Instruktörsöversikten heter nu Instruktörspanel. Undermenyerna Översikt, Elever, Personal, System E2, System M, Övrigt, Operativ IU och Simulator IU samlar navigeringen. Översikten visar elev- och personallistor med sökning samt antal elever, personal och årets klara/kvarvarande individuella uppföljningar. Lägg till person låter instruktörer och administratörer välja elev eller personal. Tidigare Utbildad personal heter Personal i menyer och vyer.
+
+På skärmar upp till 900 px öppnas sidomenyn från vänster med menyknappen i den fasta toppraden. Den stängs vid menyval, med kryss, genom tryck utanför menyn eller Escape. Namn och roll ligger kvar i kontoraden längst ned. Menyn och personlistan scrollas utan att kontoraden försvinner. Handledare och Chef har fortsatt bara elevfunktionerna; administratörens Användare finns kvar.
+
+Ingen ytterligare databasmigrering krävs för dessa menyändringar. Inloggningsförstärkningen från föregående paket kräver fortsatt `0011_login_security.sql` om den inte redan har tillämpats.
