@@ -67,7 +67,7 @@ Alla inloggade har fliken **Elever** med en sökbar elevlista och antalet elever
 
 **Utbildad personal** visas enbart för instruktörer och administratörer. Startsidan heter **Individuell uppföljning** med **TC Boden** under rubriken. Den har en sökbar lista, antalet personer och en diskret årssammanställning. Öppna en person för formulären Operativ del och Simulator. Knappen för ämnen till chef visar även nyheter och provresultat. Menyn på varje rad kan byta namn, flytta till Elever eller ta bort personen.
 
-Markera **Markera formuläret som genomfört** och spara för att räkna det som färdigt. En liten bock visas vid personens namn först när både Operativ del och Simulator är markerade som genomförda med uppföljningsdatum under innevarande år. Påbörjade formulär går fortfarande att spara och redigera via historiken utan att de räknas som genomförda.
+Välj **Godkänd** eller **Komplettering krävs** längst ned i respektive formulär och spara. En liten bock visas vid personens namn när den senaste uppföljningen för både Operativ del och Simulator är godkänd under innevarande år. Formulär utan slutbedömning kan fortfarande sparas som påbörjade.
 
 Flytt mellan grupperna bevarar personens tidigare elevbedömningar och personaluppföljningar. Historiken blir tillgänglig igen vid flytt tillbaka. Att ta bort en person tar däremot permanent bort både elevbedömningar, kommentarer och personaluppföljningar efter bekräftelse.
 
@@ -80,3 +80,23 @@ Instruktörer och administratörer kan öppna en person, välja **Operativ del**
 ## Uppdatering av personlistornas utseende
 
 Elever och Utbildad personal använder gemensamma stilregler i `app/people.css`, som importeras från `app/layout.tsx`. Vid uppdatering behöver alla filer från ZIP-filen ersätta motsvarande filer i GitHub, inklusive den nya CSS-filen och layouten. Lägg till personal öppnar samma centrerade dialog som Lägg till elev.
+
+## Ansvarig och provresultat
+
+Ansvarig väljs från en rullista med aktiva instruktörer och administratörer. Historiska ansvariga finns kvar i redan sparade protokoll. Lokalt och centralt provresultat anges i procent, 0–100, och får procenttecken på utskriften. Tidigare fritextresultat bevaras tills de ersätts med ett procentvärde. Simulatorns informationsrad om 56 respektive 55 totalpoäng har tagits bort från gränssnittet.
+
+## Historik och slutbedömning per del
+
+Knappen **Historik** öppnar en popup för den aktuella fliken. Operativ del visar endast operativa uppföljningar, och Simulator visar endast simulatoruppföljningar. Varje protokoll har datum som namn och grön markering för Godkänd eller röd för Komplettering krävs. Det går att öppna eller skriva ut protokollet direkt i popupen. Slutbedömningen väljs med de två färgade knapparna längst ned och sparas med protokollet.
+
+Migreringen `0009_followup_outcome.sql` krävs efter `0008_person_groups.sql`. Netlify Database tillämpar den vid publicering; för en separat PostgreSQL-databas behöver filen köras där. Tidigare protokoll får **Ej beslutad** tills en instruktör eller administratör anger resultatet, eftersom den tidigare kryssrutan inte skiljde godkänd uppföljning från komplettering.
+
+## Instruktörsöversikt och IU-underlag
+
+Sidolistans namn och innehåll växlar till **Personal** i Individuell uppföljning och till **Elever** i elevdelarna. Det går att öppna en person direkt i sidolistan eller från instruktörsöversikten. Översikten visar också utbildad personal med status för Operativ del och Simulator under innevarande år.
+
+Bredvid System E2, System M och Övrigt finns **Operativ IU** och **Simulator IU**. Instruktörer och administratörer kan lägga till, redigera och ta bort IU-moment. Operativa moment placeras i Bedömningsområden eller Ämnen till chef. Simulatorns moment har rubrik, beskrivning, momentgrupp och maxpoäng. Nya uppföljningar använder det aktuella underlaget. Varje sparat protokoll behåller sin kopia av moment och maxpoäng, även vid senare redigering eller borttagning.
+
+Migreringen `0010_iu_moments.sql` skapar det redigerbara IU-underlaget och sparar en kopia av det ursprungliga underlaget på tidigare protokoll. Netlify Database tillämpar den vid publicering. På en separat PostgreSQL-databas körs den efter `0009_followup_outcome.sql`.
+
+Inloggat namn och roll är alltid synliga i sidomenyns nederkant vid scrollning. På mobil ligger kontoraden fast längst ned på skärmen.

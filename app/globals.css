@@ -82,3 +82,6 @@
 /* Shared branding uses the uploaded TC Boden logo. */
 .brandmark{background:#fff;flex:none;overflow:hidden}.brandmark img{display:block;width:100%;height:100%;object-fit:contain}.signin .logo{background:#fff;overflow:hidden}.signin .logo img{display:block;width:100%;height:100%;object-fit:contain}
 
+/* Keep the signed-in account visible while the workspace scrolls. */
+@media screen and (min-width:651px){.sidebar{position:sticky;top:0;height:100dvh;min-height:0;max-height:100dvh;align-self:flex-start;overflow:hidden}.sidebar .sidelist{overflow-y:auto;min-height:0;flex:1}.sidebar .sidebottom{flex:none;margin-top:auto;padding-top:18px;background:#292929}}
+@media screen and (max-width:650px){.sidebar .sidebottom{position:fixed;left:0;bottom:0;width:100%;margin:0;padding:10px 15px;padding-bottom:calc(10px + env(safe-area-inset-bottom));background:#292929;border-top:1px solid #ffffff35;z-index:8}.content{padding-bottom:110px}.who{min-width:0}.sidebar .sidebottom .who{flex:1}.sidebar .sidebottom .who strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
