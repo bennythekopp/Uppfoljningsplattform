@@ -148,3 +148,7 @@ Kör **`0013_operational_categories.sql` efter `0012_simulator_moments.sql`** p�
 ### Ordning och separata kategoriramar
 
 På Operativ IU i Instruktörspanelen flyttas kategorier med upp- och nedpilar. Första kategorins uppåtpil och sista kategorins nedåtpil är avstängda. Ordningen sparas i databasen och gäller för nya uppföljningar samt deras utskrifter. Sparade historiska protokoll behåller ordningen från sitt sparade underlag. Under personalbedömningen har varje kategori en egen vit ruta med ram och mellanrum; nyheter och provresultat ligger i en separat ruta. Ingen ny migrering krävs utöver **0013_operational_categories.sql** från föregående paket.
+
+### Namnlistor i mobilmenyn
+
+Mobilens sidomeny visar elever och personal lodrätt, med ett namn per rad och full radbredd. Långa namn kan radbrytas. Menyns innehåll rullar lodrätt medan den inloggade användaren ligger kvar nederst. Ingen ny SQL-migrering behövs.
