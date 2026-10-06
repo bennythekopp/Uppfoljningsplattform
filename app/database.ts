@@ -123,3 +123,22 @@ export async function deleteSimulatorGroup(id:string,actor:string){
   const now=Date.now();await client.query('UPDATE iu_simulator_groups SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE id=$1',[id,now,actor]);await client.query('UPDATE iu_moments SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE simulator_group_id=$1 AND deleted_at IS NULL',[id,now,actor]);await client.query('COMMIT');return true;
  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
+
+export async function moveOperationalCategory(id:string,direction:'up'|'down',actor:string){
+ const client=await getPool().connect();
+ try{
+  await client.query('BEGIN');
+  // Serialize moves and category mutations before reading the current order.
+  await client.query('LOCK TABLE iu_operational_categories IN SHARE ROW EXCLUSIVE MODE');
+  const found=await client.query('SELECT id FROM iu_operational_categories ORDER BY position,id');
+  const ids=found.rows.map(row=>row.id as string),index=ids.indexOf(id);
+  if(index<0){await client.query('ROLLBACK');return false}
+  const destination=index+(direction==='up'?-1:1);
+  if(destination>=0&&destination<ids.length){
+   [ids[index],ids[destination]]=[ids[destination],ids[index]];
+   const now=Date.now();
+   for(const [position,categoryId] of ids.entries())await client.query('UPDATE iu_operational_categories SET position=$2,updated_at=$3,updated_by=$4 WHERE id=$1',[categoryId,position+1,now,actor]);
+  }
+  await client.query('COMMIT');return true;
+ }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}

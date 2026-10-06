@@ -1,4 +1,4 @@
-import { db } from '../../../database';
+import { db,moveOperationalCategory } from '../../../database';
 import { currentUser,error } from '../../../auth';
 export const dynamic='force-dynamic';
 const permitted=(role:string)=>['Administratör','Instruktör'].includes(role);
@@ -19,3 +19,9 @@ export async function DELETE(req:Request){try{
  // The foreign key moves the moments to "Utan kategori" in the same database statement.
  const result=await db.prepare('DELETE FROM iu_operational_categories WHERE id=?').bind(id).run();if(!result.meta.changes)return error('Kategorin finns inte',404);return Response.json({ok:true});
  }catch{return error('Kunde inte ta bort kategorin',503)}}
+export async function PATCH(req:Request){try{
+ const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);
+ const {id,direction}=await req.json();if(typeof id!=='string'||!id||!['up','down'].includes(direction))return error('Ange kategori och riktning',400);
+ if(!await moveOperationalCategory(id,direction,user.email))return error('Kategorin finns inte',404);
+ return Response.json({ok:true});
+ }catch{return error('Kunde inte flytta kategorin',503)}}
