@@ -84,17 +84,25 @@ function toPostgres(query:string) {
     .replace(/ORDER BY (\w+\.)?name COLLATE NOCASE/gi,(_,prefix)=>`ORDER BY lower(${prefix||''}name)`)
     .replace(/ORDER BY (\w+\.)?name COLLATE NOCASE/gi,(_,prefix)=>`ORDER BY lower(${prefix||''}name)`);
 }
-export const db={
+function database(executor: Pick<pg.Pool,'query'> | pg.PoolClient){
+ return {
   prepare(sql:string){
     const statement=toPostgres(sql);
     const make=(values:unknown[])=>({
-      async all<T=Record<string,unknown>>(){const r=await getPool().query(statement,values);return {results:r.rows as T[]}},
-      async first<T=Record<string,unknown>>(){const r=await getPool().query(statement,values);return (r.rows[0] as T|undefined)||null},
-      async run(){const returning=/^INSERT INTO custom_moments\b/i.test(statement)?statement+' RETURNING id':statement;const r=await getPool().query(returning,values);return {meta:{changes:r.rowCount||0,last_row_id:r.rows[0]?.id||0}}}
+      async all<T=Record<string,unknown>>(){const r=await executor.query(statement,values);return {results:r.rows as T[]}},
+      async first<T=Record<string,unknown>>(){const r=await executor.query(statement,values);return (r.rows[0] as T|undefined)||null},
+      async run(){const returning=/^INSERT INTO custom_moments\b/i.test(statement)?statement+' RETURNING id':statement;const r=await executor.query(returning,values);return {meta:{changes:r.rowCount||0,last_row_id:r.rows[0]?.id||0}}}
     });
     return {...make([]),bind(...values:unknown[]){return make(values)}};
   }
-};
+ };
+}
+export const db=database({query:(...args:Parameters<pg.Pool['query']>)=>getPool().query(...args)} as Pick<pg.Pool,'query'>);
+export async function followupTransaction<T>(personId:string,kind:string,work:(connection:ReturnType<typeof database>)=>Promise<T>):Promise<T>{
+ const client=await getPool().connect();
+ try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify([personId,kind])]);const result=await work(database(client));await client.query('COMMIT');return result}
+ catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
 
 export type SimulatorChildInput={id?:string,title:string,description:string,maxScore:number};
 export async function saveSimulatorGroup(input:{id?:string,title:string,description:string,children:SimulatorChildInput[]},actor:string){

@@ -133,11 +133,13 @@ Tillämpa `0012_simulator_moments.sql` efter `0011_login_security.sql` vid publi
 
 ### Pågående bedömningar
 
-Texter och bedömningar i individuell uppföljning hålls kvar per person och del när du byter flik, person eller sida under samma inloggning. Ändringar i öppnade historiska protokoll hålls också kvar. Osparade elevkommentarer hålls separat för varje elev och moment. Elevens färgnivå sparas direkt, som tidigare.
+Individuell uppföljning sparar automatiskt ett gemensamt pågående utkast per person och del (Operativ/Simulator) i databasen. Texter, färgval och poäng återställs efter byte av sida, omladdning och utloggning. Detta gäller även ändringar i tidigare sparade protokoll. Instruktörer och administratörer kan fortsätta arbetet efter nästa inloggning. Elevens färgnivå sparas direkt som tidigare; oskickade elevkommentarer hålls endast under samma inloggning.
 
-Använd **Spara uppföljning / Spara ändringar** eller **Lägg till kommentar** för att spara till databasen. Osparade utkast töms vid utloggning eller omladdning av sidan. **Ny uppföljning** ber om bekräftelse om ett osparat nytt protokoll behöver tömmas. Denna ändring kräver ingen ny SQL-migration.
+**Spara uppföljning / Spara ändringar** lägger protokollet i historiken och tar bort det pågående utkastet för den delen. Statusen visar därefter det sparade resultatet. **Ny uppföljning** visar en varning om pågående ändringar inte har sparats till historiken, även när man ändrat ett gammalt protokoll. Avbryt behåller arbetet. Bekräfta raderar utkastet och öppnar ett tomt formulär; sparad historik behålls. Ett utkast töms aldrig automatiskt vid utloggning.
 
-På personalöversikten och i Instruktörspanelens personallista visas en diskret **Påbörjad**-markering för personer med osparade uppföljningsutkast. Markeringen försvinner när samtliga pågående ändringar för personen har sparats eller utkastet har tömts.
+Utloggning väntar tills aktuella utkast nått databasen. Vid nätfel visas ett fel och utloggning stoppas; välj Försök igen i uppföljningen. Webbläsaren varnar vid omladdning/stängning medan arbete fortfarande väntar på automatisk sparning. Om två personer redigerar samtidigt stoppas gamla skrivningar med en versionskontroll. Meddelandet ber då användaren ladda om; kopiera först eventuella lokala ändringar som behövs.
+
+Kör **0014_persistent_followup_drafts.sql efter 0013_operational_categories.sql** på en separat PostgreSQL-databas. Netlify Database tillämpar nya migrationer vid publicering.
 
 ### Kategorier i Operativ IU
 
@@ -152,3 +154,9 @@ På Operativ IU i Instruktörspanelen flyttas kategorier med upp- och nedpilar. 
 ### Namnlistor i mobilmenyn
 
 Mobilens sidomeny visar elever och personal lodrätt, med ett namn per rad och full radbredd. Långa namn kan radbrytas. Menyns innehåll rullar lodrätt medan den inloggade användaren ligger kvar nederst. Ingen ny SQL-migrering behövs.
+
+### Sparad status och årsskifte
+
+Personalöversikten och Instruktörspanelen visar separata statusar för **Operativ** och **Simulator**: Påbörjad, Godkänd, Komplettering krävs eller Ej påbörjad. Påbörjad visar aktuella osparade ändringar i den öppna uppföljningen för respektive del. Efter **Spara uppföljning / Spara ändringar** finns protokollet i historiken och statusen ersätts av det sparade resultatet. En sparad uppföljning utan valt resultat visas som Påbörjad. Att redigera ett befintligt protokoll uppdaterar samma post i historiken. Den diskreta bocken och antal genomförda kräver att båda delarna är Godkända under innevarande år och saknar pågående ändringar.
+
+**Godkänd och Påbörjad nollställs automatiskt vid årsskiftet enligt svensk tid. Komplettering krävs ligger kvar tills en senare uppföljning ersätter resultatet.** Protokoll och kommentarer raderas inte. Pågående formulärtexter behålls i databasen även om årsskiftet döljer deras gamla Påbörjad-status; om man fortsätter redigera markeras de åter som Påbörjad. Året kontrolleras även när en öppen sida får fokus igen. För beständiga utkast krävs migration **0014_persistent_followup_drafts.sql**.
