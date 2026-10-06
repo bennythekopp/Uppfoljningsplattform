@@ -41,3 +41,5 @@
 @media(max-width:650px){.personnelopen.personnelstatusopen{grid-template-columns:33px minmax(0,1fr);gap:10px}.personnelstatusopen .personnelstatuses{gap:12px;flex-wrap:wrap}.personneloverviewrow .personnelstatuses{width:100%;margin-left:0}.personnelstatusbadge{font-size:11px}.personnelpartstatus>small{font-size:11px}}
 
 .followupformfields{border:0;padding:0;margin:0;min-width:0;display:contents}
+
+@media print{.personnelprintsimulator{display:flex;align-items:center;gap:2mm;justify-content:flex-start;break-inside:avoid}.personnelprintsimulator>.followupoutcome{flex:none}}
