@@ -95,3 +95,31 @@ export const db={
     return {...make([]),bind(...values:unknown[]){return make(values)}};
   }
 };
+
+export type SimulatorChildInput={id?:string,title:string,description:string,maxScore:number};
+export async function saveSimulatorGroup(input:{id?:string,title:string,description:string,children:SimulatorChildInput[]},actor:string){
+ const client=await getPool().connect();
+ try{
+  await client.query('BEGIN');const now=Date.now(),id=input.id||'sim-group-'+crypto.randomUUID();
+  if(input.id){const found=await client.query('SELECT id FROM iu_simulator_groups WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[id]);if(!found.rowCount){await client.query('ROLLBACK');return null}}
+  const existing=await client.query('SELECT id FROM iu_moments WHERE simulator_group_id=$1 AND deleted_at IS NULL FOR UPDATE',[id]);
+  const allowed=new Set(existing.rows.map(row=>row.id));
+  if(input.children.some(child=>child.id&&!allowed.has(child.id)))throw Error('Delmomentet tillhör inte momentet');
+  if(input.id)await client.query('UPDATE iu_simulator_groups SET title=$2,description=$3,updated_at=$4,updated_by=$5 WHERE id=$1',[id,input.title,input.description,now,actor]);
+  else await client.query('INSERT INTO iu_simulator_groups(id,title,description,position,updated_at,updated_by) SELECT $1,$2,$3,COALESCE(MAX(position),0)+1,$4,$5 FROM iu_simulator_groups',[id,input.title,input.description,now,actor]);
+  const kept:string[]=[];
+  for(const [index,child] of input.children.entries()){
+   const childId=child.id||'iu-'+crypto.randomUUID();kept.push(childId);
+   if(child.id)await client.query('UPDATE iu_moments SET section=$2,title=$3,description=$4,max_score=$5,position=$6,updated_at=$7,updated_by=$8 WHERE id=$1 AND simulator_group_id=$9 AND deleted_at IS NULL',[childId,input.title,child.title,child.description,child.maxScore,index+1,now,actor,id]);
+   else await client.query("INSERT INTO iu_moments(id,kind,section,title,description,max_score,position,updated_at,updated_by,simulator_group_id) VALUES($1,'simulator',$2,$3,$4,$5,$6,$7,$8,$9)",[childId,input.title,child.title,child.description,child.maxScore,index+1,now,actor,id]);
+  }
+  await client.query('UPDATE iu_moments SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE simulator_group_id=$1 AND deleted_at IS NULL AND NOT(id=ANY($4::text[]))',[id,now,actor,kept]);
+  await client.query('COMMIT');return {id};
+ }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
+export async function deleteSimulatorGroup(id:string,actor:string){
+ const client=await getPool().connect();try{
+  await client.query('BEGIN');const found=await client.query('SELECT id FROM iu_simulator_groups WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[id]);if(!found.rowCount){await client.query('ROLLBACK');return false}
+  const now=Date.now();await client.query('UPDATE iu_simulator_groups SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE id=$1',[id,now,actor]);await client.query('UPDATE iu_moments SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE simulator_group_id=$1 AND deleted_at IS NULL',[id,now,actor]);await client.query('COMMIT');return true;
+ }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}

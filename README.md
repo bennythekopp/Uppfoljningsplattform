@@ -122,3 +122,25 @@ Ingen ytterligare databasmigrering krävs för dessa menyändringar. Inloggnings
 Nya elever och personal läggs endast till med Lägg till person i Instruktörspanelens översikt. Registreringsknappar och formulär har tagits bort från elev- och personalöversikterna.
 
 I varje öppnat IU-moment visas en separat läsruta med kommentaren från den senaste sparade uppföljningen för samma person och samma del, tillsammans med datum och ansvarig. Detta gäller operativa moment, Ämnen till chef och simulatorns moment. Rutan ändrar eller kopierar inte kommentaren till det nya protokollet. Om den senaste uppföljningen saknar kommentar visas detta. När ett sparat historiskt protokoll öppnas jämförs det med föregående protokoll, så att senare kommentarer inte visas som tidigare historik. Ingen ny databasmigrering behövs.
+
+## Simulatorns moment och delmoment
+
+Simulator IU i Instruktörspanelen visar nu moment som innehåller flera delmoment. Momentets namn och beskrivning hanteras tillsammans med delmomentens namn, beskrivningar och egna maxpoäng. Lägg till delmoment skapar fler rader. Momentets maxpoäng är summan av delmomentens maxpoäng. Ett moment måste innehålla minst ett delmoment. Instruktörer och administratörer kan redigera moment, lägga till/ta bort delmoment eller ta bort hela momentet. Alla delmoment sparas tillsammans i en databastransaktion.
+
+Den tidigare indelningen från simulatordokumentet behålls: Specialtransport, Småfordon växling, Spärrfärd småfordon, Egenskydd, Evakuering, Spärrfärd hjälpfordon, Växling, Vägväxling, Backning på linjen med uppsikt och Stoppkörning infartssignal. Tidigare egna momentgrupper följer också med. I simulatorbedömningen finns endast den aktuella kommentaren per delmoment. Föregående kommentarer finns fortsatt i den operativa delen och Ämnen till chef.
+
+Tillämpa `0012_simulator_moments.sql` efter `0011_login_security.sql` vid publicering. Netlify Database kör nya migreringar automatiskt. För separat PostgreSQL-databas körs filen manuellt. Befintliga delmoments-ID:n, bedömningar, kommentarer och sparade protokolls underlag bevaras. Nya uppföljningar använder den aktuella momentindelningen; äldre protokoll öppnas och skrivs ut med sitt sparade underlag.
+
+### Pågående bedömningar
+
+Texter och bedömningar i individuell uppföljning hålls kvar per person och del när du byter flik, person eller sida under samma inloggning. Ändringar i öppnade historiska protokoll hålls också kvar. Osparade elevkommentarer hålls separat för varje elev och moment. Elevens färgnivå sparas direkt, som tidigare.
+
+Använd **Spara uppföljning / Spara ändringar** eller **Lägg till kommentar** för att spara till databasen. Osparade utkast töms vid utloggning eller omladdning av sidan. **Ny uppföljning** ber om bekräftelse om ett osparat nytt protokoll behöver tömmas. Denna ändring kräver ingen ny SQL-migration.
+
+På personalöversikten och i Instruktörspanelens personallista visas en diskret **Påbörjad**-markering för personer med osparade uppföljningsutkast. Markeringen försvinner när samtliga pågående ändringar för personen har sparats eller utkastet har tömts.
+
+### Kategorier i Operativ IU
+
+Instruktörspanel → Operativ IU har **Ny kategori** samt möjlighet att redigera och ta bort kategorier. Varje moment har ett kategorival vid skapande och redigering. Befintliga operativa moment placeras i **Operativa moment** och tidigare chefsfrågor i **Ämnen till chef**. Dessa visas som små underrubriker på samma nivå i personalbedömningen, med befintliga momentrutor, färgval och kommentarsfält. Nyheter och provresultat finns fortsatt i sin egen utfällbara ruta. Om en kategori tas bort flyttas momenten till **Utan kategori**; momenten och deras ID:n tas inte bort.
+
+Kör **`0013_operational_categories.sql` efter `0012_simulator_moments.sql`** på en separat PostgreSQL-databas. Netlify Database tillämpar nya migreringar vid publicering. Alla tidigare migreringsfiler finns med i paketet. Sparade protokoll behåller sin kategoriindelning i historik och utskrift genom sitt sparade underlag. Äldre protokoll utan kategorifält visar sina ursprungliga bedömningsområden och Ämnen till chef.
