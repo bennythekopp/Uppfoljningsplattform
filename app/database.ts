@@ -1,5 +1,6 @@
 import 'server-only';
 import pg from 'pg';
+import {archiveStudent} from './student-archive-data';
 
 // Netlify Database provides NETLIFY_DB_URL to build and function runtimes.
 // DATABASE_URL also supports a local or separately managed Postgres database.
@@ -52,7 +53,9 @@ export async function movePerson(id:string,source:'students'|'personnel',actor:s
     const existing=await client.query(`SELECT id FROM ${destination} WHERE id=$1 FOR UPDATE`,[id]);
     if(existing.rowCount)await client.query(`UPDATE ${destination} SET name=$2,moved_at=NULL WHERE id=$1`,[id,name]);
     else await client.query(`INSERT INTO ${destination}(id,name,created_at,created_by,moved_at) VALUES($1,$2,$3,$4,NULL)`,[id,name,Date.now(),actor]);
-    await client.query(`UPDATE ${source} SET moved_at=$2 WHERE id=$1`,[id,Date.now()]);
+    const eventAt=Date.now();
+    if(source==='students')await archiveStudent(database(client),id,name,actor,eventAt);
+    await client.query(`UPDATE ${source} SET moved_at=$2 WHERE id=$1`,[id,eventAt]);
     await client.query('COMMIT');return {id,name};
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }

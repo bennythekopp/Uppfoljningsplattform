@@ -11,6 +11,7 @@ export async function loadKPTemplate(kind:KPKind,connection=db):Promise<KPMoment
 }
 export function validKPData(data:unknown,template:KPMoment[]):data is KPData{
  if(!data||typeof data!=='object'||Array.isArray(data))return false;const d=data as KPData;
+ if(d.outcome!==undefined&&!['','approved','requires_completion'].includes(d.outcome))return false;
  if(typeof d.date!=='string'||d.date.length>10||d.date!==''&&(!/^\d{4}-\d{2}-\d{2}$/.test(d.date)||!Number.isFinite(Date.parse(d.date)))||typeof d.assessor!=='string'||d.assessor.length>120||d.examPercent!==null&&(typeof d.examPercent!=='number'||!Number.isFinite(d.examPercent)||d.examPercent<0||d.examPercent>100)||!d.answers||typeof d.answers!=='object'||Array.isArray(d.answers)||Object.keys(d.answers).length>1000)return false;
  for(const [id,a] of Object.entries(d.answers)){const m=template.find(m=>m.id===id);if(!m||!a||typeof a!=='object'||Array.isArray(a)||!['','green','yellow','red'].includes(a.level)||typeof a.comment!=='string'||a.comment.length>3000||!Array.isArray(a.checked)||new Set(a.checked).size!==a.checked.length||a.checked.some(id=>typeof id!=='string'||!m.children.some(c=>c.id===id)))return false}return true;
 }

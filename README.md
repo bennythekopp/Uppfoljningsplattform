@@ -173,7 +173,7 @@ Utskriftsknapparna hämtar aktuell sparad historik innan utskrift. Även utskrif
 
 Kör **0015_student_kp.sql efter 0014_persistent_followup_drafts.sql** innan denna version används. Alla tidigare migrationer finns med. Netlify Database tillämpar normalt nya migrationer vid publicering; på separat PostgreSQL körs filerna i nummerordning.
 
-KP1 och KP2 öppnas från de två små knapparna ovanför Övrigt på elevsidan. Knapparna har en grön prick för en helt sparad bedömning utan anmärkning och en röd prick om ett sparat huvudmoment har anmärkning eller kräver komplettering. Saknad eller pågående bedömning visas neutralt. Elevöversikten följer personalöversiktens layout och har två separata statusar, KP1 och KP2.
+KP1 och KP2 öppnas från de två små knapparna ovanför Övrigt på elevsidan. Knapparna har en grön prick för det sparade slutresultatet Godkänd och en röd prick för Komplettering krävs. Slutresultatet väljs separat längst ner i formuläret. Saknad eller pågående bedömning visas neutralt. Elevöversikten följer personalöversiktens layout och har två separata statusar, KP1 och KP2.
 
 Administratör och Instruktör kan göra bedömningen. Chef kan läsa hela elevsidan, inklusive KP1/KP2, alla delmoment, valda bedömningar, kommentarer, bedömare och provresultat, samt skriva ut sparade protokoll. Chef kan inte ändra några uppgifter. Handledare har kvar vanlig elevbedömning men ser inte KP1/KP2, och nekas åtkomst till deras server-API.
 
@@ -182,3 +182,15 @@ Underlagen är hämtade från de bifogade KP-protokollen: KP1 har sex huvudmomen
 Instruktörspanelen har underlagen KP1 och KP2 där Instruktör och Administratör kan lägga till, redigera och ta bort huvudmoment och delmoment. När moment tas bort försvinner de från det aktuella formuläret; senast sparade protokolls utskriftsunderlag behålls med sin momentindelning. Elever som flyttas till Personal behåller sina KP-bedömningar om de flyttas tillbaka. Permanent borttagning av personen tar även bort KP-bedömningarna.
 
 Pågående arbete sparas automatiskt i databasen per elev och kontrollpunkt. Det återställs efter sidbyte, omladdning och ny inloggning. **Spara bedömning** sparar ett komplett aktuellt protokoll och uppdaterar resultatstatusen. KP1/KP2 har ingen årsvis nollställning. Utskriftsknappen använder senast sparade protokoll, med bedömning, kommentar, avprickningslista och provresultat, utan momentbeskrivningar. Spara pågående ändringar innan utskrift. Vid samtidiga ändringar stoppar versionskontrollen äldre skrivningar; kopiera eventuella lokala ändringar innan omladdning. Vid nätfel visas ett fel, Försök igen kan användas och utloggning stoppas tills arbetet nått databasen.
+
+### Slutresultat och elevhistorik på Personal
+
+Kör **0016_student_protocol_history.sql efter 0015_student_kp.sql** innan denna uppdatering används.
+
+KP1 och KP2 har knapparna **Godkänd** och **Komplettering krävs** längst ner, med exakt samma stil och valbeteende som individuell uppföljning. Det valda slutresultatet sparas tillsammans med formuläret och visas på KP-utskriften samt den samlade elevutskriften. Momentens tre bedömningsval finns kvar. Ett äldre KP-protokoll utan separat slutresultat visar sitt tidigare sammanvägda resultat tills det ändras och sparas med de nya valen. Ett protokoll utan beslut markeras Ej beslutad; inget protokoll markeras Ej bedömd.
+
+Vid flytt från Elever till Personal sparas daterade kopior av elevens bedömningsstöd och befintliga KP1/KP2-protokoll i samma databastransaktion som flytten. Om arkivering misslyckas utförs inte flytten. **Personal → aktuell person → Elevhistorik** öppnar en separat popup med filter Alla, Elevbedömning, KP1 och KP2. Kopiorna går att läsa och skriva ut. Den vanliga historiken för Operativ och Simulator finns kvar separat.
+
+Elevbedömningens arkivkopia innehåller alla då aktuella moment i System E2/System M/Övrigt, färgnivåer, bedömare och samtliga aktiva kommentarsloggar, samt sparade KP-resultat. KP-kopior innehåller bedömare, datum, provresultat, huvudmomentens bedömningar/kommentarer och delmomentens avprickningar. Sparade momentbeskrivningar läggs inte till i utskrifterna. Senare redigering eller borttagning av underlag eller kommentarer ändrar inte redan arkiverade kopior. Flytt tillbaka till Elever bevarar historiken; en senare ny flytt till Personal skapar nya daterade kopior. Permanent borttagning av personen raderar även arkivkopiorna.
+
+Om personen flyttades före denna uppdatering skapas historikposterna första gången Elevhistorik öppnas, från de elevuppgifter och KP-protokoll som fortfarande finns i databasen. Det går inte att rekonstruera uppgifter som redan tagits bort före arkiveringen. Senast sparade KP-protokoll arkiveras; om inget sparat protokoll finns bevaras det pågående formuläret med då aktuellt underlag och märks som pågående.
