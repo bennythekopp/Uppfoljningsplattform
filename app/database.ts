@@ -1,5 +1,14 @@
 import 'server-only';
 import pg from 'pg';
+import {AsyncLocalStorage} from 'node:async_hooks';
+const transactionContext=new AsyncLocalStorage<pg.PoolClient>();
+async function transactionClient(){return transactionContext.getStore()||await getPool().connect()}
+export async function databaseTransaction<T>(work:()=>Promise<T>){
+ if(transactionContext.getStore())return work();
+ const client=await getPool().connect();
+ const nested={query:((sql:unknown,...args:unknown[])=>typeof sql==='string'&&/^(BEGIN|COMMIT|ROLLBACK)$/.test(sql)?Promise.resolve({rows:[],rowCount:0}):client.query(sql as string,...args as [unknown[]])) as pg.PoolClient['query'],release:()=>{}} as pg.PoolClient;
+ try{await client.query('BEGIN');const result=await transactionContext.run(nested,work);await client.query('COMMIT');return result}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
 import {archiveStudent} from './student-archive-data';
 
 // Netlify Database provides NETLIFY_DB_URL to build and function runtimes.
@@ -15,7 +24,7 @@ function getPool() {
   return pool;
 }
 export async function removePerson(id:string,source:'students'|'personnel') {
-  const client=await getPool().connect();
+  const client=await transactionClient();
   try {
     await client.query('BEGIN');
     const exists=await client.query(`SELECT id FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
@@ -32,7 +41,7 @@ export async function removePerson(id:string,source:'students'|'personnel') {
   } finally { client.release(); }
 }
 export async function renamePerson(id:string,source:'students'|'personnel',name:string) {
-  const client=await getPool().connect();
+  const client=await transactionClient();
   try {
     await client.query('BEGIN');
     const found=await client.query(`SELECT id FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
@@ -44,7 +53,7 @@ export async function renamePerson(id:string,source:'students'|'personnel',name:
 }
 export async function movePerson(id:string,source:'students'|'personnel',actor:string) {
   const destination=source==='students'?'personnel':'students';
-  const client=await getPool().connect();
+  const client=await transactionClient();
   try{
     await client.query('BEGIN');
     const found=await client.query(`SELECT id,name FROM ${source} WHERE id=$1 AND moved_at IS NULL FOR UPDATE`,[id]);
@@ -60,7 +69,7 @@ export async function movePerson(id:string,source:'students'|'personnel',actor:s
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 export async function removeMoment(id:number,deletedBy:string) {
-  const client=await getPool().connect();
+  const client=await transactionClient();
   try {
     await client.query('BEGIN');
     if(id>=1000000){
@@ -100,16 +109,16 @@ function database(executor: Pick<pg.Pool,'query'> | pg.PoolClient){
   }
  };
 }
-export const db=database({query:(...args:Parameters<pg.Pool['query']>)=>getPool().query(...args)} as Pick<pg.Pool,'query'>);
+export const db=database({query:(...args:Parameters<pg.Pool['query']>)=>(transactionContext.getStore()||getPool()).query(...args)} as Pick<pg.Pool,'query'>);
 export async function followupTransaction<T>(personId:string,kind:string,work:(connection:ReturnType<typeof database>)=>Promise<T>):Promise<T>{
- const client=await getPool().connect();
+ const client=await transactionClient();
  try{await client.query('BEGIN');await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify([personId,kind])]);const result=await work(database(client));await client.query('COMMIT');return result}
  catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
 export type SimulatorChildInput={id?:string,title:string,description:string,maxScore:number};
 export async function saveSimulatorGroup(input:{id?:string,title:string,description:string,children:SimulatorChildInput[]},actor:string){
- const client=await getPool().connect();
+ const client=await transactionClient();
  try{
   await client.query('BEGIN');const now=Date.now(),id=input.id||'sim-group-'+crypto.randomUUID();
   if(input.id){const found=await client.query('SELECT id FROM iu_simulator_groups WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[id]);if(!found.rowCount){await client.query('ROLLBACK');return null}}
@@ -129,14 +138,14 @@ export async function saveSimulatorGroup(input:{id?:string,title:string,descript
  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 export async function deleteSimulatorGroup(id:string,actor:string){
- const client=await getPool().connect();try{
+ const client=await transactionClient();try{
   await client.query('BEGIN');const found=await client.query('SELECT id FROM iu_simulator_groups WHERE id=$1 AND deleted_at IS NULL FOR UPDATE',[id]);if(!found.rowCount){await client.query('ROLLBACK');return false}
   const now=Date.now();await client.query('UPDATE iu_simulator_groups SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE id=$1',[id,now,actor]);await client.query('UPDATE iu_moments SET deleted_at=$2,updated_at=$2,updated_by=$3 WHERE simulator_group_id=$1 AND deleted_at IS NULL',[id,now,actor]);await client.query('COMMIT');return true;
  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
 export async function moveOperationalCategory(id:string,direction:'up'|'down',actor:string){
- const client=await getPool().connect();
+ const client=await transactionClient();
  try{
   await client.query('BEGIN');
   // Serialize moves and category mutations before reading the current order.

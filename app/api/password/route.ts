@@ -1,9 +1,10 @@
+import {auditMutation} from '../../activity-log';
 import { cookies } from 'next/headers';
 import { db } from '../../database';
 import { currentUser,error,verifyPassword,passwordHash,randomToken,sha256 } from '../../auth';
 export const dynamic='force-dynamic';
 
-export async function PUT(req:Request){try{
+async function PUTHandler(req:Request){try{
   const user=await currentUser();
   if(!user)return error('Du behöver logga in',401);
   const {currentPassword,newPassword}=await req.json() as {currentPassword:unknown,newPassword:unknown};
@@ -16,3 +17,5 @@ export async function PUT(req:Request){try{
   if(token)await db.prepare('DELETE FROM sessions WHERE user_email=? AND token_hash<>?').bind(user.email,await sha256(token)).run();
   return Response.json({ok:true});
 }catch{return error('Kunde inte ändra lösenordet',503)}}
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Lösenord');

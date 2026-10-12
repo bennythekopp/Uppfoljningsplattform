@@ -1,3 +1,4 @@
+import {auditMutation} from '../../../activity-log';
 import {currentUser,error} from '../../../auth';
 import {db,followupTransaction} from '../../../database';
 import {canReadKP,canEditKP,validKPKind,loadKPTemplate,validKPData,cleanKPData} from '../../../kp-data';
@@ -9,8 +10,8 @@ export async function GET(req:Request){try{const u=await currentUser();if(!u||!c
  const template=await loadKPTemplate(kind);const record=await db.prepare('SELECT a.data,a.saved_data AS savedData,a.is_draft AS isDraft,a.revision,a.updated_at AS updatedAt,COALESCE(u.name,a.updated_by) AS updatedByName FROM student_kp_assessments a LEFT JOIN users u ON u.email=a.updated_by WHERE student_id=? AND kind=?').bind(studentId,kind).first<KPRecord>();if(record)record.data=cleanKPData(record.data,template);
  const {results:assessors}=await db.prepare("SELECT name FROM users WHERE disabled_at IS NULL AND role IN ('Administratör','Instruktör') ORDER BY name COLLATE NOCASE").all();return Response.json({template,record,assessors});
 }catch{return error('Kunde inte läsa KP-bedömningen',503)}}
-export async function PUT(req:Request){return write(req,true)}
-export async function POST(req:Request){return write(req,false)}
+async function PUTHandler(req:Request){return write(req,true)}
+async function POSTHandler(req:Request){return write(req,false)}
 async function write(req:Request,isDraft:boolean){try{const u=await currentUser();if(!u||!canEditKP(u.role))return error('Behörighet saknas',403);const {studentId,kind,revision,data}=await req.json();if(typeof studentId!=='string'||!studentId||!validKPKind(kind)||!Number.isSafeInteger(revision)||revision<0)return error('Ogiltig bedömning',400);
  return await followupTransaction('kp-template',kind,async connection=>{if(!await connection.prepare('SELECT id FROM students WHERE id=? AND moved_at IS NULL').bind(studentId).first())return error('Eleven finns inte',404);const previous=await connection.prepare('SELECT data,saved_data AS savedData,is_draft AS isDraft,revision FROM student_kp_assessments WHERE student_id=? AND kind=?').bind(studentId,kind).first<KPRecord>();if((previous?.revision||0)!==revision)return error('Bedömningen har ändrats av någon annan. Kopiera dina ändringar och ladda sedan om sidan.',409);
  const template=await loadKPTemplate(kind,connection);if(!validKPData(data,template))return error('Ogiltiga bedömningar eller provresultat. Ange 0–100 procent.',400);
@@ -19,3 +20,10 @@ async function write(req:Request,isDraft:boolean){try{const u=await currentUser(
  const sanitized:KPData={outcome:data.outcome||'',date:data.date,assessor:data.assessor,examPercent:data.examPercent,answers:Object.fromEntries(Object.entries(data.answers).map(([id,a])=>[id,{level:a.level,comment:a.comment,checked:a.checked}]))};const savedData=isDraft?previous?.savedData||null:{...sanitized,template};const now=Date.now();
  await connection.prepare('INSERT INTO student_kp_assessments(student_id,kind,data,saved_data,is_draft,revision,updated_at,updated_by) VALUES(?,?,?::jsonb,?::jsonb,?,?,?,?) ON CONFLICT(student_id,kind) DO UPDATE SET data=EXCLUDED.data,saved_data=EXCLUDED.saved_data,is_draft=EXCLUDED.is_draft,revision=EXCLUDED.revision,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by').bind(studentId,kind,JSON.stringify(sanitized),savedData?JSON.stringify(savedData):null,isDraft,revision+1,now,u.email).run();const record:KPRecord={data:sanitized,savedData,isDraft,revision:revision+1,updatedAt:now,updatedByName:u.name};return Response.json({...record,status:kpStatus(record)});
  });}catch{return error('Kunde inte spara KP-bedömningen',503)}}
+async function DELETEHandler(req:Request){try{const u=await currentUser();if(!u||!canEditKP(u.role))return error('Behörighet saknas',403);const {studentId,kind,revision}=await req.json();if(typeof studentId!=='string'||!validKPKind(kind)||!Number.isSafeInteger(revision)||revision<0)return error('Ogiltig bedömning',400);return await followupTransaction('kp-template',kind,async c=>{if(!await c.prepare('SELECT id FROM students WHERE id=? AND moved_at IS NULL FOR UPDATE').bind(studentId).first())return error('Eleven finns inte',404);const row=await c.prepare('SELECT revision FROM student_kp_assessments WHERE student_id=? AND kind=?').bind(studentId,kind).first<{revision:number}>();if((row?.revision||0)!==revision)return error('Bedömningen har ändrats av någon annan. Ladda om sidan.',409);const data={outcome:'',date:'',assessor:'',examPercent:null,answers:{}};await c.prepare('INSERT INTO student_kp_assessments(student_id,kind,data,saved_data,is_draft,revision,updated_at,updated_by) VALUES(?,?,?::jsonb,NULL,false,?,?,?) ON CONFLICT(student_id,kind) DO UPDATE SET data=EXCLUDED.data,saved_data=NULL,is_draft=false,revision=EXCLUDED.revision,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by').bind(studentId,kind,JSON.stringify(data),revision+1,Date.now(),u.email).run();return Response.json({data,savedData:null,isDraft:false,revision:revision+1,status:'none'})})}catch{return error('Kunde inte ta bort bedömningen',503)}}
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'KP');
+
+export const POST=(req:Request)=>auditMutation(req,POSTHandler,'KP');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'KP');

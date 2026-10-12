@@ -1,3 +1,4 @@
+import {auditMutation} from '../../../activity-log';
 import { db } from '../../../database';
 import { currentUser,error } from '../../../auth';
 import { loadIUMoments,loadSimulatorGroups,loadOperationalCategories } from '../../../iu-data';
@@ -17,6 +18,12 @@ async function save(req:Request,editing:boolean){try{
  else await db.prepare('INSERT INTO iu_moments(id,kind,section,title,description,max_score,operational_category_id,position,updated_at,updated_by) SELECT ?,?,?,?,?,?,?,COALESCE(MAX(position),0)+1,?,? FROM iu_moments').bind(momentId,kind,section.trim(),title.trim(),description.trim(),kind==='simulator'?maxScore:null,categoryId,Date.now(),user.email).run();
  return Response.json({id:momentId,kind,section:section.trim(),title:title.trim(),description:description.trim(),maxScore:kind==='simulator'?maxScore:null,operationalCategoryId:categoryId});
 }catch{return error('Kunde inte spara IU-momentet',503)}}
-export async function POST(req:Request){return save(req,false)}
-export async function PUT(req:Request){return save(req,true)}
-export async function DELETE(req:Request){try{const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);const result=await db.prepare('UPDATE iu_moments SET deleted_at=?,updated_at=?,updated_by=? WHERE id=? AND kind=\'op\' AND deleted_at IS NULL').bind(Date.now(),Date.now(),user.email,id).run();if(!result.meta.changes)return error('Momentet finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort IU-momentet',503)}}
+async function POSTHandler(req:Request){return save(req,false)}
+async function PUTHandler(req:Request){return save(req,true)}
+async function DELETEHandler(req:Request){try{const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);const result=await db.prepare('UPDATE iu_moments SET deleted_at=?,updated_at=?,updated_by=? WHERE id=? AND kind=\'op\' AND deleted_at IS NULL').bind(Date.now(),Date.now(),user.email,id).run();if(!result.meta.changes)return error('Momentet finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort IU-momentet',503)}}
+
+export const POST=(req:Request)=>auditMutation(req,POSTHandler,'IU-underlag');
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'IU-underlag');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'IU-underlag');

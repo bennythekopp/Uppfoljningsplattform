@@ -1,3 +1,4 @@
+import {auditMutation} from '../../activity-log';
 import { db,removePerson,renamePerson } from '../../database';
 import { currentUser,error } from '../../auth';
 import {stockholmYear} from '../../followup-status';
@@ -9,6 +10,12 @@ export async function GET(){try{
  const {results:drafts}=await db.prepare('SELECT personnel_id AS personId,kind,draft_year AS year FROM personnel_followup_drafts WHERE form IS NOT NULL').all<{personId:string,kind:string,year:string}>();
  return Response.json(results.map(person=>({...person,statusYear:year,opDraftYear:drafts.find(d=>d.personId===person.id&&d.kind==='op')?.year,simulatorDraftYear:drafts.find(d=>d.personId===person.id&&d.kind==='simulator')?.year}))); 
  }catch{return error('Kunde inte läsa personal',503)}}
-export async function POST(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {name}=await req.json();if(typeof name!=='string'||!name.trim()||name.length>120)return error('Ange namn',400);const id=crypto.randomUUID(),now=Date.now();await db.prepare('INSERT INTO personnel(id,name,created_at,created_by) VALUES(?,?,?,?)').bind(id,name.trim(),now,u.email).run();return Response.json({id,name:name.trim(),createdAt:now})}catch{return error('Kunde inte spara personal',503)}}
-export async function PUT(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id,name}=await req.json() as {id:unknown,name:unknown};if(typeof id!=='string'||!id||typeof name!=='string'||!name.trim()||name.length>120)return error('Ogiltigt namn',400);if(!await renamePerson(id,'personnel',name.trim()))return error('Personen finns inte',404);return Response.json({id,name:name.trim()})}catch{return error('Kunde inte ändra namnet',503)}}
-export async function DELETE(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Personal saknas',400);if(!await removePerson(id,'personnel'))return error('Personal finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort personal',503)}}
+async function POSTHandler(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {name}=await req.json();if(typeof name!=='string'||!name.trim()||name.length>120)return error('Ange namn',400);const id=crypto.randomUUID(),now=Date.now();await db.prepare('INSERT INTO personnel(id,name,created_at,created_by) VALUES(?,?,?,?)').bind(id,name.trim(),now,u.email).run();return Response.json({id,name:name.trim(),createdAt:now})}catch{return error('Kunde inte spara personal',503)}}
+async function PUTHandler(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id,name}=await req.json() as {id:unknown,name:unknown};if(typeof id!=='string'||!id||typeof name!=='string'||!name.trim()||name.length>120)return error('Ogiltigt namn',400);if(!await renamePerson(id,'personnel',name.trim()))return error('Personen finns inte',404);return Response.json({id,name:name.trim()})}catch{return error('Kunde inte ändra namnet',503)}}
+async function DELETEHandler(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Personal saknas',400);if(!await removePerson(id,'personnel'))return error('Personal finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort personal',503)}}
+
+export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Personal');
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Personal');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Personal');

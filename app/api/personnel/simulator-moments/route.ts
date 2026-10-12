@@ -1,3 +1,4 @@
+import {auditMutation} from '../../../activity-log';
 import { currentUser,error } from '../../../auth';
 import { saveSimulatorGroup,deleteSimulatorGroup,type SimulatorChildInput } from '../../../database';
 export const dynamic='force-dynamic';
@@ -13,6 +14,12 @@ async function save(req:Request,editing:boolean){try{
  const result=await saveSimulatorGroup({...(editing?{id:input.id}:{}),title:input.title.trim(),description:input.description.trim(),children},user.email);
  return result?Response.json(result):error('Momentet finns inte',404);
 }catch{return error('Kunde inte spara momentet. Kontrollera delmomenten och försök igen.',400)}}
-export async function POST(req:Request){return save(req,false)}
-export async function PUT(req:Request){return save(req,true)}
-export async function DELETE(req:Request){try{const user=await currentUser();if(!user||!['Administratör','Instruktör'].includes(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);return await deleteSimulatorGroup(id,user.email)?Response.json({ok:true}):error('Momentet finns inte',404)}catch{return error('Kunde inte ta bort momentet',503)}}
+async function POSTHandler(req:Request){return save(req,false)}
+async function PUTHandler(req:Request){return save(req,true)}
+async function DELETEHandler(req:Request){try{const user=await currentUser();if(!user||!['Administratör','Instruktör'].includes(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);return await deleteSimulatorGroup(id,user.email)?Response.json({ok:true}):error('Momentet finns inte',404)}catch{return error('Kunde inte ta bort momentet',503)}}
+
+export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Simulatorunderlag');
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Simulatorunderlag');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Simulatorunderlag');

@@ -1,3 +1,4 @@
+import {auditMutation} from '../../../activity-log';
 import {db,followupTransaction} from '../../../database';
 import {currentUser,error} from '../../../auth';
 import {loadIUTemplate} from '../../../iu-data';
@@ -36,5 +37,9 @@ async function mutate(req:Request,discard:boolean){try{
  return Response.json({revision:nextRevision,year});
  });
 }catch{return error('Kunde inte spara pågående uppföljning',503)}}
-export async function PUT(req:Request){return mutate(req,false)}
-export async function DELETE(req:Request){return mutate(req,true)}
+async function PUTHandler(req:Request){return mutate(req,false)}
+async function DELETEHandler(req:Request){return mutate(req,true)}
+
+export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Utkast');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Utkast');

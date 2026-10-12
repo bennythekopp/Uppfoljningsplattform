@@ -1,3 +1,4 @@
+import {auditMutation} from '../../../activity-log';
 import {currentUser,error} from '../../../auth';
 import {followupTransaction} from '../../../database';
 import {canReadKP,canEditKP} from '../../../kp-data';
@@ -5,10 +6,14 @@ import {loadExamTemplate} from '../../../exam-data';
 import type {ExamMoment} from '../../../exam-types';
 export const dynamic='force-dynamic';
 export async function GET(req:Request){try{const u=await currentUser();if(!u||!canReadKP(u.role))return error('Behörighet saknas',403);const t=await loadExamTemplate(),kind=new URL(req.url).searchParams.get('kind');return kind?Response.json(t.find(g=>g.id===kind)?.moments||[]):Response.json(t)}catch{return error('Kunde inte läsa underlaget',503)}}
-export async function POST(req:Request){return change(req,false)}
-export async function DELETE(req:Request){return change(req,true)}
+async function POSTHandler(req:Request){return change(req,false)}
+async function DELETEHandler(req:Request){return change(req,true)}
 async function change(req:Request,remove:boolean){try{const u=await currentUser();if(!u||!canEditKP(u.role))return error('Behörighet saknas',403);const input=await req.json();return await followupTransaction('exam','template',async c=>{const groups=await loadExamTemplate(c);
  if(input.type==='scenario'){const old=groups.find(g=>g.id===input.id&&g.part==='simulator');if(input.id&&!old)return error('Scenariot finns inte',404);if(remove){if(!old)return error('Välj scenario',400);await c.prepare('UPDATE exam_templates SET deleted_at=? WHERE id=?').bind(Date.now(),old.id).run();return Response.json({ok:true})}if(typeof input.title!=='string'||!input.title.trim()||input.title.length>300)return error('Ange scenariots namn',400);const id=old?.id||'scenario-'+crypto.randomUUID();if(old)await c.prepare('UPDATE exam_templates SET title=? WHERE id=?').bind(input.title.trim(),id).run();else await c.prepare("INSERT INTO exam_templates(id,part,title,moments,position) SELECT ?,'simulator',?,'[]'::jsonb,COALESCE(MAX(position),0)+1 FROM exam_templates").bind(id,input.title.trim()).run();return Response.json({id})}
  const group=groups.find(g=>g.id===input.kind);if(!group)return error('Välj Operativ eller ett scenario',400);const old=group.moments.find(m=>m.id===input.id);if(input.id&&!old)return error('Momentet finns inte',404);let moments:ExamMoment[];
  if(remove){if(!old)return error('Moment saknas',400);moments=group.moments.filter(m=>m.id!==old.id)}else{const {title,description,children}=input;if(typeof title!=='string'||!title.trim()||title.length>300||typeof description!=='string'||description.length>5000||!Array.isArray(children)||children.length>200)return error('Kontrollera momentets namn och delmoment.',400);const seen=new Set();for(const child of children){if(!child||typeof child.title!=='string'||!child.title.trim()||child.title.length>2000||child.id!==undefined&&(!old?.children.some(c=>c.id===child.id)||seen.has(child.id)))return error('Ogiltigt delmoment',400);if(child.id)seen.add(child.id)}const moment:ExamMoment={id:old?.id||'exam-'+crypto.randomUUID(),kind:group.id,title:title.trim(),description:description.trim(),position:old?.position||Math.max(0,...group.moments.map(m=>m.position))+1,children:children.map((child,i)=>({id:child.id||'exam-sub-'+crypto.randomUUID(),title:child.title.trim(),position:i+1}))};moments=old?group.moments.map(m=>m.id===old.id?moment:m):[...group.moments,moment]}
  await c.prepare('UPDATE exam_templates SET moments=?::jsonb WHERE id=?').bind(JSON.stringify(moments),group.id).run();return Response.json({ok:true});})}catch{return error('Kunde inte spara underlaget',503)}}
+
+export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Examensunderlag');
+
+export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Examensunderlag');

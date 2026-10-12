@@ -207,3 +207,20 @@ Simulatorn innehåller Scenario 1 (åtta moment) och Scenario 2 (fem moment) fr�
 I **Instruktörspanelen → Bedömningsunderlag** är innehållet uppdelat i **Elever** (System E2, System M, Övrigt, KP1, KP2, Examen) och **Personal** (Operativ IU, Simulator IU). Under Examen kan Instruktör och Administratör redigera Operativs moment samt lägga till, redigera och ta bort simulatorns scenarier, huvudmoment och delmoment. Chef kan läsa alla elevens examensdelar och välja scenario för visning samt skriva ut sparat protokoll, men kan inte ändra innehåll. Handledare har kvar vanlig elevbedömning och saknar åtkomst till Examen. Servern kontrollerar behörigheterna och stoppar samtidiga skrivningar med föråldrad version.
 
 **Skriv ut** på Examen ger ett sammanhållet A4-protokoll med elevnamn, gemensamt slutresultat, alla genomförandeloggar, Operativ samt genomförda/bedömda simulatorunderlag. Delmoment, bedömningar och kommentarer ingår; momentbeskrivningar utelämnas. Vid flytt till Personal arkiveras hela senast sparade examensprotokollet i **Elevhistorik → Examen** i samma transaktion som flytten. Om inget formellt sparat protokoll finns arkiveras det pågående formuläret. Senare ändringar i scenarier och moment ändrar inte den arkiverade kopian, som kan läsas och skrivas ut.
+
+### Administratörsverktyg, aktivitetslogg och borttagning av bedömningar
+
+Kör **0018_administration_audit.sql efter 0017_student_examination.sql** innan de uppdaterade serverfilerna publiceras. Migrationen lägger till aktivitetsloggen och stöd för borttagna arkivprotokoll. Den ska bara köras en gång.
+
+Vänstermenyn har **Instruktörspanel → Översikt / Bedömningsunderlag**. Alla underlagskategorier väljs inne på Bedömningsunderlag under Elever eller Personal. **Administratörsverktyg** är ett eget huvudval endast för Administratör, utan undermenyer. Inne på sidan finns flikarna **Användare** och **Aktivitetslogg**. Användare går att söka och hantera som tidigare.
+
+Aktivitetsloggen visar lyckade ändringar av användare, personer, underlag, moment, scenarier, bedömningar, utkast, kommentarer och arkivprotokoll, samt lösenordsbyte, inloggning och utloggning. Den visar svensk tid, namn och roll vid händelsen samt vad som berördes. Namn i äldre loggposter bevaras när konton ändras eller tas bort. Loggen har sökning, filter och sidindelning. Lösenord, sessionsnycklar, fullständiga formulär och kommentarernas innehåll kopieras inte till loggen. Den börjar registrera från denna uppdatering; tidigare händelser rekonstrueras inte. Vanlig sidvisning och utskrift registreras inte. Servern nekar övriga roller åtkomst till loggen. Ändringar och loggposter sparas i samma databastransaktion; om loggningen misslyckas återställs ändringen. Inloggning registreras efter lyckad lösenordskontroll; misslyckade försök behåller befintligt spärrskydd.
+
+Instruktör och Administratör kan **Ta bort bedömning** med bekräftelseruta:
+- System E2/System M/Övrigt: aktuell fliks bedömningar och kommentarsloggar, eller ett enskilt moments bedömning i dess öppnade ruta.
+- KP1/KP2: hela kontrollpunktens bedömning, kommentarer, provresultat och avprickningar.
+- Examen: hela gemensamma bedömningen, inklusive Operativ, Simulator och genomförandeloggar.
+- Personal Operativ/Simulator: aktuellt utkast eller öppnat protokoll, samt ett valt äldre protokoll via Historik.
+- Elevhistorik på Personal: en vald arkivkopia; övriga arkivkopior påverkas inte.
+
+Borttagning raderar inte personen eller bedömningsunderlagen. Chef och Handledare saknar dessa borttagningsknappar och nekas motsvarande serveranrop. Bedömningar i KP/Examen och IU har fortsatt versionskontroll så att ett gammalt öppet formulär inte kan återställa en borttagen bedömning med en äldre skrivning. Arkivprotokoll markeras borttagna och döljs; de återskapas inte när Elevhistorik öppnas igen.

@@ -27,6 +27,7 @@ export async function POST(req:Request){try{
  // Recheck user/password to prevent a session being created after account revocation.
  const inserted=await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at) SELECT ?,email,?,? FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=?').bind(await sha256(token),expiresAt,now,row.email,verifiedHash).run();
  if(!inserted.meta.changes)return error('Logga in igen',401);
+ await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),now,row.email,row.name,row.role,'Inloggad','Inloggning',row.name).run();
  (await cookies()).set('tc_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:SESSION_LIFETIME_MS/1000});
  return Response.json({name:row.name,role:row.role,idleExpiresAt:now+IDLE_TIMEOUT_MS,expiresAt});
  }catch{return error('Inloggningen kunde inte slutföras',503)}}
