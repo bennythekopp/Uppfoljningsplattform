@@ -1,4 +1,5 @@
 import 'server-only';
+import {captureAssessment,completeRecovery} from './assessment-recovery';
 import base from './items.json';
 import {db,databaseTransaction} from './database';
 import {currentUser,error} from './auth';
@@ -24,8 +25,10 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  if(area==='Elevhistorik'&&typeof input.id==='string'){const old=await db.prepare('SELECT kind FROM personnel_student_archives WHERE id=?').bind(input.id).first<{kind:string}>();qualifier=old?.kind==='student'?'Elevbedömning':old?.kind||''}
  if(area==='Individuell uppföljning'&&typeof input.id==='string'){const old=await db.prepare('SELECT followup_date AS date FROM personnel_followups WHERE id=?').bind(input.id).first<{date:string}>();qualifier=old?.date||''}
  if(area==='Kommentarer'&&!target&&typeof input.id==='string'){const row=await db.prepare('SELECT s.name FROM comments c JOIN students s ON s.id=c.student_id WHERE c.id=?').bind(input.id).first<{name:string}>();target=row?.name||''}
+ const recovery=method==='DELETE'?await captureAssessment(area,input):null;
  const response=await handler(req);if(!response.ok)throw response;
  const output=await response.clone().json().catch(()=>({}));
+ const undo=await completeRecovery(recovery,output);
  let action=method==='DELETE'?'Borttaget':method==='POST'?(input.id?'Ändrat':'Skapat'):'Ändrat';
  if(area==='Användare')action=method==='DELETE'?'Användare borttagen':method==='POST'?'Användare skapad':'Användare ändrad';
  if(area==='Bedömning'||area==='KP'||area==='Examen'||area==='Individuell uppföljning')action=method==='DELETE'?'Bedömning borttagen':method==='PUT'?'Pågående bedömning ändrad':'Bedömning sparad';
@@ -38,8 +41,8 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  if(area==='Elevhistorik')action='Arkiverad bedömning borttagen';
  if(area.includes('underlag'))action=method==='DELETE'?'Underlag borttaget':method==='POST'&&!input.id?'Underlag skapat':'Underlag ändrat';
  const detail=[target||output.name||input.name||input.username||'',input.kind==='op'?'Operativ':input.kind==='simulator'?'Simulator':input.kind||input.category||'',input.title||'',qualifier,area==='Personflytt'?(input.source==='students'?'Elever → Personal':'Personal → Elever'):'',typeof input.itemId==='number'?'Moment '+input.itemId:''].filter(Boolean).join(' · ');
- await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),Date.now(),actor.email,actor.name,actor.role,action,area,String(detail||input.id||area).slice(0,1000)).run();
+ await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target,undo_payload) VALUES(?,?,?,?,?,?,?,?,?::jsonb)').bind(crypto.randomUUID(),Date.now(),actor.email,actor.name,actor.role,action,area,String(detail||input.id||area).slice(0,1000),undo?JSON.stringify(undo):null).run();
  return response;
  });
- }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdatering 0018 är körd.',503)}
+ }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0019 är körda.',503)}
 }

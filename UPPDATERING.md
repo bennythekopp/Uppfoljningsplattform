@@ -1,13 +1,14 @@
-# Uppdatering efter Examen-versionen
+# Uppdatering: återställning från aktivitetsloggen
 
-Detta paket innehåller bara ändrade och nya filer sedan senaste kompletta TC-Boden-Netlify-GitHub.zip med migration 0017. Det är inte en fristående installation.
+Paketet innehåller endast ändrade och nya filer sedan föregående uppdatering med Administratörsverktyg och migration 0018. Den uppdateringen måste redan finnas i projektet.
 
-1. Packa upp och lägg filerna i samma mappar i ditt befintliga GitHub-projekt. Ersätt motsvarande gamla filer och behåll resten av projektet.
-2. Kör netlify/database/migrations/0018_administration_audit.sql i den databas som webbplatsen använder, efter att migrationerna till och med 0017 är tillämpade. Kör inte om redan körda migrationer. Vid manuell körning kan hela 0018 köras som en transaktion (BEGIN före innehållet och COMMIT efter).
-3. Publicera det uppdaterade projektet via befintlig Netlify-anslutning.
-4. Logga in som Administratör: vänstermenyn ska visa Administratörsverktyg med två flikar inne på sidan, Användare och Aktivitetslogg. Instruktörspanelen har bara Översikt och Bedömningsunderlag.
-5. Prova att spara en bedömning och kontrollera att den registreras i Aktivitetslogg. Borttagning finns för Instruktör och Administratör och kräver bekräftelse.
+1. Kör netlify/database/migrations/0019_restore_assessments.sql efter 0018 i den databas som webbplatsen använder. Kör filen endast en gång. Vid manuell körning kan hela filen köras i en transaktion med BEGIN före och COMMIT efter innehållet.
+2. Lägg paketets filer i motsvarande mappar i GitHub-projektet och ersätt de gamla versionerna. Behåll alla övriga filer.
+3. Publicera via den befintliga Netlify-anslutningen.
+4. Administratörsverktyg → Aktivitetslogg: en återställningsbar borttagning får knappen Återställ. Bekräfta för att återställa bedömningen. Återställningen registreras i loggen.
 
-Aktivitetsloggen börjar samla händelser från denna uppdatering. Inga äldre händelser kan visas retroaktivt. Om meddelandet ”Kunde inte läsa Examen” fortfarande visas, kontrollera att 0017 är körd i rätt databas innan du kör 0018.
+Nya borttagningar får en återställningskopia. Tidigare fysiskt borttagna bedömningar utan kopia kan inte återställas. Äldre arkivprotokoll som fortfarande finns i databasen kan bli tillgängliga när migrationen hittar en säker koppling till loggposten.
 
-Bygge och TypeScript-kontroll samt tester av behörigheter, borttagning, samtidiga ändringar, loggning, historik och mobilbredd har körts före paketering. Se README.md för detaljer om funktionerna.
+Nyare bedömningar skrivs inte över. Personen och aktuella elevmoment måste fortfarande finnas kvar. Vid konflikt visas ett meddelande och inget återställs. Ursprungliga resultat, kommentarer och bedömare behålls vid lyckad återställning.
+
+Bygge, behörigheter, återställning av samtliga bedömningstyper, konflikter, versionskontroll och gemensam återställning vid loggningsfel har kontrollerats.
