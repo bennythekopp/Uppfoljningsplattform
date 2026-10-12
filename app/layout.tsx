@@ -3,6 +3,7 @@ import './globals.css';
 import './people.css';
 import './navigation.css';
 import './kp.css';
+import './exam.css';
 export const metadata:Metadata={
  title:'TC Boden | Bedömningsstöd',
  description:'Uppföljning av utbildning och bedömning per elev',
