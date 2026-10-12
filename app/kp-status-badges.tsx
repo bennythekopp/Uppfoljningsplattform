@@ -1,0 +1,2 @@
+import {kpStatusLabel,type KPStatusRow} from './kp-types';
+export default function KPStatusBadges({studentId,statuses}:{studentId:string,statuses:KPStatusRow[]}){return <span className="personnelstatuses" aria-label="KP-status">{(['KP1','KP2'] as const).map(kind=>{const status=statuses.find(s=>s.studentId===studentId&&s.kind===kind)?.status||'none';return <span className="personnelpartstatus" key={kind}><small>{kind}</small><span className={'personnelstatusbadge '+(status==='remark'?'requires_completion':status)}>{kpStatusLabel(status)}</span></span>})}</span>}

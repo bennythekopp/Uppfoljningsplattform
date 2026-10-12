@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './people.css';
 import './navigation.css';
+import './kp.css';
 export const metadata:Metadata={
  title:'TC Boden | Bedömningsstöd',
  description:'Uppföljning av utbildning och bedömning per elev',
