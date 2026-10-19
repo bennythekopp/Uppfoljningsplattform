@@ -10,11 +10,13 @@ export function paginateReport(report:HTMLElement){
   const children=Array.from(child.children) as HTMLElement[];
   if(child.matches('.printcategory,.personnelprintsection')&&children.length){
    const margin=win.getComputedStyle(child).marginTop;
+   let manualBreak=false;
    children.forEach((part,index)=>{
+    if(part.matches('[data-page-break]')||part.querySelector('[data-page-break]')){manualBreak=true;return}
     const wrapper=child.cloneNode(false) as HTMLElement;
     wrapper.style.setProperty('margin',index===0?`${margin} 0 0`:'0','important');
     wrapper.style.display='flow-root';wrapper.append(part.cloneNode(true));
-    blocks.push({element:wrapper,newPage:index===0&&win.getComputedStyle(child).breakBefore==='page',heading:/^H[1-6]$/.test(part.tagName)});
+    blocks.push({element:wrapper,newPage:manualBreak||index===0&&win.getComputedStyle(child).breakBefore==='page',heading:/^H[1-6]$/.test(part.tagName)||!!part.querySelector(':scope > h1,:scope > h2,:scope > h3')});manualBreak=false;
    });
   }else blocks.push({element:child.cloneNode(true) as HTMLElement,newPage:false,heading:/^H[1-6]$/.test(child.tagName)});
  }

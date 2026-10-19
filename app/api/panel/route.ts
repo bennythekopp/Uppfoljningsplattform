@@ -1,3 +1,4 @@
+import * as Y from 'yjs';
 import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
@@ -5,10 +6,10 @@ import {panelBody,panelLog,PanelError,short,staffList} from '../../panel-server'
 export const dynamic='force-dynamic';
 async function get(){const u=(await currentUser())!;const [items,documents,prefs,reads,users]=await Promise.all([
  db.prepare('SELECT id,kind,owner_email AS ownerEmail,data,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_items WHERE owner_email IS NULL OR owner_email=? ORDER BY updated_at DESC').bind(u.email).all(),
- db.prepare('SELECT id,title,epoch,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_documents WHERE deleted_at IS NULL ORDER BY updated_at DESC').all(),
+ db.prepare('SELECT id,title,state,epoch,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_documents WHERE deleted_at IS NULL ORDER BY updated_at DESC').all(),
  db.prepare('SELECT data,revision FROM panel_preferences WHERE user_email=?').bind(u.email).first<{data:unknown,revision:number}>(),
  db.prepare('SELECT notice_id AS noticeId,user_email AS userEmail FROM panel_notice_reads').all(),staffList()]);
- return Response.json({items:items.results,documents:documents.results,preferences:prefs?.data||{},preferenceRevision:prefs?.revision||0,reads:reads.results,users});}
+ return Response.json({items:items.results,documents:documents.results.map((r:any)=>{const d=new Y.Doc();try{Y.applyUpdate(d,Buffer.from(r.state,'base64'));const m=d.getMap('meta');const {state,...rest}=r;return {...rest,icon:m.get('icon'),iconColor:m.get('iconColor')}}finally{d.destroy()}}),preferences:prefs?.data||{},preferenceRevision:prefs?.revision||0,reads:reads.results,users});}
 async function mutate(req:Request){const u=(await currentUser())!,b=await panelBody(req,4000000);return databaseTransaction(async()=>{
  if(b.action==='preference'){
   if(!['layout','favorites','shortcuts','introduction'].includes(b.key))throw new PanelError('Ogiltig inställning');
@@ -35,7 +36,7 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
  if(['task','reminder'].includes(kind)){data.due=short(raw.due,30);if(data.due&&!/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(data.due))throw new PanelError('Ogiltigt datum');data.done=raw.done===true;data.assignee=short(raw.assignee);if(data.assignee&&!(await staffList()).some((s:any)=>s.email===data.assignee))throw new PanelError('Ansvarig måste vara instruktör eller administratör');data.priority=['normal','high'].includes(raw.priority)?raw.priority:'normal'}
  if(kind==='notice')data.important=raw.important===true;
  if(typeof raw.documentId==='string'&&raw.documentId){const doc=await db.prepare('SELECT id FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(raw.documentId).first();if(!doc)throw new PanelError('Dokumentet finns inte');data.documentId=raw.documentId}
- if(kind==='email-template'){data.to=short(raw.to,1000).replace(/[\r\n]/g,'');data.subject=short(raw.subject,1000).replace(/[\r\n]/g,'')}
+ if(kind==='email-template'){data.outlookKind=raw.outlookKind==='meeting'?'meeting':'mail';data.subject=short(raw.subject,1000).replace(/[\r\n]/g,'')}
  if(kind==='document-template'){
   if(raw.sourceDocumentId){const doc=await db.prepare('SELECT state FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(short(raw.sourceDocumentId)).first<{state:string}>();if(!doc)throw new PanelError('Välj ett dokument att använda som mall');data.state=doc.state}
   else if(old?.data.state)data.state=old.data.state;

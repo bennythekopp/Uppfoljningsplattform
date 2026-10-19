@@ -22,26 +22,30 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 - Dokument, uppgifter, mallar, anslag och introduktionens checklistesteg är gemensamma.
 - Layout, favoriter, snabbåtgärder, introduktionens avprickningar och påminnelser sparas per inloggat konto i databasen.
 - Skapa introduktionens steg via Introduktion → Nytt steg. Koppla vid behov ett dokument till varje steg. Nya användare har egna avprickningar.
-- Lägg till elever och personal med Lägg till person i instruktörspanelen eller via en personlig snabbåtgärd.
+- Lägg till elever och personal med Lägg till person på respektive översiktssida Elever eller Personal.
 - Outlook-kalendern, Formulär och Min arbetsyta ingår inte.
 
 ## Anpassa panelen
 
-Välj Anpassa panelen. Lägg till eller ta bort moduler, flytta med draghandtaget och ändra bredd/höjd med hörnhandtaget. Ändringarna visas direkt. Spara behåller layouten för ditt konto; Avbryt återgår till senast sparad layout. Bredd/höjd kan även anges med kontrollerna i varje modul och draghandtaget fungerar med piltangenter. Moduler kan upprepas. Upp till 40 moduler, 12 kolumner och 3–20 rader per modul stöds.
+Välj Anpassa panelen högst upp till höger. Modulrubrikerna öppnar respektive innehållslista. Lägg till eller ta bort moduler, flytta med draghandtaget och ändra bredd/höjd med hörnhandtaget. Ändringarna visas direkt. Spara behåller layouten för ditt konto; Avbryt återgår till senast sparad layout. Bredd/höjd kan även anges med kontrollerna i varje modul och draghandtaget fungerar med piltangenter. Moduler kan upprepas. Upp till 40 moduler, 12 kolumner och 3–20 rader per modul stöds.
 
 På mobilen visas modulerna under varandra i sparad ordning. Höjden kan ändras med pekskärmen; bredden anpassas till skärmen. Breddinställningen används på större skärmar. Dölj en modul genom krysset i redigeringsläget; det raderar inte modulens innehåll.
 
 ## Dokument
 
-Skapa dokument och öppna flera dokument i dokumentfliksraden. Varje dokument har egna innehållsflikar. Lägg till flikar med +, dubbelklicka för att byta namn, eller använd krysset för att ta bort en flik. Tidigare innehåll kan återfinnas i versionshistoriken.
+Skapa dokument och öppna flera dokument i dokumentfliksraden. Nya dokument startar med endast Översikt. Äldre dokument slås samman till Översikt vid första öppningen efter uppdateringen: text och kommentarer bevaras och en version sparas före sammanslagningen. Detta sker bara en gång; flikar du därefter själv lägger till behålls. Dokumentet öppnas alltid på Översikt om den finns. Lägg till flikar med +, dubbelklicka för att byta namn, eller använd krysset för att ta bort en flik. Tidigare innehåll kan återfinnas i versionshistoriken.
 
-Redigeraren har rubriker, stycken, teckensnitt, textstorlek/färg, justering, länkar, rasterbilder, redigerbara tabeller, listor och checklistor. Sidhuvud och sidfot anges ovanför och under dokumenttexten. Ångra/gör om gäller den aktuella dokumenttexten. Ordräknare och sök/ersätt finns också.
+Redigeraren har rubriker, stycken, teckensnitt, textstorlek/färg, bakgrundsfärg, genomstrykning, upphöjd/nedsänkt text, indrag, radavstånd, sidbrytning, specialtecken, justering, länkar, rasterbilder, redigerbara tabeller med cellfärg, sammanfogning och delning, listor och checklistor. Sidhuvud och sidfot anges ovanför och under dokumenttexten. Ångra/gör om gäller den aktuella dokumenttexten. Ordräknare och sök/ersätt finns också.
 
 Stavningskontroll är inställd på svenska och använder webbläsarens inbyggda stöd. Svenska måste vara aktiverat/installerat i webbläsaren eller på enheten; sidan skickar inte texten till en separat språktjänst.
 
 Automatisk sparning sker efter en kort skrivpaus. Yjs sammanfogar samtidiga textändringar. Öppna dokument hämtar andras ändringar ungefär varannan sekund, utan separat WebSocket-server. Närvaromarkeringarna visar vilka konton som nyligen haft dokumentet öppet. Det finns inga delade live-markörer. Användare behöver nätanslutning; detta är inte en fristående offline-redigerare.
 
 Osparade ändringar behålls i minnet om sparning misslyckas. Sidan varnar innan man lämnar webbläsaren och stoppar vanlig navigering/utloggning om dokumentet inte kan sparas. Ladda inte om vid sparfel innan texten har sparats eller exporterats. Knappen Spara lokal säkerhetskopia ger rådata för återhämtning; normal export ger Word/PDF. Lokala råkopior har ingen importknapp och kan återställas med teknisk hjälp.
+
+Dokumentikonen och dess färg kan ändras genom ikonen vid dokumentnamnet. Word, PDF, Skriv ut och Spara som mall ligger överst till höger på samma rad som Alla dokument. Krysset för ett öppet dokument visas vid hovring eller tangentbordsfokus; på pekskärm visas det på den aktiva dokumentfliken.
+
+Redigeraren är utökad men är inte en fullständig kopia av Google Docs. Bland annat saknas Google Docs tillägg, avancerade ekvationer, automatisk innehållsförteckning, avancerad sidlayout och fullständig Word-import.
 
 ## Kommentarer, förslag och historik
 
@@ -51,7 +55,7 @@ Automatiska historikversioner sparas vid redigering med ungefär fem minuters me
 
 ## Word, PDF och utskrift
 
-Exportknapparna sparar först och tar sedan med dokumentets ifyllda flikar, inklusive tabeller, listor och bilder. Word är en riktig `.docx`-fil och PDF laddas ned som en `.pdf`-fil. Skriv ut använder webbläsarens utskriftsdialog. Sidhuvud/sidfot blir upprepade Word-sidhuvuden/sidfötter; i PDF/utskrift visas de i dokumentets början/slut. Kommentarspanel och historik tas inte med. Exporten följer dokumentets innehåll; Word och webbläsare kan ha olika rad- och sidbrytningar.
+Exportknapparna sparar först och tar sedan med dokumentets ifyllda flikar, inklusive tabeller, listor och bilder. Word är en riktig `.docx`-fil och PDF laddas ned som en `.pdf`-fil. Skriv ut använder webbläsarens utskriftsdialog. Exporten innehåller enbart själva dokumenttexten. Sidhuvud, sidfot, automatiskt dokumentnamn, fliknamn och webbplatsens gränssnitt läggs inte till. Rubriker som skrivits i dokumentet behålls. Stäng av webbläsarens egna sidhuvuden/sidfötter i utskriftsdialogen vid behov. Kommentarspanel och historik tas inte med. Exporten följer dokumentets innehåll; Word och webbläsare kan ha olika rad- och sidbrytningar.
 
 Bilder bäddas in från PNG/JPEG/WebP, skalas till högst 1200 pixlars bredd och lagras som PNG. Uppladdningen accepterar högst 4 MB före bearbetning och ungefär 675 KB efter. Hela dokumentets sparade samarbetsdata begränsas till cirka 2,6 MB. Dela större material i flera dokument eller minska bilderna.
 
@@ -60,7 +64,7 @@ Bilder bäddas in från PNG/JPEG/WebP, skalas till högst 1200 pixlars bredd och
 Listan visar endast namn och malltyp under namnet, tillsammans med redigerings-/borttagningsikoner.
 
 - Dokumentmall: välj ett befintligt dokument när du skapar mallen, eller använd Spara som mall i redigeraren. Ett klick skapar ett nytt, fristående dokument från mallens sparade innehåll. Senare ändringar av originaldokumentet ändrar inte mallen automatiskt.
-- Outlook-mall: ange namn, mottagare (valfritt), ämne och meddelande. Ett klick öppnar ett nytt utkast i **Outlook på webben**. Ingen Microsoft-koppling eller serverbaserad e-postsändning görs. Användaren loggar vid behov in i Outlook, granskar och skickar själv. Detta tvingar inte fram Outlooks skrivbordsapp.
+- Outlook-mall: välj Ny mall och därefter nytt mejl eller nytt möte. Ange rubrik, ämne och meddelande. Ingen mottagare lagras i mallen. Ett klick öppnar ett nytt utkast i **Outlook på webben**. Ingen Microsoft-koppling eller serverbaserad e-postsändning görs. Användaren loggar vid behov in i Outlook, fyller i deltagare/tid vid behov, granskar och skickar själv. Detta tvingar inte fram Outlooks skrivbordsapp.
 
 ## Granskning och verifiering
 

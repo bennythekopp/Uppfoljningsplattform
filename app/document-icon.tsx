@@ -1,0 +1,3 @@
+import {FileText,BookOpen,ClipboardList,GraduationCap,TrainFront,Folder,Calendar,Mail, type LucideIcon} from 'lucide-react';
+export const documentIcons:Record<string,{label:string,icon:LucideIcon}>={document:{label:'Dokument',icon:FileText},book:{label:'Bok',icon:BookOpen},checklist:{label:'Checklista',icon:ClipboardList},education:{label:'Utbildning',icon:GraduationCap},train:{label:'Tåg',icon:TrainFront},folder:{label:'Mapp',icon:Folder},calendar:{label:'Kalender',icon:Calendar},mail:{label:'Mejl',icon:Mail}};
+export function DocumentIcon({name,color,size=22}:{name?:string,color?:string,size?:number}){const Icon=(documentIcons[name||'']||documentIcons.document).icon;return <Icon size={size} style={{color:/^#[a-f\d]{6}$/i.test(color||'')?color:'#b00000'}}/>}
