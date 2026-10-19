@@ -1,12 +1,10 @@
-# Rättning: Spara som PDF hämtar en riktig PDF-fil
+# Rättning: centrerad text och färgade rutor i PDF och utskrift
 
-Ersätt filerna i paketet på samma sökvägar i GitHub och publicera via Netlify.
-Ta även med hela den medföljande mappen `public/vendor/`.
+Ersätt filerna från paketet på samma sökvägar i GitHub och publicera via Netlify.
+Ta med den nya filen `app/print.css` och den uppdaterade `app/layout.tsx` som laddar den.
 
-Ingen ny SQL-migrering behövs för denna rättning. Den bygger vidare på föregående uppdatering med 0020.
+Ingen ny SQL-migrering behövs. Paketet bygger vidare på senaste uppdateringen med direkt PDF-hämtning.
 
-Spara som PDF skapar nu PDF-filen direkt och startar hämtningen utan att öppna utskriftsdialogen. Skriv ut använder fortfarande den vanliga utskriftsdialogen.
+Texten i gröna, gula och röda bedömningsrutor centreras både vågrätt och lodrätt. Samma färger används i PDF och vanlig utskrift. Statusrutorna i PDF-exporten återges så att textcentreringen inte påverkas av webbläsarens canvas-rendering.
 
-Filen döps till `Personens namn_Protokolltyp_ÅÅMMDD.pdf`. Datumet hämtas från bedömningen; för vanlig elevbedömning används dagens datum. Äldre protokoll behåller sina bedömningsdatum.
-
-Funktionen finns på elevbedömning, KP1, KP2, Examen, individuell uppföljning och historiska protokoll. Samma A4-underlag används med kommentarer och bedömningar.
+Kontrollerat med faktiska nedladdade PDF-filer samt utskrift där webbläsarens bakgrundsgrafik var avstängd.

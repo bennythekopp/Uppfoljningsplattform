@@ -13,6 +13,32 @@ type PdfWorker={set(options:Record<string,unknown>):PdfWorker,from(element:HTMLE
 type PdfWindow=Window&{html2pdf:()=>PdfWorker};
 let exporting=false;
 
+// Canvas text baselines differ from browser printing. Render the small status labels
+// as SVG images in the export copy so their text stays optically centred.
+async function renderPdfBadges(report:HTMLElement){
+ const doc=report.ownerDocument,win=doc.defaultView!;
+ const context=doc.createElement('canvas').getContext('2d');
+ const ns='http://www.w3.org/2000/svg';
+ await Promise.all(Array.from(report.querySelectorAll<HTMLElement>('.printlevel,.followupoutcome')).map(async badge=>{
+  const style=win.getComputedStyle(badge),bounds=badge.getBoundingClientRect(),label=badge.textContent?.trim()||'';
+  if(!bounds.width||!bounds.height)return;
+  const svg=doc.createElementNS(ns,'svg');
+  svg.setAttribute('width',String(bounds.width));svg.setAttribute('height',String(bounds.height));
+  svg.setAttribute('viewBox',`0 0 ${bounds.width} ${bounds.height}`);
+  const border=parseFloat(style.borderTopWidth)||0,rect=doc.createElementNS(ns,'rect');
+  for(const [key,value] of Object.entries({x:border/2,y:border/2,width:bounds.width-border,height:bounds.height-border,rx:parseFloat(style.borderTopLeftRadius)||0,fill:style.backgroundColor,stroke:style.borderTopColor,'stroke-width':border}))rect.setAttribute(key,String(value));
+  const text=doc.createElementNS(ns,'text');
+  if(context)context.font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  const metrics=context?.measureText(label),ascent=metrics?.actualBoundingBoxAscent??parseFloat(style.fontSize)*.75,descent=metrics?.actualBoundingBoxDescent??0;
+  for(const [key,value] of Object.entries({x:bounds.width/2,y:bounds.height/2+(ascent-descent)/2,'text-anchor':'middle','font-family':style.fontFamily,'font-size':style.fontSize,'font-weight':style.fontWeight,fill:style.color}))text.setAttribute(key,String(value));
+  text.textContent=label;svg.append(rect,text);
+  const image=doc.createElement('img');image.alt=label;
+  image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  image.style.cssText=`display:inline-block;vertical-align:middle;flex:none;width:${bounds.width}px;height:${bounds.height}px;max-width:none;margin:${style.margin}`;
+  await image.decode();badge.replaceWith(image);
+ }));
+}
+
 // Apply the actual print rules inside an isolated document, leaving the workspace visible.
 function printStyles(){
  const rules=(list:CSSRuleList):string=>Array.from(list).map(rule=>{
@@ -49,6 +75,7 @@ async function downloadReport(filename:string){
   const style=doc.createElement('style');style.textContent=styles+'\nhtml,body{margin:0!important;padding:0!important;background:white!important;width:190mm!important;min-height:0!important}.printreport{display:block!important;width:190mm!important;max-width:none!important;margin:0!important;padding-bottom:6mm!important}.printmoment,.printcomment{overflow-wrap:anywhere}';doc.head.append(style);
   const clone=doc.importNode(report,true);doc.body.append(clone);
   await doc.fonts.ready;
+  await renderPdfBadges(clone);
   await Promise.all(Array.from(clone.querySelectorAll('img')).map(img=>img.decode().catch(()=>undefined)));
   await new Promise<void>((resolve,reject)=>{const script=doc.createElement('script');script.src=new URL('/vendor/html2pdf-0.14.0.bundle.min.js',location.href).href;script.onload=()=>resolve();script.onerror=()=>reject(Error('PDF-funktionen kunde inte laddas. Kontrollera anslutningen och försök igen.'));doc.head.append(script)});
   const worker=(frame.contentWindow as PdfWindow).html2pdf().set({

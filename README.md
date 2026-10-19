@@ -242,3 +242,5 @@ Loggposten markeras med vem som återställde och när, och en ny händelse **Be
 Kör `0020_iu_annual_reset.sql` efter `0019_restore_assessments.sql` i en befintlig databas. Knappen **Spara som PDF** skapar och laddar ner en PDF direkt med samma A4-underlag som **Skriv ut**. Filnamnet är `Person_Protokolltyp_ÅÅMMDD.pdf`. Den använder bedömningens datum när det finns, annars dagens datum. PDF skapas i webbläsaren med en lokalt medföljande PDF-komponent i `public/vendor/`.
 
 Administratörer kan nollställa markeringarna för årets genomförda IU under **Administratörsverktyg → Användare**. Åtgärden loggas, döljer tidigare gröna markeringar för innevarande år och låter protokollen ligga kvar i historiken. Nya sparade godkännanden efter nollställningen syns igen.
+
+Utskriftsstilarna i `app/print.css` centrerar texten i bedömningsrutorna och bevarar deras färger vid utskrift. PDF-exporten använder samma färger och återger statusrutorna separat för stabil textcentrering.

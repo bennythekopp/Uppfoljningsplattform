@@ -1,0 +1,21 @@
+/* Shared A4 appearance for native printing and downloaded PDF reports. */
+@media print {
+ .printreport .printsummary{align-items:flex-end}
+ .printreport .printmomenthead{align-items:center}
+ .printreport .printlevel,.printreport .followupoutcome{
+  display:inline-flex!important;align-items:center;justify-content:center;text-align:center!important;
+  vertical-align:middle;box-sizing:border-box;flex:none;white-space:nowrap;
+  min-height:7.5mm;padding:1.5mm 3mm!important;line-height:1.25!important;
+  font-size:9pt!important;font-weight:700;border-radius:1.6mm;
+  print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;
+ }
+ .printreport .printlevel.grön,.printreport .followupoutcome.approved{
+  background:#dff2e4!important;color:#23623c!important;border:1px solid #8cbd9b!important;
+ }
+ .printreport .printlevel.gul{
+  background:#fff0c8!important;color:#795700!important;border:1px solid #d8b45c!important;
+ }
+ .printreport .printlevel.röd,.printreport .followupoutcome.requires_completion{
+  background:#fce4df!important;color:#982519!important;border:1px solid #d8978c!important;
+ }
+}
