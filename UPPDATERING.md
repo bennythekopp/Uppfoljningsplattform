@@ -1,14 +1,11 @@
-# Uppdatering: återställning från aktivitetsloggen
+# Uppdatering: PDF, årets IU och historik på dator
 
-Paketet innehåller endast ändrade och nya filer sedan föregående uppdatering med Administratörsverktyg och migration 0018. Den uppdateringen måste redan finnas i projektet.
+1. Ersätt filerna från paketet på samma sökvägar i ditt GitHub-repository.
+2. Kör `netlify/database/migrations/0020_iu_annual_reset.sql` i samma databas där tidigare migreringar till och med `0019` är körda.
+3. Publicera den nya versionen via Netlify. Ladda om sidan om gamla stilar ligger kvar i webbläsarens cache.
 
-1. Kör netlify/database/migrations/0019_restore_assessments.sql efter 0018 i den databas som webbplatsen använder. Kör filen endast en gång. Vid manuell körning kan hela filen köras i en transaktion med BEGIN före och COMMIT efter innehållet.
-2. Lägg paketets filer i motsvarande mappar i GitHub-projektet och ersätt de gamla versionerna. Behåll alla övriga filer.
-3. Publicera via den befintliga Netlify-anslutningen.
-4. Administratörsverktyg → Aktivitetslogg: en återställningsbar borttagning får knappen Återställ. Bekräfta för att återställa bedömningen. Återställningen registreras i loggen.
+**Spara som PDF** finns intill **Skriv ut** på elevbedömning, KP1, KP2, Examen, individuell uppföljning och sparade historikprotokoll. Den använder samma A4-utskrift. Välj **Spara som PDF** i webbläsarens utskriftsdialog. Föreslaget filnamn är `Namn_Protokolltyp_ÅÅMMDD.pdf` (bedömningens datum, när det finns).
 
-Nya borttagningar får en återställningskopia. Tidigare fysiskt borttagna bedömningar utan kopia kan inte återställas. Äldre arkivprotokoll som fortfarande finns i databasen kan bli tillgängliga när migrationen hittar en säker koppling till loggposten.
+**Nollställ årets IU** finns i Administratörsverktyg → Användare och kräver administratör. Årets gröna indikatorer nollställs och åtgärden registreras i aktivitetsloggen; protokoll ligger kvar i historiken. En ny sparad bedömning efter nollställning kan åter ge grön markering.
 
-Nyare bedömningar skrivs inte över. Personen och aktuella elevmoment måste fortfarande finnas kvar. Vid konflikt visas ett meddelande och inget återställs. Ursprungliga resultat, kommentarer och bedömare behålls vid lyckad återställning.
-
-Bygge, behörigheter, återställning av samtliga bedömningstyper, konflikter, versionskontroll och gemensam återställning vid loggningsfel har kontrollerats.
+Historikraderna på datorskärm har separata kolumner för protokoll, utskrift, PDF och borttagning. Mobilens tidigare upplägg behålls.

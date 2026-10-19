@@ -39,10 +39,11 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  if(area==='Utloggning')action='Utloggad';
  if(area==='Lösenord')action='Lösenord ändrat';
  if(area==='Elevhistorik')action='Arkiverad bedömning borttagen';
+ if(area==='Årets IU')action='Årets IU nollställd';
  if(area.includes('underlag'))action=method==='DELETE'?'Underlag borttaget':method==='POST'&&!input.id?'Underlag skapat':'Underlag ändrat';
  const detail=[target||output.name||input.name||input.username||'',input.kind==='op'?'Operativ':input.kind==='simulator'?'Simulator':input.kind||input.category||'',input.title||'',qualifier,area==='Personflytt'?(input.source==='students'?'Elever → Personal':'Personal → Elever'):'',typeof input.itemId==='number'?'Moment '+input.itemId:''].filter(Boolean).join(' · ');
  await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target,undo_payload) VALUES(?,?,?,?,?,?,?,?,?::jsonb)').bind(crypto.randomUUID(),Date.now(),actor.email,actor.name,actor.role,action,area,String(detail||input.id||area).slice(0,1000),undo?JSON.stringify(undo):null).run();
  return response;
  });
- }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0019 är körda.',503)}
+ }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0020 är körda.',503)}
 }

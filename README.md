@@ -236,3 +236,9 @@ Loggposten markeras med vem som återställde och när, och en ny händelse **Be
 Äldre loggposter för fysiskt borttagna bedömningar före uppdateringen saknar återställningskopior och kan inte rekonstrueras. De visas med **Återställningskopia saknas**. Äldre arkivprotokoll som fortfarande finns markerade borttagna i databasen kopplas till loggen vid migrationen endast om tidpunkt och användare ger en entydig matchning. Dessa kan återställas. Tvetydiga kopplingar görs inte automatiskt.
 
 Återställningskopiorna innehåller bedömningar och kommentarer för återställning, men exponeras inte i logglistans API. Lösenord och sessionsuppgifter ingår inte. Återställning, markering och ny loggpost sparas i samma transaktion och återställs tillsammans vid fel.
+
+### PDF och nollställning av årets IU (0020)
+
+Kör `0020_iu_annual_reset.sql` efter `0019_restore_assessments.sql` i en befintlig databas. Knappen **Spara som PDF** använder samma A4-underlag som **Skriv ut**. Välj PDF som mål i webbläsarens utskriftsdialog; dokumentets föreslagna namn är `Person_Protokolltyp_ÅÅMMDD.pdf`.
+
+Administratörer kan nollställa markeringarna för årets genomförda IU under **Administratörsverktyg → Användare**. Åtgärden loggas, döljer tidigare gröna markeringar för innevarande år och låter protokollen ligga kvar i historiken. Nya sparade godkännanden efter nollställningen syns igen.

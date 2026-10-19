@@ -43,3 +43,21 @@
 .followupformfields{border:0;padding:0;margin:0;min-width:0;display:contents}
 
 @media print{.personnelprintsimulator{display:flex;align-items:center;gap:2mm;justify-content:flex-start;break-inside:avoid}.personnelprintsimulator>.followupoutcome{flex:none}}
+
+/* Keep the existing mobile history layout; separate actions on desktop. */
+@media(min-width:651px){
+ .personnelhistorymodal .personnelhistoryrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto 44px;align-items:stretch;gap:0}
+ .personnelhistorymodal .personnelhistoryrow>button{width:auto;min-width:0;margin:0}
+ .personnelhistorymodal .personnelhistoryrow>button:first-child{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px}
+ .personnelhistorymodal .personnelhistoryrow>button:first-child>span:first-child{min-width:0;text-align:left}
+ .personnelhistorymodal .personnelhistoryrow strong{display:block;white-space:nowrap}
+ .personnelhistorymodal .personnelhistoryrow small{display:block;white-space:normal;overflow-wrap:anywhere}
+ .personnelhistorymodal .personnelhistoryrow .followupoutcome{flex:none;white-space:nowrap}
+ .personnelhistorymodal .personnelhistoryrow .personnelhistoryprint,.personnelhistorymodal .personnelhistoryrow .personnelhistorypdf{display:flex;align-items:center;justify-content:center;gap:7px;width:auto;min-height:44px;margin:0;padding:12px 14px;white-space:nowrap}
+ .personnelhistorymodal .personnelhistoryrow>.editicon{display:grid;place-items:center;width:44px;min-height:44px;margin:0;padding:10px;border-left:1px solid #0001;color:#a70000}
+ .personnelhistorymodal .personnelhistoryrow svg{flex:none}
+}
+.personnelprintactions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.adminiureset{display:flex;align-items:center;justify-content:space-between;gap:24px}.adminiureset p{color:#666;margin:0;line-height:1.5}.adminresetbutton{color:#a90000;border:1px solid #c88;border-radius:8px;background:white;padding:11px 15px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.personnelhistorymodal .personnelhistoryrow .personnelhistorypdf{border-left:1px solid #0001;color:#a90000}
+@media(max-width:650px){.personnelprintactions{justify-content:flex-start;width:100%}.adminiureset{align-items:flex-start;flex-direction:column}.personnelhistorymodal .personnelhistoryrow .personnelhistorypdf{width:auto;margin:0 0 10px 0;border:1px solid #0002;border-radius:7px}}

@@ -1,5 +1,6 @@
 'use client';
 import ConfirmRemoval from './confirm-removal';
+import {preparePdfPrint} from './pdf-print';
 import {useEffect,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {ChevronDown,Save,Check,X} from 'lucide-react';
@@ -10,7 +11,7 @@ export default function KPAssessment({student,kind,user,store,onStatus,onPrintRe
  const key=kpKey(student.id,kind),readOnly=user.role==='Chef';const [entry,setEntry]=useState<KPEntry|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[expanded,setExpanded]=useState<string|null>(null),[printing,setPrinting]=useState(false),[removing,setRemoving]=useState(false);
  useEffect(()=>{let active=true;setLoading(true);setEntry(null);setExpanded(null);setMessage('');onPrintReady(false);flushKP(store).then(()=>kpRequest('/api/kp/assessments?studentId='+encodeURIComponent(student.id)+'&kind='+kind)).then(value=>{if(!active)return;const loaded:KPEntry={...value,record:value.record||{data:{outcome:'',date:new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Stockholm'}),assessor:user.name,examPercent:null,answers:{}},savedData:null,isDraft:false,revision:0}};store.entries[key]=loaded;setEntry(loaded)}).catch(e=>{if(active){setEntry(store.entries[key]||null);setMessage(e.message)}}).finally(()=>{if(active)setLoading(false)});return()=>{active=false;onPrintReady(false)}},[student.id,kind]);
  useEffect(()=>{onPrintReady(!!entry?.record.savedData&&!entry.record.isDraft&&!loading&&!busy)},[entry,loading,busy]);
- useEffect(()=>{const print=()=>{if(entry?.record.savedData&&!entry.record.isDraft&&!loading&&!busy)setPrinting(true)};window.addEventListener('print-kp',print);return()=>window.removeEventListener('print-kp',print)},[entry,loading,busy]);
+ useEffect(()=>{const print=(event:Event)=>{if(entry?.record.savedData&&!entry.record.isDraft&&!loading&&!busy){if((event as CustomEvent<{pdf?:boolean}>).detail?.pdf)preparePdfPrint(student.name,kind,entry.record.savedData.date);setPrinting(true)}};window.addEventListener('print-kp',print);return()=>window.removeEventListener('print-kp',print)},[entry,loading,busy]);
  useEffect(()=>{if(!printing)return;const clear=()=>setPrinting(false);window.addEventListener('afterprint',clear);const frame=requestAnimationFrame(()=>window.print());return()=>{cancelAnimationFrame(frame);window.removeEventListener('afterprint',clear)}},[printing]);
  useEffect(()=>{const open=()=>{if(entry&&!readOnly&&!loading&&!busy)setRemoving(true)};window.addEventListener('delete-kp',open);return()=>window.removeEventListener('delete-kp',open)},[entry,loading,busy,readOnly]);
  async function remove(){if(!entry||readOnly)return;setBusy(true);try{await flushKP(store);const result=await kpRequest('/api/kp/assessments',kpBody('DELETE',{studentId:student.id,kind,revision:store.entries[key].record.revision}));const next={...entry,record:result};store.entries[key]=next;setEntry(next);setRemoving(false);setPrinting(false);onPrintReady(false);onStatus({studentId:student.id,kind,status:'none'});setMessage('Bedömningen är borttagen.')}catch(e){setMessage((e as Error).message)}finally{setBusy(false)}}
