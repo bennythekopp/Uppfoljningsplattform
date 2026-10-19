@@ -1,4 +1,5 @@
 import 'server-only';
+import {ordered} from './ordering';
 import {db} from './database';
 import type {KPKind,KPMoment,KPData} from './kp-types';
 export const canReadKP=(role:string)=>['Administratör','Instruktör','Chef'].includes(role);
@@ -7,7 +8,7 @@ export const validKPKind=(kind:unknown):kind is KPKind=>kind==='KP1'||kind==='KP
 export async function loadKPTemplate(kind:KPKind,connection=db):Promise<KPMoment[]>{
  const {results:moments}=await connection.prepare('SELECT id,kind,title,description,position FROM kp_moments WHERE kind=? AND deleted_at IS NULL ORDER BY position,id').bind(kind).all<Omit<KPMoment,'children'>>();
  const {results:children}=await connection.prepare('SELECT s.id,s.moment_id AS momentId,s.title,s.position FROM kp_submoments s JOIN kp_moments m ON m.id=s.moment_id WHERE m.kind=? AND m.deleted_at IS NULL AND s.deleted_at IS NULL ORDER BY s.position,s.id').bind(kind).all<{id:string,momentId:string,title:string,position:number}>();
- return moments.map(m=>({...m,children:children.filter(c=>c.momentId===m.id).map(({id,title,position})=>({id,title,position}))}));
+ return ordered('kp-moments:'+kind,moments.map(m=>({...m,children:children.filter(c=>c.momentId===m.id).map(({id,title,position})=>({id,title,position}))})),connection);
 }
 export function validKPData(data:unknown,template:KPMoment[]):data is KPData{
  if(!data||typeof data!=='object'||Array.isArray(data))return false;const d=data as KPData;

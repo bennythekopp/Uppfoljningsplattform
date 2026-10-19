@@ -5,6 +5,9 @@ import './navigation.css';
 import './kp.css';
 import './exam.css';
 import './admin.css';
+import './sorting.css';
+import './role-preview.css';
+import './panel.css';
 import './print.css';
 export const metadata:Metadata={
  title:'TC Boden | Bedömningsstöd',

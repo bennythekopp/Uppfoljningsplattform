@@ -1,3 +1,7 @@
+# Instruktörspanel – uppdatering 19 oktober 2026
+
+Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Nya databassteget är **0022 efter 0021**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify.
+
 # TC Boden – Bedömningsstöd på Netlify
 
 Detta är **Netlify-versionen** av projektet. GitHub lagrar koden; Netlify bygger Next.js-appen, kör API-rutterna och tillhandahåller Postgres-databasen. Den tidigare Sites-versionen påverkas inte.
@@ -246,3 +250,15 @@ Administratörer kan nollställa markeringarna för årets genomförda IU under 
 Utskriftsstilarna i `app/print.css` centrerar texten i bedömningsrutorna och bevarar deras färger vid utskrift. PDF-exporten använder samma färger och återger statusrutorna separat för stabil textcentrering.
 
 PDF-exporten sidindelar protokollet i separata A4-sidor innan varje sida återges. Moment hålls alltid hela och flyttas till nästa sida när de inte får plats. Moment som är större än en hel A4-sida skalas ned och behålls i en enda ruta. Långa tabeller delas mellan rader och får upprepat tabellhuvud.
+
+
+## Behörigheter och säkerhetslogg
+
+Serverns rollregler finns i `app/api-security.ts`. Varje ny API-operation ska ha en uttrycklig regel och exporteras via `secureApi`. Saknade regler nekar åtkomst. Säkerhetshändelser visas i administratörens aktivitetslogg. Se `SAKERHETSGRANSKNING.md` för granskning och testresultat. Ingen ny SQL krävs för denna uppdatering.
+
+
+## Sortering och rollförhandsvisning (0021)
+
+Kör `netlify/database/migrations/0021_order_and_role_preview.sql` efter 0020 och före publicering av denna kod. Ordningen sparas i `display_orders` och används av underlagens laddningsfunktioner. Sparade protokollsnapshotar ändras inte. `app/api/order/route.ts` kontrollerar både medlemskap och föregående ordning innan en ny ordning sparas.
+
+Administratören startar skrivskyddad rollförhandsvisning under Administratörsverktyg → Användare. `currentUser()` ger sessionens effektiva roll; `currentAccount()` används enbart där den verkliga rollen behövs för att kunna starta och avsluta förhandsvisningen. `secureApi` avvisar skrivningar under förhandsvisning. Det finns ingen klientstyrd genväg för att få större behörighet. Se `UPPDATERING.md` för installation och användning.

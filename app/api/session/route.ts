@@ -1,3 +1,4 @@
+import {secureApi} from '../../api-security';
 import { cookies } from 'next/headers';
 import { db } from '../../database';
 import { error,sha256 } from '../../auth';
@@ -11,9 +12,12 @@ async function session(touch:boolean){
  if(!row)return error('Inloggningen har gått ut',401);
  return Response.json({expiresAt:row.expires_at,idleExpiresAt:row.last_activity_at+IDLE_TIMEOUT_MS},{headers:{'Cache-Control':'no-store'}});
 }
-export async function GET(){try{return await session(false)}catch{return error('Kunde inte kontrollera inloggningen',503)}}
-export async function POST(req:Request){try{
+async function GETEndpoint(){try{return await session(false)}catch{return error('Kunde inte kontrollera inloggningen',503)}}
+async function POSTEndpoint(req:Request){try{
  // The activity heartbeat requires same-origin JSON requests.
  if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return error('Ogiltig begäran',403);
  return await session(true);
 }catch{return error('Kunde inte förlänga inloggningen',503)}}
+
+export const GET=secureApi('/api/session',GETEndpoint);
+export const POST=secureApi('/api/session',POSTEndpoint);

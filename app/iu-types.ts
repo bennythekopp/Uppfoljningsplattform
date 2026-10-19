@@ -9,7 +9,7 @@ export function buildIUTemplate(moments:IUMoment[],groups?:IUSimulatorGroup[],ca
  const result:IUTemplate={op:[],chef:[],simulator:[],passingScore:40,operationalCategories:categories||[]};
  for(const moment of moments){
   const row={id:moment.id,title:moment.title,description:moment.description};
-  if(moment.kind==='op')result[moment.section==='chef'?'chef':'op'].push({...row,categoryId:moment.operationalCategoryId||null});
+  if(moment.kind==='op')result[categories?'op':moment.section==='chef'?'chef':'op'].push({...row,categoryId:moment.operationalCategoryId||null});
   else if(!groups){let section=result.simulator.find(s=>s.title===moment.section);if(!section){section={title:moment.section,rows:[]};result.simulator.push(section)}section.rows.push({...row,max:moment.maxScore??0})}
  }
  if(groups)result.simulator=groups.filter(group=>group.children.length).map(group=>({id:group.id,title:group.title,description:group.description,rows:group.children.map(child=>({id:child.id,title:child.title,description:child.description,max:child.maxScore??0}))}));

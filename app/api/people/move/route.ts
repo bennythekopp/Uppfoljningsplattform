@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import { movePerson } from '../../../database';
 import { currentUser,error } from '../../../auth';
@@ -11,4 +12,6 @@ async function POSTHandler(req:Request){try{
   return Response.json({...moved,destination:source==='students'?'personnel':'students'});
 }catch{return error('Kunde inte flytta personen',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Personflytt');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Personflytt');
+
+export const POST=secureApi('/api/people/move',POSTEndpoint);

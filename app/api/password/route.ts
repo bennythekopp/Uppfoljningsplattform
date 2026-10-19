@@ -1,3 +1,4 @@
+import {secureApi} from '../../api-security';
 import {auditMutation} from '../../activity-log';
 import { cookies } from 'next/headers';
 import { db } from '../../database';
@@ -18,4 +19,6 @@ async function PUTHandler(req:Request){try{
   return Response.json({ok:true});
 }catch{return error('Kunde inte ändra lösenordet',503)}}
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Lösenord');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'Lösenord');
+
+export const PUT=secureApi('/api/password',PUTEndpoint);

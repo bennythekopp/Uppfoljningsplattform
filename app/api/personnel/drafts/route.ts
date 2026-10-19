@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import {db,followupTransaction} from '../../../database';
 import {currentUser,error} from '../../../auth';
@@ -7,7 +8,7 @@ import {stockholmYear} from '../../../followup-status';
 import type {IUTemplate} from '../../../iu-types';
 export const dynamic='force-dynamic';
 const permitted=(role:string)=>role==='Administratör'||role==='Instruktör';
-export async function GET(req:Request){try{
+async function GETEndpoint(req:Request){try{
  const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);
  const id=new URL(req.url).searchParams.get('personId');if(!id)return error('Personal saknas',400);
  if(!await db.prepare('SELECT id FROM personnel WHERE id=? AND moved_at IS NULL').bind(id).first())return error('Personal finns inte',404);
@@ -40,6 +41,10 @@ async function mutate(req:Request,discard:boolean){try{
 async function PUTHandler(req:Request){return mutate(req,false)}
 async function DELETEHandler(req:Request){return mutate(req,true)}
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Utkast');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'Utkast');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Utkast');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'Utkast');
+
+export const GET=secureApi('/api/personnel/drafts',GETEndpoint);
+export const PUT=secureApi('/api/personnel/drafts',PUTEndpoint);
+export const DELETE=secureApi('/api/personnel/drafts',DELETEEndpoint);

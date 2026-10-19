@@ -1,10 +1,11 @@
-import { db } from '../../database';
+import {secureApi} from '../../api-security';
+import { db,databaseTransaction } from '../../database';
 import { cookies } from 'next/headers';
 import { error,passwordHash,verifyPassword,needsPasswordUpgrade,randomToken,sha256 } from '../../auth';
 import { reserveLogin,clearLoginAccount,cleanAuthState } from '../../login-security';
 import { SESSION_LIFETIME_MS,IDLE_TIMEOUT_MS } from '../../session-policy';
 export const dynamic='force-dynamic';
-export async function POST(req:Request){try{
+async function POSTEndpoint(req:Request){try{
  const {username,password}=await req.json() as {username:unknown,password:unknown};
  if(typeof username!=='string'||typeof password!=='string'||username.length>80||password.length>200)return error('Fel användarnamn eller lösenord',401);
  const normalized=username.trim().toLowerCase();
@@ -25,9 +26,17 @@ export async function POST(req:Request){try{
  await clearLoginAccount(limit.accountKey);await cleanAuthState();
  const token=randomToken(),now=Date.now(),expiresAt=now+SESSION_LIFETIME_MS;
  // Recheck user/password to prevent a session being created after account revocation.
- const inserted=await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at) SELECT ?,email,?,? FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=?').bind(await sha256(token),expiresAt,now,row.email,verifiedHash).run();
- if(!inserted.meta.changes)return error('Logga in igen',401);
- await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),now,row.email,row.name,row.role,'Inloggad','Inloggning',row.name).run();
+ const created=await databaseTransaction(async()=>{
+  // Share the user-row lock with role/password changes and account revocation.
+  const latest=await db.prepare('SELECT email,name,role FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=? FOR UPDATE').bind(row.email,verifiedHash).first<{email:string,name:string,role:string}>();
+  if(!latest)return null;
+  await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at) VALUES(?,?,?,?)').bind(await sha256(token),latest.email,expiresAt,now).run();
+  await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),now,latest.email,latest.name,latest.role,'Inloggad','Inloggning',latest.name).run();
+  return latest;
+ });
+ if(!created)return error('Logga in igen',401);
  (await cookies()).set('tc_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:SESSION_LIFETIME_MS/1000});
- return Response.json({name:row.name,role:row.role,idleExpiresAt:now+IDLE_TIMEOUT_MS,expiresAt});
+ return Response.json({name:created.name,role:created.role,idleExpiresAt:now+IDLE_TIMEOUT_MS,expiresAt});
  }catch{return error('Inloggningen kunde inte slutföras',503)}}
+
+export const POST=secureApi('/api/login',POSTEndpoint);

@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import { currentUser,error } from '../../../auth';
 import { saveSimulatorGroup,deleteSimulatorGroup,type SimulatorChildInput } from '../../../database';
@@ -18,8 +19,12 @@ async function POSTHandler(req:Request){return save(req,false)}
 async function PUTHandler(req:Request){return save(req,true)}
 async function DELETEHandler(req:Request){try{const user=await currentUser();if(!user||!['Administratör','Instruktör'].includes(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);return await deleteSimulatorGroup(id,user.email)?Response.json({ok:true}):error('Momentet finns inte',404)}catch{return error('Kunde inte ta bort momentet',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Simulatorunderlag');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Simulatorunderlag');
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Simulatorunderlag');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'Simulatorunderlag');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Simulatorunderlag');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'Simulatorunderlag');
+
+export const POST=secureApi('/api/personnel/simulator-moments',POSTEndpoint);
+export const PUT=secureApi('/api/personnel/simulator-moments',PUTEndpoint);
+export const DELETE=secureApi('/api/personnel/simulator-moments',DELETEEndpoint);

@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import {currentUser,error} from '../../../auth';
 import {followupTransaction} from '../../../database';
@@ -5,7 +6,7 @@ import {canReadKP,canEditKP} from '../../../kp-data';
 import {loadExamTemplate} from '../../../exam-data';
 import type {ExamMoment} from '../../../exam-types';
 export const dynamic='force-dynamic';
-export async function GET(req:Request){try{const u=await currentUser();if(!u||!canReadKP(u.role))return error('Behörighet saknas',403);const t=await loadExamTemplate(),kind=new URL(req.url).searchParams.get('kind');return kind?Response.json(t.find(g=>g.id===kind)?.moments||[]):Response.json(t)}catch{return error('Kunde inte läsa underlaget',503)}}
+async function GETEndpoint(req:Request){try{const u=await currentUser();if(!u||!canReadKP(u.role))return error('Behörighet saknas',403);const t=await loadExamTemplate(),kind=new URL(req.url).searchParams.get('kind');return kind?Response.json(t.find(g=>g.id===kind)?.moments||[]):Response.json(t)}catch{return error('Kunde inte läsa underlaget',503)}}
 async function POSTHandler(req:Request){return change(req,false)}
 async function DELETEHandler(req:Request){return change(req,true)}
 async function change(req:Request,remove:boolean){try{const u=await currentUser();if(!u||!canEditKP(u.role))return error('Behörighet saknas',403);const input=await req.json();return await followupTransaction('exam','template',async c=>{const groups=await loadExamTemplate(c);
@@ -14,6 +15,10 @@ async function change(req:Request,remove:boolean){try{const u=await currentUser(
  if(remove){if(!old)return error('Moment saknas',400);moments=group.moments.filter(m=>m.id!==old.id)}else{const {title,description,children}=input;if(typeof title!=='string'||!title.trim()||title.length>300||typeof description!=='string'||description.length>5000||!Array.isArray(children)||children.length>200)return error('Kontrollera momentets namn och delmoment.',400);const seen=new Set();for(const child of children){if(!child||typeof child.title!=='string'||!child.title.trim()||child.title.length>2000||child.id!==undefined&&(!old?.children.some(c=>c.id===child.id)||seen.has(child.id)))return error('Ogiltigt delmoment',400);if(child.id)seen.add(child.id)}const moment:ExamMoment={id:old?.id||'exam-'+crypto.randomUUID(),kind:group.id,title:title.trim(),description:description.trim(),position:old?.position||Math.max(0,...group.moments.map(m=>m.position))+1,children:children.map((child,i)=>({id:child.id||'exam-sub-'+crypto.randomUUID(),title:child.title.trim(),position:i+1}))};moments=old?group.moments.map(m=>m.id===old.id?moment:m):[...group.moments,moment]}
  await c.prepare('UPDATE exam_templates SET moments=?::jsonb WHERE id=?').bind(JSON.stringify(moments),group.id).run();return Response.json({ok:true});})}catch{return error('Kunde inte spara underlaget',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Examensunderlag');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Examensunderlag');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Examensunderlag');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'Examensunderlag');
+
+export const GET=secureApi('/api/exam/templates',GETEndpoint);
+export const POST=secureApi('/api/exam/templates',POSTEndpoint);
+export const DELETE=secureApi('/api/exam/templates',DELETEEndpoint);

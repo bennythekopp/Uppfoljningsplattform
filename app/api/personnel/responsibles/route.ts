@@ -1,7 +1,8 @@
+import {secureApi} from '../../../api-security';
 import { db } from '../../../database';
 import { currentUser,error } from '../../../auth';
 export const dynamic='force-dynamic';
-export async function GET(){
+async function GETEndpoint(){
  try{
   const user=await currentUser();
   if(!user||!['Administratör','Instruktör'].includes(user.role))return error('Behörighet saknas',403);
@@ -9,3 +10,5 @@ export async function GET(){
   return Response.json(results);
  }catch{return error('Kunde inte läsa ansvariga',503)}
 }
+
+export const GET=secureApi('/api/personnel/responsibles',GETEndpoint);

@@ -1,10 +1,11 @@
+import {secureApi} from '../../api-security';
 import {auditMutation} from '../../activity-log';
 import { db,removePerson,renamePerson } from '../../database';
 import { currentUser,error } from '../../auth';
 import {stockholmYear} from '../../followup-status';
 export const dynamic='force-dynamic';
 const permitted=(role:string)=>role==='Administratör'||role==='Instruktör';
-export async function GET(){try{
+async function GETEndpoint(){try{
  const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const year=stockholmYear();
  const {results}=await db.prepare("SELECT p.id,p.name,p.created_at AS createdAt,COUNT(DISTINCT f.kind) FILTER (WHERE f.outcome='approved')=2 AS completed,MAX(f.outcome) FILTER (WHERE f.kind='op') AS opOutcome,MAX(f.outcome) FILTER (WHERE f.kind='simulator') AS simulatorOutcome FROM personnel p LEFT JOIN iu_annual_resets r ON r.year=? LEFT JOIN LATERAL (SELECT kind,CASE WHEN outcome='requires_completion' THEN outcome WHEN followup_date LIKE ? AND updated_at>COALESCE(r.reset_at,0) THEN outcome ELSE NULL END AS outcome FROM (SELECT DISTINCT ON (kind) kind,outcome,followup_date,updated_at FROM personnel_followups WHERE personnel_id=p.id ORDER BY kind,followup_date DESC,created_at DESC,id DESC) latest) f ON true WHERE p.moved_at IS NULL GROUP BY p.id,p.name,p.created_at ORDER BY p.name COLLATE NOCASE").bind(year,year+'-%').all();
  const {results:drafts}=await db.prepare('SELECT personnel_id AS personId,kind,draft_year AS year FROM personnel_followup_drafts WHERE form IS NOT NULL').all<{personId:string,kind:string,year:string}>();
@@ -14,8 +15,13 @@ async function POSTHandler(req:Request){try{const u=await currentUser();if(!u||!
 async function PUTHandler(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id,name}=await req.json() as {id:unknown,name:unknown};if(typeof id!=='string'||!id||typeof name!=='string'||!name.trim()||name.length>120)return error('Ogiltigt namn',400);if(!await renamePerson(id,'personnel',name.trim()))return error('Personen finns inte',404);return Response.json({id,name:name.trim()})}catch{return error('Kunde inte ändra namnet',503)}}
 async function DELETEHandler(req:Request){try{const u=await currentUser();if(!u||!permitted(u.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Personal saknas',400);if(!await removePerson(id,'personnel'))return error('Personal finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort personal',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Personal');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Personal');
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Personal');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'Personal');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Personal');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'Personal');
+
+export const GET=secureApi('/api/personnel',GETEndpoint);
+export const POST=secureApi('/api/personnel',POSTEndpoint);
+export const PUT=secureApi('/api/personnel',PUTEndpoint);
+export const DELETE=secureApi('/api/personnel',DELETEEndpoint);

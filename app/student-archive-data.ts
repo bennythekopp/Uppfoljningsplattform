@@ -1,4 +1,5 @@
 import 'server-only';
+import {ordered} from './ordering';
 import {loadExamTemplate} from './exam-data';
 import type {ExamRecord} from './exam-types';
 import base from './items.json';
@@ -18,5 +19,6 @@ export async function archiveStudent(connection:typeof db,id:string,name:string,
  const {results:assessments}=await connection.prepare('SELECT a.item_id AS itemId,a.level,a.updated_at AS updatedAt,COALESCE(u.name,a.updated_by) AS updatedByName FROM assessments a LEFT JOIN users u ON u.email=a.updated_by WHERE a.student_id=?').bind(id).all<{itemId:number,level:string,updatedAt:number,updatedByName:string}>();
  const {results:comments}=await connection.prepare('SELECT c.id,c.item_id AS itemId,c.body,c.created_at AS createdAt,COALESCE(u.name,c.author_email) AS authorName FROM comments c LEFT JOIN users u ON u.email=c.author_email WHERE c.student_id=? AND c.deleted_at IS NULL ORDER BY c.created_at,c.id').bind(id).all<ArchivedStudent['comments'][number]>();
  const hidden=new Set(deleted.map(x=>x.id)),map=new Map(edits.map(x=>[x.id,x]));const items=[...base.filter(b=>!hidden.has(b.id)).map(b=>({id:b.id,title:b.title,category:'System E2',...map.get(b.id)})),...created.map(c=>({...c,id:1000000+c.id}))].map(item=>({...item,assessment:assessments.find(a=>a.itemId===item.id)||null}));
- const payload:ArchivedStudent={kind:'student',name,items,comments,kp:protocols,exam:examProtocol};await connection.prepare('INSERT INTO personnel_student_archives(id,personnel_id,kind,event_at,created_at,created_by,payload) VALUES(?,?,?,?,?,?,?::jsonb) ON CONFLICT(personnel_id,event_at,kind) DO NOTHING').bind(crypto.randomUUID(),id,'student',eventAt,Date.now(),actor,JSON.stringify(payload)).run();
+ const orderedItems=[];for(const category of ['System E2','System M','Övrigt'])orderedItems.push(...await ordered('student-moments:'+category,items.filter(item=>item.category===category),connection));
+ const payload:ArchivedStudent={kind:'student',name,items:orderedItems,comments,kp:protocols,exam:examProtocol};await connection.prepare('INSERT INTO personnel_student_archives(id,personnel_id,kind,event_at,created_at,created_by,payload) VALUES(?,?,?,?,?,?,?::jsonb) ON CONFLICT(personnel_id,event_at,kind) DO NOTHING').bind(crypto.randomUUID(),id,'student',eventAt,Date.now(),actor,JSON.stringify(payload)).run();
 }

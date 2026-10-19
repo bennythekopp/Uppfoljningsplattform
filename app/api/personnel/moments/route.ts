@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import { db } from '../../../database';
 import { currentUser,error } from '../../../auth';
@@ -5,7 +6,7 @@ import { loadIUMoments,loadSimulatorGroups,loadOperationalCategories } from '../
 import { buildIUTemplate } from '../../../iu-types';
 export const dynamic='force-dynamic';
 const permitted=(role:string)=>['Administratör','Instruktör'].includes(role);
-export async function GET(){try{const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);const moments=await loadIUMoments(),simulatorGroups=await loadSimulatorGroups(moments);const operationalCategories=await loadOperationalCategories();return Response.json({moments,simulatorGroups,operationalCategories,template:buildIUTemplate(moments,simulatorGroups,operationalCategories)})}catch{return error('Kunde inte läsa IU-moment',503)}}
+async function GETEndpoint(){try{const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);const moments=await loadIUMoments(),simulatorGroups=await loadSimulatorGroups(moments);const operationalCategories=await loadOperationalCategories();return Response.json({moments,simulatorGroups,operationalCategories,template:buildIUTemplate(moments,simulatorGroups,operationalCategories)})}catch{return error('Kunde inte läsa IU-moment',503)}}
 async function save(req:Request,editing:boolean){try{
  const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);
  const {id,kind,section,title,description,maxScore,operationalCategoryId}=await req.json();
@@ -22,8 +23,13 @@ async function POSTHandler(req:Request){return save(req,false)}
 async function PUTHandler(req:Request){return save(req,true)}
 async function DELETEHandler(req:Request){try{const user=await currentUser();if(!user||!permitted(user.role))return error('Behörighet saknas',403);const {id}=await req.json();if(typeof id!=='string'||!id)return error('Moment saknas',400);const result=await db.prepare('UPDATE iu_moments SET deleted_at=?,updated_at=?,updated_by=? WHERE id=? AND kind=\'op\' AND deleted_at IS NULL').bind(Date.now(),Date.now(),user.email,id).run();if(!result.meta.changes)return error('Momentet finns inte',404);return Response.json({ok:true})}catch{return error('Kunde inte ta bort IU-momentet',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'IU-underlag');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'IU-underlag');
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'IU-underlag');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'IU-underlag');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'IU-underlag');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'IU-underlag');
+
+export const GET=secureApi('/api/personnel/moments',GETEndpoint);
+export const POST=secureApi('/api/personnel/moments',POSTEndpoint);
+export const PUT=secureApi('/api/personnel/moments',PUTEndpoint);
+export const DELETE=secureApi('/api/personnel/moments',DELETEEndpoint);

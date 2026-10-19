@@ -1,0 +1,19 @@
+'use client';
+import * as Y from 'yjs';
+import {panelRequest} from './panel-types';
+export const bytes64=(bytes:Uint8Array)=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)};
+export const from64=(text:string)=>Uint8Array.from(atob(text),c=>c.charCodeAt(0));
+export type DocComment={id:string,tabId:string,body:string,quote:string,suggestion:string|null,status:string,createdAt:number,createdBy:string,creatorName:string,revision:number};
+export type DocSession={id:string,user:string,doc:Y.Doc,epoch:number,revision:number,pending:Uint8Array[],saving:Promise<void>|null,error:string,stale:boolean,listeners:Set<()=>void>,comments:DocComment[],presence:{name:string,email:string}[],timer:ReturnType<typeof setTimeout>|null,readonly:boolean};
+const sessions=new Map<string,DocSession>();
+let activeUser='';
+export function activateDocuments(user:string){activeUser=user;for(const s of sessions.values())if(s.user!==user&&s.timer){clearTimeout(s.timer);s.timer=null}}
+function notify(s:DocSession){s.listeners.forEach(f=>f())}
+export async function openDocument(id:string,user:string,readonly=false){const key=user+':'+id;const old=sessions.get(key);if(old)return old;const data=await panelRequest('/api/documents?id='+encodeURIComponent(id)),doc=new Y.Doc();Y.applyUpdate(doc,from64(data.state),'remote');const s:DocSession={id,user,doc,epoch:data.epoch,revision:data.revision,pending:[],saving:null,error:'',stale:false,listeners:new Set(),comments:data.comments,presence:data.presence,timer:null,readonly};
+ doc.on('update',(update:Uint8Array,origin:unknown)=>{if(origin==='remote'||s.readonly)return;s.pending.push(update);notify(s);if(s.timer)clearTimeout(s.timer);s.timer=setTimeout(()=>void saveDocument(s).catch(()=>{}),650)});sessions.set(key,s);return s}
+export async function saveDocument(s:DocSession,heartbeat=false):Promise<void>{if(s.readonly)return;if(s.user!==activeUser){if(s.pending.length)throw Error('Logga in på det konto som äger de osparade ändringarna för att spara dem.');return}if(s.saving){await s.saving;if(s.pending.length)return saveDocument(s);return}if(s.stale)throw Error(s.error);if(!s.pending.length&&!heartbeat)return;const n=s.pending.length,updates=s.pending.slice(0,n);s.saving=(async()=>{try{await panelRequest('/api/documents','PUT',{id:s.id,epoch:s.epoch,...(updates.length?{update:bytes64(Y.mergeUpdates(updates))}:{})});s.pending.splice(0,n);s.error=''}catch(e){s.error=(e as Error).message;if((e as any).status===409)s.stale=true;throw e}finally{s.saving=null;notify(s)}})();notify(s);await s.saving;if(s.pending.length)await saveDocument(s)}
+export async function refreshDocument(s:DocSession){if(s.stale)return;try{const data=await panelRequest('/api/documents?id='+encodeURIComponent(s.id)+'&vector='+encodeURIComponent(bytes64(Y.encodeStateVector(s.doc))));if(data.epoch!==s.epoch){s.stale=true;s.error='Dokumentet har återställts. Dina lokala ändringar finns kvar här. Exportera dem innan du laddar om.'}else{Y.applyUpdate(s.doc,from64(data.state),'remote');s.revision=data.revision;s.comments=data.comments;s.presence=data.presence}notify(s)}catch(e){s.error=(e as Error).message;notify(s)}}
+export async function flushDocuments(){for(const s of sessions.values())if(s.user===activeUser&&(s.pending.length||s.saving))await saveDocument(s)}
+export function documentsPending(){return [...sessions.values()].some(s=>s.user===activeUser&&(s.pending.length||s.saving||s.stale&&s.pending.length))}
+export function forgetDocuments(){for(const s of sessions.values()){if(s.timer)clearTimeout(s.timer);s.doc.destroy()}sessions.clear()}
+export function forgetDocument(s:DocSession){if(s.timer)clearTimeout(s.timer);s.doc.destroy();sessions.delete(s.user+':'+s.id)}

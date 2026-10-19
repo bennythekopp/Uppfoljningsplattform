@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import { db,moveOperationalCategory } from '../../../database';
 import { currentUser,error } from '../../../auth';
@@ -27,10 +28,15 @@ async function PATCHHandler(req:Request){try{
  return Response.json({ok:true});
  }catch{return error('Kunde inte flytta kategorin',503)}}
 
-export const POST=(req:Request)=>auditMutation(req,POSTHandler,'Operativa underlag');
+const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Operativa underlag');
 
-export const PUT=(req:Request)=>auditMutation(req,PUTHandler,'Operativa underlag');
+const PUTEndpoint=(req:Request)=>auditMutation(req,PUTHandler,'Operativa underlag');
 
-export const DELETE=(req:Request)=>auditMutation(req,DELETEHandler,'Operativa underlag');
+const DELETEEndpoint=(req:Request)=>auditMutation(req,DELETEHandler,'Operativa underlag');
 
-export const PATCH=(req:Request)=>auditMutation(req,PATCHHandler,'Operativa underlag');
+const PATCHEndpoint=(req:Request)=>auditMutation(req,PATCHHandler,'Operativa underlag');
+
+export const POST=secureApi('/api/personnel/operational-categories',POSTEndpoint);
+export const PUT=secureApi('/api/personnel/operational-categories',PUTEndpoint);
+export const DELETE=secureApi('/api/personnel/operational-categories',DELETEEndpoint);
+export const PATCH=secureApi('/api/personnel/operational-categories',PATCHEndpoint);

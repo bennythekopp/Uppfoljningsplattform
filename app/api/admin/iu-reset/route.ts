@@ -1,3 +1,4 @@
+import {secureApi} from '../../../api-security';
 import {auditMutation} from '../../../activity-log';
 import {currentUser,error} from '../../../auth';
 import {db} from '../../../database';
@@ -13,4 +14,6 @@ async function reset(req:Request){
  await db.prepare('INSERT INTO iu_annual_resets(year,reset_at,reset_by) VALUES(?,?,?) ON CONFLICT (year) DO UPDATE SET reset_at=EXCLUDED.reset_at,reset_by=EXCLUDED.reset_by').bind(year,Date.now(),user.email).run();
  return Response.json({year,ok:true});
 }
-export const POST=(req:Request)=>auditMutation(req,reset,'Årets IU');
+const POSTEndpoint=(req:Request)=>auditMutation(req,reset,'Årets IU');
+
+export const POST=secureApi('/api/admin/iu-reset',POSTEndpoint);
