@@ -51,12 +51,24 @@ function privateResponse(response:Response){
  const vary=response.headers.get('Vary');response.headers.set('Vary',vary?vary+', Cookie':'Cookie');
  return response;
 }
+// Explicit public origins survive Netlify's internal request URL rewriting.
+// Forwarded/Host headers are client-controlled and are not an origin allowlist.
+function siteOrigin(value:string){
+ try{const url=new URL(value);if(!['https:','http:'].includes(url.protocol)||url.username||url.password||url.pathname!=='/'||url.search||url.hash)return null;return url.origin}catch{return null}
+}
 function foreignMutation(req:Request){
  if(['GET','HEAD','OPTIONS'].includes(req.method))return false;
  if(req.headers.get('sec-fetch-site')==='cross-site')return true;
- const origin=req.headers.get('origin');
- if(!origin)return false; // SameSite=Strict cookies and JSON clients also remain supported.
- try{return new URL(origin).origin!==new URL(req.url).origin}catch{return true}
+ const value=req.headers.get('origin');
+ if(!value)return false; // SameSite=Strict cookies and originless JSON clients remain supported.
+ const origin=siteOrigin(value);if(!origin)return true;
+ const allowed=new Set([new URL(req.url).origin]);
+ const configured=[
+  'https://handledare.netlify.app', // This application's published address.
+  process.env.APP_ORIGIN,process.env.URL,process.env.DEPLOY_URL,process.env.DEPLOY_PRIME_URL
+ ];
+ for(const value of configured){if(!value)continue;for(const entry of value.split(',')){const candidate=siteOrigin(entry.trim());if(candidate)allowed.add(candidate)}}
+ return !allowed.has(origin);
 }
 async function securityEvent(req:Request,route:string,actor:Actor|null,action:string,reason:string){
  const now=Date.now();
