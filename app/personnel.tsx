@@ -1,7 +1,7 @@
  'use client';
 import ConfirmRemoval from './confirm-removal';
 import StudentHistory from './student-history';
-import {preparePdfPrint} from './pdf-print';
+import {pdfFileName,outputReport} from './pdf-print';
 import { useEffect,useMemo,useRef,useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash2,ChevronDown,Save,Search,Check,Pencil,ArrowLeftRight,MoreHorizontal,ChevronLeft,ClipboardCheck,Printer,Download,History,X } from 'lucide-react';
@@ -65,6 +65,7 @@ async function request(url:string,init?:RequestInit){const r=await fetch(url,ini
 const body=(method:string,value:unknown):RequestInit=>({method,headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});
 export default function Personnel({draftStore,userName,onStudentsChanged,template,selectedPersonId,onSelectedChange,onPeopleChanged}:{draftStore:FollowupDraftStore,userName:string,onStudentsChanged:()=>void,template:IUTemplate,selectedPersonId:string|null,onSelectedChange:(id:string|null)=>void,onPeopleChanged:(people:Person[])=>void}){
  const [people,setPeople]=useState<Person[]>([]),[selected,setSelected]=useState<Person|null>(null),[records,setRecords]=useState<Followup[]>([]),[responsibles,setResponsibles]=useState<Responsible[]>([]),[responsiblesLoading,setResponsiblesLoading]=useState(true),[printingRecord,setPrintingRecord]=useState<Followup|null>(null),[kind,setKind]=useState<'op'|'simulator'>('op'),[form,setForm]=useState<Form|null>(null),[dirty,setDirty]=useState(false),[expanded,setExpanded]=useState<string|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[loading,setLoading]=useState(true),[search,setSearch]=useState(''),[menu,setMenu]=useState<string|null>(null),[editing,setEditing]=useState<Person|null>(null),[editName,setEditName]=useState(''),[showExtra,setShowExtra]=useState(false),[historyOpen,setHistoryOpen]=useState(false),[removal,setRemoval]=useState<{id?:string,kind:'op'|'simulator',date?:string}|null>(null);
+ const pdfFilename=useRef<string|null>(null);
  const visibleForm=useRef(form);visibleForm.current=form;
  const printPersonId=useRef(selectedPersonId);printPersonId.current=selectedPersonId;
  const year=useStockholmYear();
@@ -79,7 +80,7 @@ export default function Personnel({draftStore,userName,onStudentsChanged,templat
   commit(draft?.form||fresh(personId,nextKind,userName),draft?.dirty||false,true,draft?.year||year);
  }
  useEffect(()=>{if(!selected){setForm(null);setRecords([]);return}let active=true;const nextKind=draftStore.kinds[selected.id]||'op';setKind(nextKind);restore(selected.id,nextKind);setExpanded(null);setShowExtra(false);setLoading(true);flushFollowupDrafts(draftStore).then(()=>Promise.all([request('/api/personnel/followups?personId='+encodeURIComponent(selected.id)),request('/api/personnel/drafts?personId='+encodeURIComponent(selected.id))])).then(([list,drafts]:[Followup[],{kind:'op'|'simulator',form:Form|null,year:string,revision:number}[]])=>{if(!active)return;setRecords(list);for(const draft of drafts){const pair=draftPair(selected.id,draft.kind);draftStore.revisions[pair]=draft.revision;if(draft.form)commit(draft.form,true,false,draft.year)}restore(selected.id,nextKind)}).catch(e=>{if(active)setMessage(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[selected?.id]);
- useEffect(()=>{if(!printingRecord)return;const clear=()=>setPrintingRecord(null);window.addEventListener('afterprint',clear);const frame=requestAnimationFrame(()=>window.print());return()=>{cancelAnimationFrame(frame);window.removeEventListener('afterprint',clear)}},[printingRecord]);
+ useEffect(()=>{if(!printingRecord)return;const clear=()=>setPrintingRecord(null);window.addEventListener('afterprint',clear);const frame=requestAnimationFrame(()=>outputReport(pdfFilename.current,clear,setMessage));return()=>{cancelAnimationFrame(frame);window.removeEventListener('afterprint',clear)}},[printingRecord]);
  useEffect(()=>{if(!historyOpen)return;const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setHistoryOpen(false)};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[historyOpen]);
  const reference=previousFollowup(records,kind,form?.id);
  const activeTemplate=form?.templateSnapshot||template;
@@ -107,7 +108,7 @@ export default function Personnel({draftStore,userName,onStudentsChanged,templat
  async function removeAssessment(){if(!selected||!removal)return;setBusy(true);try{await flushFollowupDrafts(draftStore);const pair=draftPair(selected.id,removal.kind),result=await request('/api/personnel/followups',body('DELETE',{personId:selected.id,kind:removal.kind,id:removal.id,revision:draftStore.revisions[pair]||0}));draftStore.revisions[pair]=result.revision;setRecords(list=>list.filter(r=>r.id!==removal.id));if(result.clearedDraft){for(const [key,d] of Object.entries(draftStore.forms))if(d.form.personId===selected.id&&d.form.kind===removal.kind)delete draftStore.forms[key];delete draftStore.active[pair];if(kind===removal.kind)commit(fresh(selected.id,kind,userName),false)}else if(form&&form.id===removal.id){delete draftStore.forms[draftKey(form)];restore(selected.id,kind)}setPrintingRecord(null);setRemoval(null);await reload();setMessage('Bedömningen är borttagen.')}catch(e){setMessage((e as Error).message)}finally{setBusy(false)}}
  async function printFollowup(record:Followup,asPdf=false){
   if(!selected||busy)return;setBusy(true);
-  try{const list=await request('/api/personnel/followups?personId='+encodeURIComponent(selected.id)) as Followup[];if(printPersonId.current!==record.personnelId)return;const latest=list.find(item=>item.id===record.id);if(!latest)throw Error('Protokollet finns inte längre.');setRecords(list);if(asPdf)preparePdfPrint(selected.name,latest.kind==='op'?'Praktisk kontroll':'Simulator',latest.followupDate);setPrintingRecord(latest)}catch(e){setMessage((e as Error).message)}finally{setBusy(false)}
+  try{const list=await request('/api/personnel/followups?personId='+encodeURIComponent(selected.id)) as Followup[];if(printPersonId.current!==record.personnelId)return;const latest=list.find(item=>item.id===record.id);if(!latest)throw Error('Protokollet finns inte längre.');setRecords(list);pdfFilename.current=asPdf?pdfFileName(selected.name,latest.kind==='op'?'Praktisk kontroll':'Simulator',latest.followupDate):null;setPrintingRecord(latest)}catch(e){setMessage((e as Error).message)}finally{setBusy(false)}
  }
  const printable=printingRecord||records.find(record=>record.id===form?.id);
  return <><div className="personnel">

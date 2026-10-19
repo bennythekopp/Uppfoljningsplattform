@@ -2,7 +2,7 @@
 import { useEffect,useMemo,useRef,useState } from 'react';
 import AdminActivity from './admin-activity';
 import AdminIUReset from './admin-iu-reset';
-import {preparePdfPrint} from './pdf-print';
+import {pdfFileName,outputReport} from './pdf-print';
 import ConfirmRemoval from './confirm-removal';
 import KPAssessment from './kp-assessment';
 import ExamAssessment from './exam-assessment';
@@ -34,8 +34,9 @@ export function AssessmentApp(){
  const examStore=useRef(createExamStore());
  const [adminView,setAdminView]=useState<'users'|'activity'>('users'),[userSearch,setUserSearch]=useState(''),[removal,setRemoval]=useState<{studentId:string,name:string,category:Category,itemId?:number}|null>(null);
  const [examOpen,setExamOpen]=useState(false),[examPrintable,setExamPrintable]=useState(false),[examAddSignal,setExamAddSignal]=useState(0),[underlagGroup,setUnderlagGroup]=useState<'students'|'personnel'>('students');
- const [studentPrintRequested,setStudentPrintRequested]=useState<string|null>(null);
- useEffect(()=>{if(!studentPrintRequested)return;const frame=requestAnimationFrame(()=>{if(visibleStudent.current===studentPrintRequested)window.print();setStudentPrintRequested(null)});return()=>cancelAnimationFrame(frame)},[studentPrintRequested]);
+ const [studentPrintRequested,setStudentPrintRequested]=useState<{id:string,filename:string|null}|null>(null);
+ useEffect(()=>{if(!studentPrintRequested)return;const frame=requestAnimationFrame(()=>{if(visibleStudent.current===studentPrintRequested.id)outputReport(studentPrintRequested.filename,()=>setStudentPrintRequested(null),setMessage);else setStudentPrintRequested(null)});return()=>cancelAnimationFrame(frame)},[studentPrintRequested]);
+ useEffect(()=>{const clear=()=>setStudentPrintRequested(null);window.addEventListener('afterprint',clear);return()=>window.removeEventListener('afterprint',clear)},[]);
  const [kpKind,setKpKind]=useState<KPKind|null>(null),[kpStatuses,setKpStatuses]=useState<KPStatusRow[]>([]),[kpPrintable,setKpPrintable]=useState(false),[kpAddSignal,setKpAddSignal]=useState(0);
  const year=useStockholmYear();
  const [me,setMe]=useState<User|null>(null),[ready,setReady]=useState(false),[login,setLogin]=useState({username:'',password:''}),[loginError,setLoginError]=useState('');
@@ -54,7 +55,7 @@ export function AssessmentApp(){
   if(!selected)return;
   if(examOpen){window.dispatchEvent(new CustomEvent('print-exam',{detail:{pdf:asPdf}}));return}
   if(kpKind){window.dispatchEvent(new CustomEvent('print-kp',{detail:{pdf:asPdf}}));return}
-  void json('/api/kp/assessments').then(list=>{if(visibleStudent.current!==selected.id)return;setKpStatuses(list);if(asPdf)preparePdfPrint(selected.name,'Elevbedömning');setStudentPrintRequested(selected.id)}).catch(e=>setMessage(e.message));
+  void json('/api/kp/assessments').then(list=>{if(visibleStudent.current!==selected.id)return;setKpStatuses(list);setStudentPrintRequested({id:selected.id,filename:asPdf?pdfFileName(selected.name,'Elevbedömning'):null})}).catch(e=>setMessage(e.message));
  }
  useEffect(()=>{const refresh=()=>{void reloadPersonnel().catch(e=>setMessage(e.message))};window.addEventListener('iu-year-reset',refresh);return()=>window.removeEventListener('iu-year-reset',refresh)},[]);
  const [passwordOpen,setPasswordOpen]=useState(false),[passwordForm,setPasswordForm]=useState({currentPassword:'',newPassword:'',confirmPassword:''}),[passwordError,setPasswordError]=useState('');
