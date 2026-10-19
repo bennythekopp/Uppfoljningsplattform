@@ -1,4 +1,5 @@
 'use client';
+import {paginateReport} from './pdf-pagination';
 
 /** Direct PDF export uses the existing A4 report and the assessment date. */
 export function pdfFileName(name:string,kind:string,date?:string|number){
@@ -9,7 +10,8 @@ export function pdfFileName(name:string,kind:string,date?:string|number){
  return `${safe(name)}_${safe(kind)}_${stamp}.pdf`;
 }
 
-type PdfWorker={set(options:Record<string,unknown>):PdfWorker,from(element:HTMLElement):PdfWorker,toContainer():PdfWorker,get(key:'container'):Promise<HTMLElement>,outputPdf(type:'blob'):Promise<Blob>};
+type PdfDocument={addPage():void,addImage(image:string,type:string,x:number,y:number,width:number,height:number):void,output(type:'blob'):Blob,getNumberOfPages():number};
+type PdfWorker={set(options:Record<string,unknown>):PdfWorker,from(element:HTMLElement):PdfWorker,toCanvas():PdfWorker,toPdf():PdfWorker,get(key:'canvas'):Promise<HTMLCanvasElement>,get(key:'pdf'):Promise<PdfDocument>};
 type PdfWindow=Window&{html2pdf:()=>PdfWorker};
 let exporting=false;
 
@@ -78,16 +80,25 @@ async function downloadReport(filename:string){
   await renderPdfBadges(clone);
   await Promise.all(Array.from(clone.querySelectorAll('img')).map(img=>img.decode().catch(()=>undefined)));
   await new Promise<void>((resolve,reject)=>{const script=doc.createElement('script');script.src=new URL('/vendor/html2pdf-0.14.0.bundle.min.js',location.href).href;script.onload=()=>resolve();script.onerror=()=>reject(Error('PDF-funktionen kunde inte laddas. Kontrollera anslutningen och försök igen.'));doc.head.append(script)});
-  const worker=(frame.contentWindow as PdfWindow).html2pdf().set({
-   margin:10,filename,image:{type:'jpeg',quality:0.98},
-   jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-   pagebreak:{mode:['css','legacy'],avoid:['.printmoment','.printcomment','.printhead','.personnelprintsimulator']}
-  }).from(clone).toContainer();
-  const container=await worker.get('container');
-  const height=container.scrollHeight||1123,width=container.scrollWidth||718;
-  // Bound the canvas area for browsers on phones as well as long reports.
-  const scale=Math.min(2,30000/height,Math.sqrt(16000000/(width*height)));
-  const blob=await worker.set({html2canvas:{scale,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:794}}).outputPdf('blob');
+  const pages=paginateReport(clone);
+  let pdf:PdfDocument|undefined;
+  for(const [index,page] of pages.entries()){
+   progress.textContent=`Skapar PDF… sida ${index+1} av ${pages.length}`;
+   const worker=(frame.contentWindow as PdfWindow).html2pdf().set({
+    margin:10,image:{type:'jpeg',quality:0.98},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:[]},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false,windowWidth:794}
+   }).from(page).toCanvas();
+   const canvas=await worker.get('canvas');
+   if(!pdf){
+    await worker.toPdf();pdf=await worker.get('pdf');
+    if(pdf.getNumberOfPages()!==1)throw Error('PDF-sidans mått kunde inte bevaras. Försök igen.');
+   }else{
+    pdf.addPage();pdf.addImage(canvas.toDataURL('image/jpeg',.98),'JPEG',10,10,190,canvas.height/canvas.width*190);
+   }
+  }
+  if(!pdf)throw Error('Det finns inget protokoll att spara.');
+  const blob=pdf.output('blob');
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();
   window.setTimeout(()=>URL.revokeObjectURL(url),60000);

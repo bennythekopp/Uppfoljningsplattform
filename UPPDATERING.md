@@ -1,10 +1,10 @@
-# Rättning: centrerad text och färgade rutor i PDF och utskrift
+# PDF: moment hålls alltid hela
 
-Ersätt filerna från paketet på samma sökvägar i GitHub och publicera via Netlify.
-Ta med den nya filen `app/print.css` och den uppdaterade `app/layout.tsx` som laddar den.
+Ersätt filerna på samma sökvägar i GitHub och publicera via Netlify.
+Ta med `app/pdf-pagination.ts` och `app/pdf-print.ts`.
 
-Ingen ny SQL-migrering behövs. Paketet bygger vidare på senaste uppdateringen med direkt PDF-hämtning.
+Ingen ny SQL behövs.
 
-Texten i gröna, gula och röda bedömningsrutor centreras både vågrätt och lodrätt. Samma färger används i PDF och vanlig utskrift. Statusrutorna i PDF-exporten återges så att textcentreringen inte påverkas av webbläsarens canvas-rendering.
+Moment delas aldrig över flera PDF-sidor. Hela momentrutan flyttas till nästa sida när den inte får plats på den aktuella sidan. Om ett enskilt moment är större än en hel A4-sida skalas det ned för att rymmas i en enda ruta, utan att något innehåll tas bort.
 
-Kontrollerat med faktiska nedladdade PDF-filer samt utskrift där webbläsarens bakgrundsgrafik var avstängd.
+Testat med vanliga moment, sidbrytningar och ett extra långt moment. Kontrollerat att momentet förekommer endast en gång, att allt innehåll följer med i rätt ordning och att ramen ryms helt på sidan.
