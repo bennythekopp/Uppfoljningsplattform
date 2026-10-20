@@ -17,3 +17,19 @@ Paketet innehåller endast ändrade och nya filer för den befintliga webbplatse
 - Netlify-inloggningsfixen ingår också.
 
 Läs `INSTRUKTORSPANEL.md` för handhavande och praktiska begränsningar. Ingen publicering till din Netlify-sida har gjorts från denna miljö.
+
+## Typsnitt · 20 oktober 2026
+
+Dokumentredigeraren har nu 198 valbara Office- och Windows-typsnitt. De vanligaste ligger överst, följt av övriga i alfabetisk ordning. Valet sparas i dokumentet och följer med till Word-export, även för typsnitt med mellanslag i namnet.
+
+Typsnittsfiler är inte inbäddade eller nedladdade. Webbläsaren använder typsnitt som finns på enheten och ersätter annars med ett tillgängligt typsnitt. Detta gäller också PDF/utskrift från samma enhet. Word använder det angivna typsnittet om det finns tillgängligt där. Inga externa typsnittstjänster kontaktas.
+
+Detta paket innehåller även samtliga filer från den föregående uppdateringen Dokument-19okt. Det ersätter det paketet. Installera i befintligt GitHub-repo, behåll övriga filer och låt Netlify bygga. Ingen ny SQL eller ytterligare paketinstallation behövs utöver beroendena i den medföljande package-lock.json.
+
+## Ordning i moduler och dokumentflikar
+
+Poster i samtliga panelmoduler kan flyttas med upp/ned-knapparna eller dras på datorn. Ordningen sparas per användare och syns i modul och helsida. Själva modulernas placering sparas fortsatt via Anpassa panelen. Dokumentflikar kan flyttas med pilar eller dragning och döpas om med pennknappen. Flikens innehåll och kommentarer hör fortsatt till samma flik efter flytt och namnbyte. Ingen ny SQL-migrering krävs.
+
+## Import av dokument och mallar
+
+Knapparna Ladda upp dokument och Ladda upp mall finns på respektive sida. DOCX, HTML och TXT upp till 2 MB omvandlas till redigerbart innehåll. Dokumentmallar kan därefter skapa nya dokument. Ingen ny SQL-migrering krävs. PDF och äldre DOC-format stöds inte för redigerbar import.

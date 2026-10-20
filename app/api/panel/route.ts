@@ -3,6 +3,7 @@ import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
 import {panelBody,panelLog,PanelError,short,staffList} from '../../panel-server';
+import {importedDocumentState} from '../../document-import';
 export const dynamic='force-dynamic';
 async function get(){const u=(await currentUser())!;const [items,documents,prefs,reads,users]=await Promise.all([
  db.prepare('SELECT id,kind,owner_email AS ownerEmail,data,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_items WHERE owner_email IS NULL OR owner_email=? ORDER BY updated_at DESC').bind(u.email).all(),
@@ -12,11 +13,12 @@ async function get(){const u=(await currentUser())!;const [items,documents,prefs
  return Response.json({items:items.results,documents:documents.results.map((r:any)=>{const d=new Y.Doc();try{Y.applyUpdate(d,Buffer.from(r.state,'base64'));const m=d.getMap('meta');const {state,...rest}=r;return {...rest,icon:m.get('icon'),iconColor:m.get('iconColor')}}finally{d.destroy()}}),preferences:prefs?.data||{},preferenceRevision:prefs?.revision||0,reads:reads.results,users});}
 async function mutate(req:Request){const u=(await currentUser())!,b=await panelBody(req,4000000);return databaseTransaction(async()=>{
  if(b.action==='preference'){
-  if(!['layout','favorites','shortcuts','introduction'].includes(b.key))throw new PanelError('Ogiltig inställning');
+  if(!['layout','favorites','shortcuts','introduction','orders'].includes(b.key))throw new PanelError('Ogiltig inställning');
   if(b.key==='layout'&&(!Array.isArray(b.value)||b.value.length>40||b.value.some((m:any)=>!m||typeof m.id!=='string'||!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts'].includes(m.kind)||!['x','y','w','h'].every(k=>Number.isInteger(m[k]))||m.x<0||m.y<0||m.y>1000||m.w<2||m.w>12||m.x+m.w>12||m.h<3||m.h>20)||new Set(b.value.map((m:any)=>m.id)).size!==b.value.length))throw new PanelError('Ogiltig layout');
   if(b.key==='favorites'&&(!Array.isArray(b.value)||b.value.length>100||b.value.some((f:any)=>!f||typeof f.id!=='string'||typeof f.title!=='string'||f.title.length>300||f.documentId&&typeof f.documentId!=='string'||f.view&&!['overview','documents','tasks','templates','notices','introduction','reminders'].includes(f.view))))throw new PanelError('Ogiltiga favoriter');
   if(b.key==='shortcuts'&&(!Array.isArray(b.value)||b.value.length>10||b.value.some((v:any)=>!['new-document','new-notice','new-task','new-reminder','people','assessments'].includes(v))))throw new PanelError('Ogiltiga snabbåtgärder');
   if(b.key==='introduction'&&(!b.value||Array.isArray(b.value)||typeof b.value!=='object'||Object.keys(b.value).length>1000||Object.values(b.value).some(v=>typeof v!=='boolean')))throw new PanelError('Ogiltiga framsteg');
+  if(b.key==='orders'&&(!b.value||Array.isArray(b.value)||typeof b.value!=='object'||Object.keys(b.value).some(k=>!['notices','documents','tasks','templates','introduction','reminders'].includes(k))||Object.values(b.value).some((ids:any)=>!Array.isArray(ids)||ids.length>1000||ids.some((id:any)=>typeof id!=='string'||id.length>100)||new Set(ids).size!==ids.length)))throw new PanelError('Ogiltig ordning');
   await db.prepare('INSERT INTO panel_preferences(user_email,data,revision) VALUES(?,?::jsonb,1) ON CONFLICT(user_email) DO NOTHING').bind(u.email,'{}').run();
   const old=await db.prepare('SELECT revision FROM panel_preferences WHERE user_email=? FOR UPDATE').bind(u.email).first<{revision:number}>();
   if(old!.revision!==(b.revision||1))throw new PanelError('Dina inställningar har ändrats på en annan flik. Uppdatera och försök igen.',409);
@@ -38,7 +40,8 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
  if(typeof raw.documentId==='string'&&raw.documentId){const doc=await db.prepare('SELECT id FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(raw.documentId).first();if(!doc)throw new PanelError('Dokumentet finns inte');data.documentId=raw.documentId}
  if(kind==='email-template'){data.outlookKind=raw.outlookKind==='meeting'?'meeting':'mail';data.subject=short(raw.subject,1000).replace(/[\r\n]/g,'')}
  if(kind==='document-template'){
-  if(raw.sourceDocumentId){const doc=await db.prepare('SELECT state FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(short(raw.sourceDocumentId)).first<{state:string}>();if(!doc)throw new PanelError('Välj ett dokument att använda som mall');data.state=doc.state}
+  if(raw.importContent){if(raw.sourceDocumentId)throw new PanelError('Välj en källa till mallen');data.state=importedDocumentState(title,raw.importContent)}
+  else if(raw.sourceDocumentId){const doc=await db.prepare('SELECT state FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(short(raw.sourceDocumentId)).first<{state:string}>();if(!doc)throw new PanelError('Välj ett dokument att använda som mall');data.state=doc.state}
   else if(old?.data.state)data.state=old.data.state;
  }
  const id=old?.id||crypto.randomUUID(),now=Date.now();

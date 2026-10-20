@@ -29,13 +29,17 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 
 Välj Anpassa panelen högst upp till höger. Modulrubrikerna öppnar respektive innehållslista. Lägg till eller ta bort moduler, flytta med draghandtaget och ändra bredd/höjd med hörnhandtaget. Ändringarna visas direkt. Spara behåller layouten för ditt konto; Avbryt återgår till senast sparad layout. Bredd/höjd kan även anges med kontrollerna i varje modul och draghandtaget fungerar med piltangenter. Moduler kan upprepas. Upp till 40 moduler, 12 kolumner och 3–20 rader per modul stöds.
 
+Innehållet i Dokument, Att göra, Mallar, Anslagstavla, Introduktion, Mina påminnelser, Favoriter och Snabbåtgärder kan också flyttas. Använd handtaget på dator eller upp/ned-knapparna vid varje post, även på mobilen. Ordningen i listorna sparas för ditt konto och gäller också på respektive helsida. Nya poster läggs sist.
+
 På mobilen visas modulerna under varandra i sparad ordning. Höjden kan ändras med pekskärmen; bredden anpassas till skärmen. Breddinställningen används på större skärmar. Dölj en modul genom krysset i redigeringsläget; det raderar inte modulens innehåll.
 
 ## Dokument
 
-Skapa dokument och öppna flera dokument i dokumentfliksraden. Nya dokument startar med endast Översikt. Äldre dokument slås samman till Översikt vid första öppningen efter uppdateringen: text och kommentarer bevaras och en version sparas före sammanslagningen. Detta sker bara en gång; flikar du därefter själv lägger till behålls. Dokumentet öppnas alltid på Översikt om den finns. Lägg till flikar med +, dubbelklicka för att byta namn, eller använd krysset för att ta bort en flik. Tidigare innehåll kan återfinnas i versionshistoriken.
+På Dokument och Mallar finns Ladda upp. Välj Word (DOCX), HTML eller TXT (högst 2 MB). Filen omvandlas till ett redigerbart dokument i Översikt; en uppladdad mall visas bland dokumentmallarna och kan användas för nya dokument. Word-format kan se något annorlunda ut efter konverteringen. PDF och äldre DOC-filer kan inte importeras som redigerbara dokument.
 
-Redigeraren har rubriker, stycken, teckensnitt, textstorlek/färg, bakgrundsfärg, genomstrykning, upphöjd/nedsänkt text, indrag, radavstånd, sidbrytning, specialtecken, justering, länkar, rasterbilder, redigerbara tabeller med cellfärg, sammanfogning och delning, listor och checklistor. Sidhuvud och sidfot anges ovanför och under dokumenttexten. Ångra/gör om gäller den aktuella dokumenttexten. Ordräknare och sök/ersätt finns också.
+Skapa dokument och öppna flera dokument i dokumentfliksraden. Nya dokument startar med endast Översikt. Äldre dokument slås samman till Översikt vid första öppningen efter uppdateringen: text och kommentarer bevaras och en version sparas före sammanslagningen. Detta sker bara en gång; flikar du därefter själv lägger till behålls. Dokumentet öppnas alltid på Översikt om den finns. Lägg till flikar med +. Byt namn med pennknappen eller dubbelklick. Flytta dem med pilarna eller dra flikens handtag på datorn. Krysset tar bort en flik. Ordning och namn sparas automatiskt i dokumentet för alla som kan öppna det. Tidigare innehåll kan återfinnas i versionshistoriken.
+
+Redigeraren har rubriker, stycken, 198 valbara Office-/Windows-typsnitt (visas om de finns på enheten), textstorlek/färg, bakgrundsfärg, genomstrykning, upphöjd/nedsänkt text, indrag, radavstånd, sidbrytning, specialtecken, justering, länkar, rasterbilder, redigerbara tabeller med cellfärg, sammanfogning och delning, listor och checklistor. Sidhuvud och sidfot anges ovanför och under dokumenttexten. Ångra/gör om gäller den aktuella dokumenttexten. Ordräknare och sök/ersätt finns också.
 
 Stavningskontroll är inställd på svenska och använder webbläsarens inbyggda stöd. Svenska måste vara aktiverat/installerat i webbläsaren eller på enheten; sidan skickar inte texten till en separat språktjänst.
 
