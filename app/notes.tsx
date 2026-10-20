@@ -1,11 +1,13 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {yXmlFragmentToProsemirrorJSON} from '@tiptap/y-tiptap';
+import {EditorContent,useEditor} from '@tiptap/react';
+import {documentExtensions} from './document-extensions';
 import {RichDocument} from './document-editor';
 import {openNote,refreshNote,saveNote,type NoteScope,type NoteSession} from './notes-client';
 
-export function NoteLinks({scope,onChange}:{scope:NoteScope,onChange:(scope:NoteScope)=>void}){
- return <span className="note-links" aria-label="Välj anteckningar"><button type="button" className={scope==='shared'?'active':''} aria-current={scope==='shared'?'page':undefined} onClick={()=>onChange('shared')}>Gemensamt</button><span aria-hidden="true">|</span><button type="button" className={scope==='private'?'active':''} aria-current={scope==='private'?'page':undefined} onClick={()=>onChange('private')}>Privat</button></span>
+export function NoteLinks({scope,onChange,label='Välj anteckningar',disabled=false}:{scope:NoteScope,onChange:(scope:NoteScope)=>void,label?:string,disabled?:boolean}){
+ return <span className="note-links" aria-label={label}><button type="button" disabled={disabled} className={scope==='shared'?'active':''} aria-current={scope==='shared'?'page':undefined} onClick={()=>onChange('shared')}>Gemensamt</button><span aria-hidden="true">|</span><button type="button" disabled={disabled} className={scope==='private'?'active':''} aria-current={scope==='private'?'page':undefined} onClick={()=>onChange('private')}>Privat</button></span>
 }
 function useNote(scope:NoteScope,user:string,readonly:boolean){
  const [session,setSession]=useState<NoteSession|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[,refresh]=useState(0);
@@ -16,16 +18,15 @@ function useNote(scope:NoteScope,user:string,readonly:boolean){
   return()=>{alive=false;clearInterval(interval);if(current){current.listeners.delete(changed);void saveNote(current).catch(()=>{})}}
  },[scope,user,readonly]);return {session,loading,error};
 }
-function previewText(s:NoteSession){
- try{const json=yXmlFragmentToProsemirrorJSON(s.doc.getXmlFragment('notes'));
-  const parts:string[]=[];
-  function walk(node:any){if(node.type==='text'&&node.text)parts.push(node.text);else{if(node.type==='taskItem')parts.push(node.attrs?.checked?'☑ ':'☐ ');for(const child of node.content||[])walk(child);if(['heading','paragraph','taskItem','listItem'].includes(node.type))parts.push('\n')}}
-  walk(json);return parts.join('').trim()
- }catch{return ''}
+function FormattedNote({session}:{session:NoteSession}){
+ const editor=useEditor({extensions:documentExtensions(),immediatelyRender:false,shouldRerenderOnTransaction:true,editable:false,editorProps:{attributes:{class:'document-prose',lang:'sv',spellcheck:'false','aria-label':'Förhandsvisning av anteckningar'}}},[session]);
+ useEffect(()=>{if(!editor)return;const update=()=>editor.commands.setContent(yXmlFragmentToProsemirrorJSON(session.doc.getXmlFragment('notes')),{emitUpdate:false});update();session.doc.on('update',update);return()=>session.doc.off('update',update)},[editor,session]);
+ if(!editor)return <span>Läser anteckningar…</span>;
+ return editor.isEmpty?<span className="notes-placeholder">Inga anteckningar ännu. Klicka här för att börja skriva.</span>:<div className="notes-preview-document" inert><EditorContent editor={editor}/></div>
 }
 export function NotesPreview({scope,user,readonly,onOpen}:{scope:NoteScope,user:string,readonly:boolean,onOpen:()=>void}){
- const {session,loading,error}=useNote(scope,user,readonly),text=session?previewText(session):'';
- return <button type="button" className="notes-preview" onClick={onOpen} aria-label={'Öppna '+(scope==='private'?'privata':'gemensamma')+' anteckningar'}>{loading?'Läser anteckningar…':error?<span role="alert">{error}</span>:text?<span className="notes-preview-text">{text}</span>:<span className="notes-placeholder">Inga anteckningar ännu. Klicka här för att börja skriva.</span>}</button>
+ const {session,loading,error}=useNote(scope,user,readonly);
+ return <div role="button" tabIndex={0} className="notes-preview" onClick={onOpen} onKeyDown={e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();onOpen()}}} aria-label={'Öppna '+(scope==='private'?'privata':'gemensamma')+' anteckningar'}>{loading?'Läser anteckningar…':error?<span role="alert">{error}</span>:session?<FormattedNote session={session}/>:null}</div>
 }
 export function NotesEditor({scope,onScope,user,readonly,onBack}:{scope:NoteScope,onScope:(scope:NoteScope)=>void,user:string,readonly:boolean,onBack:()=>void}){
  const {session,loading,error}=useNote(scope,user,readonly);

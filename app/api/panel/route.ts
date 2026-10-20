@@ -33,9 +33,11 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
   await db.prepare('INSERT INTO panel_notice_reads(notice_id,user_email,read_at) VALUES(?,?,?) ON CONFLICT(notice_id,user_email) DO NOTHING').bind(b.id,u.email,Date.now()).run();return Response.json({ok:true});
  }
  let old:any=null;if(b.id){old=await db.prepare('SELECT * FROM panel_items WHERE id=? AND (owner_email IS NULL OR owner_email=?) FOR UPDATE').bind(short(b.id),u.email).first();if(!old)throw new PanelError('Innehållet finns inte',404);if(old.revision!==b.revision)throw new PanelError('Innehållet har ändrats. Uppdatera och försök igen.',409)}
- if(b.action==='delete'){if(!old)throw new PanelError('Välj innehåll');await db.prepare('DELETE FROM panel_items WHERE id=?').bind(old.id).run();await panelLog(u,'Modulinnehåll borttaget',old.kind==='reminder'?'Personlig påminnelse':old.data.title);return Response.json({ok:true})}
+ if(b.action==='delete'){if(!old)throw new PanelError('Välj innehåll');await db.prepare('DELETE FROM panel_items WHERE id=?').bind(old.id).run();await panelLog(u,'Modulinnehåll borttaget',old.owner_email?(old.kind==='reminder'?'Privat påminnelse':'Privat uppgift'):old.data.title);return Response.json({ok:true})}
  if(b.action!=='save')throw new PanelError('Okänd åtgärd');
  const kind=old?.kind||b.kind;if(!['task','notice','introduction','reminder','document-template','email-template'].includes(kind))throw new PanelError('Ogiltig modul');
+ if(!old&&b.scope!==undefined&&!['shared','private'].includes(b.scope))throw new PanelError('Välj Gemensamt eller Privat');
+ const owner=old?old.owner_email:['task','reminder'].includes(kind)&&(b.scope==='private'||b.scope===undefined&&kind==='reminder')?u.email:null;
  const raw=b.data||{},title=short(raw.title);if(!title)throw new PanelError('Ange en rubrik');
  const data:any={title,body:short(raw.body,30000)};
  if(['task','reminder'].includes(kind)){data.due=short(raw.due,30);if(data.due&&!/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(data.due))throw new PanelError('Ogiltigt datum');data.done=raw.done===true;data.assignee=short(raw.assignee);if(data.assignee&&!(await staffList()).some((s:any)=>s.email===data.assignee))throw new PanelError('Ansvarig måste vara instruktör eller administratör');data.priority=['normal','high'].includes(raw.priority)?raw.priority:'normal'}
@@ -49,9 +51,9 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
  }
  const id=old?.id||crypto.randomUUID(),now=Date.now();
  if(old)await db.prepare('UPDATE panel_items SET data=?::jsonb,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(JSON.stringify(data),now,u.email,id).run();
- else await db.prepare('INSERT INTO panel_items(id,kind,owner_email,data,created_at,updated_at,updated_by) VALUES(?,?,?,?::jsonb,?,?,?)').bind(id,kind,kind==='reminder'?u.email:null,JSON.stringify(data),now,now,u.email).run();
- await panelLog(u,old?'Modulinnehåll ändrat':'Modulinnehåll skapat',kind==='reminder'?'Personlig påminnelse':title);return Response.json({id});
+ else await db.prepare('INSERT INTO panel_items(id,kind,owner_email,data,created_at,updated_at,updated_by) VALUES(?,?,?,?::jsonb,?,?,?)').bind(id,kind,owner,JSON.stringify(data),now,now,u.email).run();
+ await panelLog(u,old?'Modulinnehåll ändrat':'Modulinnehåll skapat',owner?(kind==='reminder'?'Privat påminnelse':'Privat uppgift'):title);return Response.json({id});
 });}
-function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Panelen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0022.',e instanceof PanelError?e.status:503)}}}
+function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Panelen kunde inte läsas eller sparas. Kontrollera databasuppdateringarna till och med 0024.',e instanceof PanelError?e.status:503)}}}
 export const GET=secureApi('/api/panel',handle(get));
 export const POST=secureApi('/api/panel',handle(mutate));

@@ -1,5 +1,15 @@
 # Uppdatering 19 oktober 2026 · Dokument och panel
 
+## Gemensamt och Privat för Att göra och Påminnelser · 20 oktober 2026
+
+Texten TC Boden ovanför rubriken Instruktörspanelen är borttagen.
+
+Det aktuella paketet innehåller anteckningsmodulen, dess formaterade förhandsvisning, namnbytet till Instruktörer och Gemensamt | Privat för Att göra och Påminnelser. Det innehåller endast uppdaterade och nya filer för det befintliga GitHub-repot.
+
+Kör `0023_panel_notes.sql` efter 0022 om den inte redan är tillämpad, och därefter **`0024_panel_item_scopes.sql`**. Netlify Database tillämpar normalt nya migrationer vid publicering; på separat PostgreSQL körs de manuellt. Kör aldrig om en redan tillämpad migration.
+
+Välj Gemensamt eller Privat bredvid rubriken i modulen eller på modulsidan. Nya uppgifter och påminnelser hamnar i den valda vyn. Gemensamma poster kan läsas, redigeras och klarmarkeras av instruktörer och administratörer. Privata poster kan bara läsas, ändras eller tas bort av kontot som skapade dem. Befintliga uppgifter förblir gemensamma och befintliga påminnelser privata. Sidomenyn och modulen heter nu Påminnelser. Sorteringen behåller båda vyernas ordning.
+
 ## Anteckningar · 20 oktober 2026
 
 Paketet innehåller även namnbytet till **Instruktörer · TC Boden** för instruktörer och administratörer. Namnet visas i sidomenyn, mobilhuvudet och webbläsarfliken utifrån den aktuella rollen. Handledare, Chef och inloggningssidan behåller Bedömningsstöd. Namnbytet kräver ingen ytterligare SQL utöver anteckningarnas `0023`.

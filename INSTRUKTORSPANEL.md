@@ -7,6 +7,7 @@
 3. Kör `netlify/database/migrations/0021_order_and_role_preview.sql` om den inte redan har körts.
 4. Kör därefter `netlify/database/migrations/0022_instructor_panel.sql` **en gång** i samma databas som webbplatsen använder. Återkör inte redan tillämpade migrationsfiler.
 5. Kör `netlify/database/migrations/0023_panel_notes.sql` **en gång efter 0022** för Anteckningar. Netlify Database tillämpar den normalt vid publicering.
+   Kör därefter `netlify/database/migrations/0024_panel_item_scopes.sql` för gemensamma och privata uppgifter och påminnelser. Redan tillämpade migrationer ska inte köras igen.
 6. Kopiera ZIP-filens innehåll till roten i det befintliga GitHub-repot och ersätt filerna. Behåll alla andra filer. Ta med både `package.json` och `package-lock.json` om de ingår i ditt paket.
 7. Låt Netlify bygga och publicera uppdateringen. Inga nya miljövariabler eller externa dokumenttjänster krävs. Logga in och ladda om sidan.
 
@@ -20,8 +21,9 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 
 ## Gemensamt och personligt
 
-- Dokument, uppgifter, mallar, anslag och introduktionens checklistesteg är gemensamma.
-- Layout, favoriter, snabbåtgärder, introduktionens avprickningar och påminnelser sparas per inloggat konto i databasen.
+- Dokument, mallar, anslag och introduktionens checklistesteg är gemensamma.
+- Att göra och Påminnelser har Gemensamt | Privat. Nya poster skapas i vald vy. Befintliga uppgifter är gemensamma; befintliga påminnelser är privata. Privata poster är låsta till sitt konto även på servern.
+- Layout, favoriter, snabbåtgärder och introduktionens avprickningar sparas per inloggat konto i databasen.
 - Anteckningar har en privat yta per konto och en gemensam yta för alla instruktörer och administratörer. Redigering sparas automatiskt i `panel_notes`, utan dokumentlista, export, utskrift, kommentarer eller versionshistorik.
 - Skapa introduktionens steg via Introduktion → Nytt steg. Koppla vid behov ett dokument till varje steg. Nya användare har egna avprickningar.
 - Lägg till elever och personal med Lägg till person på respektive översiktssida Elever eller Personal.
