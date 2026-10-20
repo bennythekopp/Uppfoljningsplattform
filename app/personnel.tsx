@@ -1,4 +1,5 @@
- 'use client';
+'use client';
+import {visibleIUTemplate} from './iu-types';
 import ConfirmRemoval from './confirm-removal';
 import StudentHistory from './student-history';
 import {pdfFileName,outputReport} from './pdf-print';
@@ -83,7 +84,7 @@ export default function Personnel({draftStore,userName,onStudentsChanged,templat
  useEffect(()=>{if(!printingRecord)return;const clear=()=>setPrintingRecord(null);window.addEventListener('afterprint',clear);const frame=requestAnimationFrame(()=>outputReport(pdfFilename.current,clear,setMessage));return()=>{cancelAnimationFrame(frame);window.removeEventListener('afterprint',clear)}},[printingRecord]);
  useEffect(()=>{if(!historyOpen)return;const close=(event:KeyboardEvent)=>{if(event.key==='Escape')setHistoryOpen(false)};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[historyOpen]);
  const reference=previousFollowup(records,kind,form?.id);
- const activeTemplate=form?.templateSnapshot||template;
+ const activeTemplate=visibleIUTemplate(form?.templateSnapshot||template,template);
  const total=activeTemplate.simulator.flatMap(section=>section.rows).reduce((sum,row)=>sum+row.max,0);
  const rows=useMemo(()=>activeTemplate.simulator.flatMap(s=>s.rows),[activeTemplate]);
  const scored=rows.filter(r=>form?.answers[r.id]?.score!=null).length;

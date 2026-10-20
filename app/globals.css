@@ -85,3 +85,8 @@
 /* Keep the signed-in account visible while the workspace scrolls. */
 @media screen and (min-width:651px){.sidebar{position:sticky;top:0;height:100dvh;min-height:0;max-height:100dvh;align-self:flex-start;overflow:hidden}.sidebar .sidelist{overflow-y:auto;min-height:0;flex:1}.sidebar .sidebottom{flex:none;margin-top:auto;padding-top:18px;background:#292929}}
 @media screen and (max-width:650px){.sidebar .sidebottom{position:fixed;left:0;bottom:0;width:100%;margin:0;padding:10px 15px;padding-bottom:calc(10px + env(safe-area-inset-bottom));background:#292929;border-top:1px solid #ffffff35;z-index:8}.content{padding-bottom:110px}.who{min-width:0}.sidebar .sidebottom .who{flex:1}.sidebar .sidebottom .who strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* Visibility is reversible; editor controls remain accessible. */
+.hiddenmomentrow{background:#f2f2f2!important;border-color:#d4d4d4!important}.hiddenmomentbadge{display:block!important;width:fit-content;padding:3px 7px;margin-top:5px;border-radius:5px;background:#e4e4e4;color:#555;font-size:11px;font-weight:500}.momentvisibility{display:inline-flex;align-items:center;position:relative}.momentvisibility .formerror{position:absolute;right:0;top:100%;z-index:5;background:white;border:1px solid #c00;padding:8px;min-width:190px}.kpchecklist label{width:100%;min-width:0}.kpchecklist label span{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;flex:1}.simulatorgroupchildren strong,.simulatorgroupchildren small{white-space:pre-wrap;overflow-wrap:anywhere}
+
+.personnelsimtext,.iusimdescription,.kpprintchecklist li{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}

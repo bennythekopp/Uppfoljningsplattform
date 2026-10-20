@@ -1,7 +1,7 @@
 export type KPOutcome=''|'approved'|'requires_completion';
 export type KPKind='KP1'|'KP2';
 export type KPLevel=''|'green'|'yellow'|'red';
-export type KPMoment={id:string,kind:KPKind,title:string,description:string,position:number,children:{id:string,title:string,position:number}[]};
+export type KPMoment={hidden?:boolean,id:string,kind:KPKind,title:string,description:string,position:number,children:{id:string,title:string,position:number}[]};
 export type KPAnswer={level:KPLevel,comment:string,checked:string[]};
 export type KPData={outcome?:KPOutcome,date:string,assessor:string,examPercent:number|null,answers:Record<string,KPAnswer>};
 export type KPSaved=KPData&{template:KPMoment[]};
