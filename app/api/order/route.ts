@@ -9,7 +9,8 @@ import {loadExamTemplate} from '../../exam-data';
 export const dynamic='force-dynamic';
 async function currentIds(scope:string):Promise<string[]|null>{
  let rows:{id:string|number}[];
- if(scope==='iu-categories')rows=await loadOperationalCategories();
+ if(scope==='exam-categories')rows=(await loadExamTemplate()).find(g=>g.part==='op')?.categories||[];
+ else if(scope==='iu-categories')rows=await loadOperationalCategories();
  else if(scope==='iu-simulator-groups')rows=await loadSimulatorGroups();
  else if(scope==='exam-scenarios')rows=(await loadExamTemplate()).filter(g=>g.part==='simulator');
  else if(scope.startsWith('student-moments:')){const category=scope.slice(16);if(!['System E2','System M','Övrigt'].includes(category))return null;rows=(await loadStudentMoments()).filter(m=>m.category===category)}
