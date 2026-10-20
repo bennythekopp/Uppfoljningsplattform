@@ -25,6 +25,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/order':{POST:instructors},
  '/api/panel':{GET:instructors,POST:instructors},
  '/api/documents':{GET:instructors,POST:instructors,PUT:instructors,PATCH:instructors},
+ '/api/notes':{GET:instructors,PUT:instructors},
  '/api/admin/role-preview':{POST:['Administratör']},
  '/api/users':{GET:['Administratör'],POST:['Administratör'],PUT:['Administratör'],DELETE:['Administratör']},
  '/api/people/move':{POST:instructors},

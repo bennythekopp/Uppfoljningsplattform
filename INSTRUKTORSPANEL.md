@@ -6,8 +6,9 @@
 2. Databasen ska sedan tidigare vara uppdaterad till och med `0020`.
 3. Kör `netlify/database/migrations/0021_order_and_role_preview.sql` om den inte redan har körts.
 4. Kör därefter `netlify/database/migrations/0022_instructor_panel.sql` **en gång** i samma databas som webbplatsen använder. Återkör inte redan tillämpade migrationsfiler.
-5. Kopiera ZIP-filens innehåll till roten i det befintliga GitHub-repot och ersätt filerna. Behåll alla andra filer. Ta med både `package.json` och `package-lock.json`.
-6. Låt Netlify bygga och publicera uppdateringen. Inga nya miljövariabler eller externa dokumenttjänster krävs. Logga in och ladda om sidan.
+5. Kör `netlify/database/migrations/0023_panel_notes.sql` **en gång efter 0022** för Anteckningar. Netlify Database tillämpar den normalt vid publicering.
+6. Kopiera ZIP-filens innehåll till roten i det befintliga GitHub-repot och ersätt filerna. Behåll alla andra filer. Ta med både `package.json` och `package-lock.json` om de ingår i ditt paket.
+7. Låt Netlify bygga och publicera uppdateringen. Inga nya miljövariabler eller externa dokumenttjänster krävs. Logga in och ladda om sidan.
 
 Paketet är en kumulativ uppdatering med ändrade och nya filer från dagens eftermiddag/kväll. Det är inte en komplett webbplats. Befintlig databasanslutning (`NETLIFY_DB_URL` eller `DATABASE_URL`) och inloggning används.
 
@@ -21,6 +22,7 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 
 - Dokument, uppgifter, mallar, anslag och introduktionens checklistesteg är gemensamma.
 - Layout, favoriter, snabbåtgärder, introduktionens avprickningar och påminnelser sparas per inloggat konto i databasen.
+- Anteckningar har en privat yta per konto och en gemensam yta för alla instruktörer och administratörer. Redigering sparas automatiskt i `panel_notes`, utan dokumentlista, export, utskrift, kommentarer eller versionshistorik.
 - Skapa introduktionens steg via Introduktion → Nytt steg. Koppla vid behov ett dokument till varje steg. Nya användare har egna avprickningar.
 - Lägg till elever och personal med Lägg till person på respektive översiktssida Elever eller Personal.
 - Outlook-kalendern, Formulär och Min arbetsyta ingår inte.

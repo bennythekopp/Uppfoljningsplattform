@@ -1,6 +1,6 @@
-# Instruktörspanel – uppdatering 19 oktober 2026
+# Instruktörspanel – uppdatering 20 oktober 2026
 
-Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Nya databassteget är **0022 efter 0021**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify.
+Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Senaste databassteget är **0023_panel_notes.sql efter 0022**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify när de ingår i uppdateringspaketet.
 
 # TC Boden – Bedömningsstöd på Netlify
 
