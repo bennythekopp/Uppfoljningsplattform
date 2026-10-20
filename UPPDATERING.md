@@ -1,5 +1,7 @@
 # Uppdatering 19 oktober 2026 · Dokument och panel
 
+Kraschen vid växling mellan Gemensamt och Privat i Anteckningar är korrigerad. Varje vy öppnar en egen redigerarinstans och stängda instanser uppdateras inte längre. Fixen kräver ingen SQL utöver tidigare 0023/0024.
+
 ## Gemensamt och Privat för Att göra och Påminnelser · 20 oktober 2026
 
 Texten TC Boden ovanför rubriken Instruktörspanelen är borttagen.
