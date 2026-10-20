@@ -18,11 +18,12 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
   if(b.key==='favorites'&&(!Array.isArray(b.value)||b.value.length>100||b.value.some((f:any)=>!f||typeof f.id!=='string'||typeof f.title!=='string'||f.title.length>300||f.documentId&&typeof f.documentId!=='string'||f.view&&!['overview','documents','tasks','templates','notices','introduction','reminders'].includes(f.view))))throw new PanelError('Ogiltiga favoriter');
   if(b.key==='shortcuts'&&(!Array.isArray(b.value)||b.value.length>10||b.value.some((v:any)=>!['new-document','new-notice','new-task','new-reminder','people','assessments'].includes(v))))throw new PanelError('Ogiltiga snabbåtgärder');
   if(b.key==='introduction'&&(!b.value||Array.isArray(b.value)||typeof b.value!=='object'||Object.keys(b.value).length>1000||Object.values(b.value).some(v=>typeof v!=='boolean')))throw new PanelError('Ogiltiga framsteg');
-  if(b.key==='orders'&&(!b.value||Array.isArray(b.value)||typeof b.value!=='object'||Object.keys(b.value).some(k=>!['notices','documents','tasks','templates','introduction','reminders'].includes(k))||Object.values(b.value).some((ids:any)=>!Array.isArray(ids)||ids.length>1000||ids.some((id:any)=>typeof id!=='string'||id.length>100)||new Set(ids).size!==ids.length)))throw new PanelError('Ogiltig ordning');
+  const orders=b.key==='orders'?b.value:b.key==='layout'?b.orders:undefined;
+  if((b.key==='orders'||orders!==undefined)&&(!orders||Array.isArray(orders)||typeof orders!=='object'||Object.keys(orders).some(k=>!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts'].includes(k))||Object.values(orders).some((ids:any)=>!Array.isArray(ids)||ids.length>1000||ids.some((id:any)=>typeof id!=='string'||id.length>100)||new Set(ids).size!==ids.length)))throw new PanelError('Ogiltig ordning');
   await db.prepare('INSERT INTO panel_preferences(user_email,data,revision) VALUES(?,?::jsonb,1) ON CONFLICT(user_email) DO NOTHING').bind(u.email,'{}').run();
   const old=await db.prepare('SELECT revision FROM panel_preferences WHERE user_email=? FOR UPDATE').bind(u.email).first<{revision:number}>();
   if(old!.revision!==(b.revision||1))throw new PanelError('Dina inställningar har ändrats på en annan flik. Uppdatera och försök igen.',409);
-  await db.prepare('UPDATE panel_preferences SET data=data || ?::jsonb,revision=revision+1 WHERE user_email=?').bind(JSON.stringify({[b.key]:b.value}),u.email).run();
+  await db.prepare('UPDATE panel_preferences SET data=data || ?::jsonb,revision=revision+1 WHERE user_email=?').bind(JSON.stringify({[b.key]:b.value,...(b.key==='layout'&&orders!==undefined?{orders}:{})}),u.email).run();
   await panelLog(u,'Personlig panel ändrad',b.key);return Response.json({ok:true});
  }
  if(b.action==='read'){

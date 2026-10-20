@@ -28,7 +28,7 @@ Detta paket innehåller även samtliga filer från den föregående uppdateringe
 
 ## Ordning i moduler och dokumentflikar
 
-Poster i samtliga panelmoduler kan flyttas med upp/ned-knapparna eller dras på datorn. Ordningen sparas per användare och syns i modul och helsida. Själva modulernas placering sparas fortsatt via Anpassa panelen. Dokumentflikar kan flyttas med pilar eller dragning och döpas om med pennknappen. Flikens innehåll och kommentarer hör fortsatt till samma flik efter flytt och namnbyte. Ingen ny SQL-migrering krävs.
+Sorteringen är låst i vanligt visningsläge. Anpassa panelen visar draghandtag på översikten; Sortera gör samma sak på varje modulsida och i dokumentfliksraden. Dragning med mus eller pekskärm visar ordningen direkt. Spara behåller den och låser läget; Avbryt återgår till sparad ordning. Pilarna är borttagna. Panelens ordning sparas per användare; dokumentflikarnas ordning delas med dokumentet. Pennknappen byter fliknamn. Flikens innehåll och kommentarer hör fortsatt till samma flik efter flytt och namnbyte. Ingen ny SQL-migrering krävs.
 
 ## Import av dokument och mallar
 
