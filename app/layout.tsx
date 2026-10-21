@@ -12,6 +12,9 @@ import './print.css';
 import './smooth.css';
 import './document-page.css';
 import './grundschema.css';
+import './appearance.css';
+import AppearanceProvider from './appearance-provider';
+import {appearanceBootScript} from './appearance-settings';
 export const metadata:Metadata={
  title:'TC Boden | Bedömningsstöd',
  description:'Uppföljning av utbildning och bedömning per elev',
@@ -20,4 +23,4 @@ export const metadata:Metadata={
  appleWebApp:{capable:true,title:'TC Boden',statusBarStyle:'default'}
 };
 export const viewport:Viewport={width:'device-width',initialScale:1,themeColor:'#292929'};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="sv"><body>{children}</body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="sv" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:appearanceBootScript}}/></head><body><AppearanceProvider>{children}</AppearanceProvider></body></html>}

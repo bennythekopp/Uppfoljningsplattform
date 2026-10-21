@@ -9,6 +9,12 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  const input=await req.clone().json().catch(()=>({})),method=req.method;
  return await databaseTransaction(async()=>{
  const personId=input.studentId||input.personId||(area==='Elever'||area==='Personal'||area==='Personflytt'?input.id:null);
+ // Keep autosaving, but represent one continuous editing burst with one audit row.
+ // Lock the assessment before its handler so overlapping requests cannot duplicate rows.
+ const editScope=area==='Utkast'||area==='Individuell uppföljning'?'IU':area;
+ const editKey=['KP','Examen','IU'].includes(editScope)&&typeof personId==='string'
+   ?JSON.stringify([editScope,personId,input.kind||'']):null;
+ if(editKey)await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind('audit-edit:'+editKey).first();
  const person=typeof personId==='string'?await db.prepare('SELECT name FROM students WHERE id=? UNION SELECT name FROM personnel WHERE id=? LIMIT 1').bind(personId,personId).first<{name:string}>():null;
  let target=person?.name||'',qualifier='',accountChange='';
  if(area==='Användare'&&typeof input.username==='string'){const old=await db.prepare('SELECT name,role FROM users WHERE username=? FOR UPDATE').bind(input.username.toLowerCase()).first<{name:string,role:string}>();target=old?.name||'';if(method==='PUT'&&old&&typeof input.role==='string'&&old.role!==input.role)accountChange='Roll: '+old.role+' → '+input.role;if(method==='PUT'&&typeof input.password==='string'&&input.password)accountChange=[accountChange,'Lösenord återställt'].filter(Boolean).join(' · ')}
@@ -44,8 +50,17 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  if(area.includes('underlag')&&area!=='Sortering av underlag')action=method==='DELETE'?'Underlag borttaget':method==='POST'&&!input.id?'Underlag skapat':'Underlag ändrat';
  if(area==='Sortering av underlag')target=typeof input.scope==='string'?input.scope:'';
  const detail=[target||output.name||input.name||input.username||'',input.kind==='op'?'Operativ':input.kind==='simulator'?'Simulator':input.kind||input.category||'',input.title||'',qualifier,accountChange,area==='Personflytt'?(input.source==='students'?'Elever → Personal':'Personal → Elever'):'',typeof input.itemId==='number'?'Moment '+input.itemId:''].filter(Boolean).join(' · ');
- await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target,undo_payload) VALUES(?,?,?,?,?,?,?,?,?::jsonb)').bind(crypto.randomUUID(),Date.now(),actor.email,actor.name,actor.role,action,area,String(detail||input.id||area).slice(0,1000),undo?JSON.stringify(undo):null).run();
+ const now=Date.now(),auditTarget=String(detail||input.id||area).slice(0,1000);
+ const autosave=!!editKey&&method==='PUT';
+ const previous=autosave?await db.prepare('SELECT id FROM activity_log WHERE edit_key=? AND actor_email=? AND actor_role=? AND occurred_at>=? ORDER BY occurred_at DESC,id DESC LIMIT 1 FOR UPDATE').bind(editKey,actor.email,actor.role,now-30000).first<{id:string}>():null;
+ if(previous){
+   await db.prepare('UPDATE activity_log SET occurred_at=?,actor_name=?,target=? WHERE id=?').bind(now,actor.name,auditTarget,previous.id).run();
+ }else{
+   // A final save/deletion closes the burst, including when another user finalizes it.
+   if(editKey&&!autosave)await db.prepare('UPDATE activity_log SET edit_key=NULL WHERE edit_key=?').bind(editKey).run();
+   await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target,undo_payload,edit_key) VALUES(?,?,?,?,?,?,?,?,?::jsonb,?)').bind(crypto.randomUUID(),now,actor.email,actor.name,actor.role,action,area,auditTarget,undo?JSON.stringify(undo):null,autosave?editKey:null).run();
+ }
  return response;
  });
- }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0020 är körda.',503)}
+ }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0028 är körda.',503)}
 }

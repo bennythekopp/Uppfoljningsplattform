@@ -1,0 +1,10 @@
+TC Boden – samlad aktivitetslogg för bedömningar
+
+1. Kör netlify/database/migrations/0028_coalesced_assessment_audit.sql i samma databas som tidigare migreringar, efter 0027 och innan koden publiceras.
+2. Ersätt app/activity-log.ts i projektet och publicera via det vanliga GitHub/Netlify-flödet.
+
+Bara uppdaterade filer ingår. Tidigare uppdateringar ligger kvar i ditt projekt.
+
+Autosparning fortsätter som tidigare. Löpande ändringar i KP, Examen och individuell uppföljning samlas i en aktivitetsrad per användare och bedömning. Radens tid uppdateras till senaste sparade ändringen. Efter mer än 30 sekunders uppehåll börjar nästa ändring en ny loggrad. Färdig sparning och borttagning får egna loggrader och avslutar pågående grupperingen. Kommentarer som uttryckligen läggs till i kommentarsloggen registreras fortfarande separat. Äldre aktivitetsrader ändras inte.
+
+Verifierat: typkontroll och databastester för gruppering, tidsstämplar, autosparningar, avbrott, olika användare/personer/KP-delar, färdig sparning, IU, Examen samt återställning av databastransaktionen vid fel.

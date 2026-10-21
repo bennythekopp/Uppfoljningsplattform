@@ -1,0 +1,9 @@
+SAMLAD UPPDATERING – TC BODEN
+
+Innehåller förra uppdateringen med mörkt/ljust läge, kugghjulsmeny och textstorlek samt senaste ändringen som samlar bedömningarnas autosparningar i färre aktivitetsrader. Även filerna för mjukare gränssnitt och schemakorrigeringarna från förra paketet ingår.
+
+1. Kör netlify/database/migrations/0028_coalesced_assessment_audit.sql efter 0027 i den befintliga databasen innan publicering. Om 0028 redan är körd behöver den inte köras igen.
+2. Kopiera app/ och netlify/ över motsvarande mappar i ditt befintliga projekt. Behåll övriga filer.
+3. Publicera som vanligt via GitHub/Netlify.
+
+Detta är ett samlat uppdateringspaket, inte hela hemsidans källkod. De tidigare instruktionerna finns under Instruktioner/.

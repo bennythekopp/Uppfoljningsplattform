@@ -1,0 +1,110 @@
+/* All appearance overrides are screen-only. Document paper and exports keep their formatting. */
+@media screen{
+ html{--ui-surface:#fff;--ui-canvas:#f5f5f5;--ui-raised:#f1f1f1;--ui-field:#fff;--ui-line:#d8d8d8;--ui-text:#292929;--ui-muted:#686d73;--ui-green:#185a32;--ui-yellow:#715315;--ui-red:#9a2828;--ui-font-extra:0px;color-scheme:light}
+ html[data-theme=dark]{--ui-surface:#24272a;--ui-canvas:#181a1c;--ui-raised:#303438;--ui-field:#1d2023;--ui-line:#44494f;--ui-text:#edf0f2;--ui-muted:#b1b7bf;--ui-green:#a0ddb4;--ui-yellow:#f4d778;--ui-red:#ffb2aa;color-scheme:dark;background:var(--ui-canvas);color:var(--ui-text)}
+ .user-settings-trigger{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:36px;min-height:36px;border:0;border-radius:7px;background:transparent;color:inherit;cursor:pointer}
+ .user-settings-trigger:hover,.user-settings-trigger[aria-expanded=true]{background:#ffffff18}
+ .user-settings-bubble{position:fixed;z-index:90;width:218px;max-width:calc(100vw - 20px);padding:8px 10px;background:var(--ui-surface);color:var(--ui-text);border:1px solid var(--ui-line);border-radius:11px;box-shadow:0 8px 26px #0003;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.4;animation:settings-in 130ms ease-out}
+ .user-settings-bubble:after{content:'';position:absolute;bottom:-6px;left:calc(var(--settings-arrow) - 5px);width:10px;height:10px;transform:rotate(45deg);background:var(--ui-surface);border-right:1px solid var(--ui-line);border-bottom:1px solid var(--ui-line)}
+ .user-settings-password{display:flex;align-items:center;gap:9px;width:100%;min-height:38px;padding:7px 4px;font:inherit;color:inherit;background:transparent;border:0;border-radius:5px;text-align:left;cursor:pointer}
+ .user-settings-password:hover{background:var(--ui-raised)}
+ .user-settings-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:43px;margin:0;padding:5px 3px;color:inherit;font-size:13px}
+ .user-settings-row>select{width:100px;min-width:0;min-height:33px;padding:5px 4px;border:1px solid var(--ui-line);border-radius:6px;color:var(--ui-text);background:var(--ui-field);font:inherit;font-size:12px}
+ .user-settings-bubble :is(button,select):focus-visible,.user-settings-trigger:focus-visible{outline:2px solid #d44a4a;outline-offset:3px}
+ .appearance-switch{position:relative;isolation:isolate;display:block;flex:none;width:72px;height:35px;padding:0;border:1px solid #dfe3e8;border-radius:22px;background:#f9fafc;box-shadow:0 2px 5px #00000012,inset 0 1px 2px #fff;cursor:pointer;transition:background-color 180ms,border-color 180ms}
+ .appearance-switch .switch-sun{position:absolute;left:10px;top:7px;color:#ffb846;opacity:1;transition:opacity 160ms}
+ .appearance-switch .switch-moon{position:absolute;right:9px;top:7px;color:#f1f3f8;opacity:0;transition:opacity 160ms}
+ .appearance-switch .switch-thumb{position:absolute;top:4px;left:4px;width:25px;height:25px;box-sizing:border-box;border:4px solid #ffbc54;background:#fff0d5;border-radius:50%;transform:translateX(36px);box-shadow:0 1px 3px #0002;transition:transform 200ms ease,background-color 200ms,border-color 200ms}
+ .appearance-switch.is-dark{background:#171b20;border-color:#616a74;box-shadow:inset 0 1px 3px #0005}
+ .appearance-switch.is-dark .switch-thumb{transform:translateX(0);background:#e4e9ef;border-color:#919ca7}
+ .appearance-switch.is-dark .switch-sun{opacity:0}.appearance-switch.is-dark .switch-moon{opacity:1}
+ @keyframes settings-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+}
+@media screen{
+ html[data-theme=dark] body,html[data-theme=dark] .main{background:var(--ui-canvas);color:var(--ui-text)}
+ html[data-theme=dark] :is(.content,.personnel,.instructor-hub,.document-workspace,.modal,.archivepreview){color:var(--ui-text)}
+ html[data-theme=dark] :is(.topbar,.panel-module,.panel-layout-toolbar,.panel-catalog,.panel-full-list,.panel-template-preview,.panel-intro-progress,.document-formatbar,.document-side,.document-page-panel,.personnelcard,.personnelselector,.personnelscores>div,.personneladd,.personnelcount,.personnelsearch,.personnelempty,.summary,.overview>div,.search,.studentlist,.student,.item,.modal,.personnelmenu,.personnelhistory button,.simulatorgroup,.archivepreview,.gs-card,.document-tab-entry,.panel-ordered-row.is-sortable){background:var(--ui-surface);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.topbar strong,.pagehead h1,.pagehead h2,.sectionhead h2,.student strong,.personnel .pagehead h1,.panel-module h2,.panel-module h3,.panel-task strong,.panel-list-link strong,.panel-notice strong,.personnelcard h2,.personnelcard h3,.itemtitle strong,.personnelmomenthead strong,.overview strong,.personneldetailtitle,.personnelcount strong,.modal h2,.gs-card h2){color:var(--ui-text)}
+ html[data-theme=dark] :is(.pagehead p,.topbar,.topmeta,.sectionhead span,.student small,.panel-task small,.panel-notice>small,.panel-inline-actions small,.panel-list-link small,.panel-scope,.personnelannual,.personneldetailhead p,.personnelscores small,.personnelscores span,.personnelcount small,.personnelpartstatus>small,.personnelmomenthead span,.iusimdescription,.legacyresult,.document-sharing,.document-comment small,.document-comment-form small,.document-side>small,.document-wordcount,.assessmentmeta,.nocomments,.personneldescription,.iucategoryhead>span,.gs-muted,.gs-wish-footer small,.activitytable small,.adminactivity .sectionhead p){color:var(--ui-muted)}
+ html[data-theme=dark] :is(.content input,.content select,.content textarea,.modal input,.modal select,.modal textarea,.document-workspace input,.document-workspace select,.document-workspace textarea){background:var(--ui-field);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(input,textarea)::placeholder{color:#979fa8;opacity:1}
+ html[data-theme=dark] :is(.content label,.modal label){color:var(--ui-text)}
+ html[data-theme=dark] :is(.primary,.content button.primary,.personnel .primary,.instructor-hub button.primary,.document-workspace button.primary){background:#b00000;border-color:#b00000;color:#fff}
+ html[data-theme=dark] :is(.secondary,.editicon,.personnellevel,.level,.personneltabs button,.categorytabs button,.kpnav button,.instructor-hub button,.document-workspace button,.studenthistoryfilters button,.historyclose,.personnelmore){background:var(--ui-raised);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.categorytabs button.active,.personneltabs button.active,.kpnav button.active,.instructor-hub button.active,.studenthistoryfilters button.active){background:#b00000;border-color:#c32d2d;color:#fff}
+ html[data-theme=dark] .instructor-hub button.primary{background:#b00000;color:#fff}
+ html[data-theme=dark] :is(.categorytabs button span,.overviewnote,.previouscomment,.kpreadcomment,.personnelextrahead,.panel-size,.document-comment blockquote,.document-comment-form blockquote,.document-search,.followuptoolbar span){background:var(--ui-raised);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.panel-heading-link,.panel-list-link,.panel-favorite button,.panel-notice .panel-inline-actions button,.panel-row-actions button,.panel-order-actions button,.document-title-row>button,.document-sharing>button,.personnelopen,.personnelmomenthead,.personnelmenu button,.simulatorgroupopen){background:transparent;border-color:transparent;color:var(--ui-text)}
+ html[data-theme=dark] :is(.panel-module header,.panel-notice,.panel-task,.panel-document-row,.panel-template-row,.panel-favorite,.document-comment,.document-tabs,.commentlog,.comment,.details,.personnelrosterrow,.personnelmoment,.simulatorgroupchildren,.iucategoryhead,.activitytable th,.activitytable td,.gs-pattern th,.gs-pattern td){border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.personnelopen:hover,.student:hover,.personnelmenu button:hover,.panel-list-link:hover){background:#ffffff08}
+ html[data-theme=dark] :is(.document-workspace,.document-paper-area){background:var(--ui-canvas)}
+ html[data-theme=dark] .document-title-row>input{background:transparent;color:var(--ui-text)}
+ html[data-theme=dark] :is(.document-tabs .active,.instructor-hub .note-links button.active){color:#ff9292!important;background:transparent!important}
+ html[data-theme=dark] :is(.note-links,.notes-placeholder){color:var(--ui-muted)}
+ html[data-theme=dark] :is(.document-save,.notes-save,.save-status.saved,.activityrestored){color:#a0ddb4}
+ html[data-theme=dark] .save-status{color:var(--ui-muted)}
+ html[data-theme=dark] :is(.assessmentdelete,.danger,.personnelremove,.adminresetbutton,.gs-delete,.save-status.error,.save-status.unsaved,.document-save.bad,.notes-save.bad){color:#ffaaa3}
+ html[data-theme=dark] :is(.formerror,.personnelnotice,.followupstarted,.sessionwarning){background:#392820;border-color:#8f5f50;color:#ffcebf}
+ html[data-theme=dark] .toast{background:#303438;border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.itemgreen,.personnelmoment.grön,.personnelhistorymodal .personnelhistoryrow.approved){background:#20382a;border-color:#467557;color:var(--ui-text)}
+ html[data-theme=dark] :is(.itemyellow,.personnelmoment.gul){background:#3a321b;border-color:#877039;color:var(--ui-text)}
+ html[data-theme=dark] :is(.itemred,.personnelmoment.röd,.personnelhistorymodal .personnelhistoryrow.requires_completion){background:#402523;border-color:#985c54;color:var(--ui-text)}
+ html[data-theme=dark] :is(.personnelmomentbody,.personnelsimrows,.details){background:transparent;color:var(--ui-text)}
+ html[data-theme=dark] :is(.personnellevel.grön.selected,.level.grön.chosen,.decisionapproved[aria-pressed=true]){background:#286b3c;border-color:#5c9d6e;color:#fff}
+ html[data-theme=dark] :is(.personnellevel.gul.selected,.level.gul.chosen){background:#846416;border-color:#b39136;color:#fff4ca}
+ html[data-theme=dark] :is(.personnellevel.röd.selected,.level.röd.chosen,.decisioncompletion[aria-pressed=true]){background:#8c342c;border-color:#c06b60;color:#fff}
+ html[data-theme=dark] :is(.followupoutcome.approved,.personnelstatusbadge.approved){background:#203e2c;border-color:#467557;color:#a9e5bc}
+ html[data-theme=dark] :is(.followupoutcome.requires_completion,.personnelstatusbadge.requires_completion){background:#452927;border-color:#985c54;color:#ffb5aa}
+ html[data-theme=dark] .personnelstatusbadge.started{background:#44381b;border-color:#877039;color:#f4d778}
+ html[data-theme=dark] .personnelstatusbadge.none{background:#363a3f;border-color:var(--ui-line);color:var(--ui-muted)}
+ html[data-theme=dark] .decisionapproved:not([aria-pressed=true]){color:#a0ddb4;background:var(--ui-field);border-color:#467557}
+ html[data-theme=dark] .decisioncompletion:not([aria-pressed=true]){color:#ffb2aa;background:var(--ui-field);border-color:#985c54}
+ html[data-theme=dark] :is(.activitytable th,.gs-calendar thead th,.gs-calendar thead .gs-fixed,.gs-tours th,.gs-pattern th){background:var(--ui-raised);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.gs-calendar .gs-fixed,.gs-tours td){background:var(--ui-surface);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.gs-calendar .gs-selected .gs-fixed,.gs-rank,.panel-template-row.chosen){background:#452829;color:#ffd4d4}
+ html[data-theme=dark] .gs-calendar th small{color:var(--ui-muted)}
+ html[data-theme=dark] :is(.gs-scroll,.gs-calendar th,.gs-calendar td){border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.gs-own-day>span,.gs-own-day>time){background:var(--ui-surface);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.gs-own-day.is-today>span,.gs-own-day.is-today>time){background:#452829;color:#ffd4d4}
+ html[data-theme=dark] .gs-own-day{border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.gs-priorities,.gs-message,.eyebrow){color:#ffaaa3}
+ html[data-theme=dark] .document-suggestion{background:#203e2c;color:var(--ui-text)}
+ html[data-theme=dark] .document-paper:not(.note-paper){color-scheme:light;background:#fff;border-color:#bbb;color:#292929}
+ html[data-theme=dark] .document-paper:not(.note-paper) :is(.document-header-input,.document-footer-input){background:transparent;color:#666}
+ html[data-theme=dark] .document-paper:not(.note-paper) .document-prose{color:#292929}
+ html[data-theme=dark] :is(.note-paper,.notes-preview .document-prose){color:var(--ui-text);background:var(--ui-surface)}
+ html[data-theme=dark] .note-paper .document-prose{color:var(--ui-text)}
+ html[data-theme=dark] .page-settings-thumbnail{color-scheme:light;color:#292929;background:#fff}
+ html[data-theme=dark] .archivepreview .printreport{color-scheme:light;color:#111;background:#fff;padding:12px}
+ html[data-theme=dark] .modalback{background:#0009}
+ html[data-theme=dark] :is(.login,.loginpage){background:var(--ui-canvas);color:var(--ui-text)}
+ html[data-theme=dark] :is(.logincard,.loginbox){background:var(--ui-surface);color:var(--ui-text);border-color:var(--ui-line)}
+}
+/* Increase UI text only, never the rich document's own font size or printed protocols. */
+@media screen{
+ html[data-text-size=large]{--ui-font-extra:2px}html[data-text-size=extra-large]{--ui-font-extra:4px}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.navitem,.studentnav){font-size:calc(14px + var(--ui-font-extra));line-height:1.45}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.who strong,.who small){font-size:calc(12px + var(--ui-font-extra));line-height:1.35}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.content,.modal){font-size:calc(14px + var(--ui-font-extra));line-height:1.55}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.content,.modal) :is(button,input,select,textarea,label):not(:where(.document-paper *,.document-prose *,.user-settings-bubble *)){font-size:calc(13px + var(--ui-font-extra))!important;line-height:1.45}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.itemtitle strong,.personnelmomenthead strong,.student strong,.personnelopen strong,.panel-list-link strong,.panel-task strong,.panel-notice strong){font-size:calc(15px + var(--ui-font-extra))}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.pagehead p,.description,.personneldescription,.comment p,.panel-notice p,.previouscomment p,.document-comment p){font-size:calc(14px + var(--ui-font-extra));line-height:1.6}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.assessmentmeta,.commenthead,.panel-list-link small,.panel-task small,.personnelannual,.personnelpartstatus>small,.panel-notice>small){font-size:calc(12px + var(--ui-font-extra))}
+ html:is([data-text-size=large],[data-text-size=extra-large]) .pagehead h1{font-size:calc(32px + var(--ui-font-extra))}
+ html:is([data-text-size=large],[data-text-size=extra-large]) :is(.panel-module h2,.sectionhead h2,.personnelcard h2){font-size:calc(18px + var(--ui-font-extra))}
+ html:is([data-text-size=large],[data-text-size=extra-large]) .panel-module-content{overflow:auto}
+ html:is([data-text-size=large],[data-text-size=extra-large]) .categorytabs{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){.user-settings-bubble,.appearance-switch,.appearance-switch *{animation:none!important;transition:none!important}}
+@media print{html{color-scheme:light!important}.user-settings-trigger,.user-settings-bubble{display:none!important}}
+
+@media screen{
+ html[data-theme=dark] :is(.items,.statline span,.loginform,.rolebadge,.notice,.document-search,.hiddenmomentbadge){background:var(--ui-surface);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.itemtitle,.comment p,.commenthead,.statline b,.summary strong,.summary strong span,.signin h1,.loginform label,.document-page-panel h2,.document-side strong,.gs-calendar tbody th){color:var(--ui-text)}
+ html[data-theme=dark] :is(.itemtitle small,.itemtitle em,.commenthead time,.details small,.summary small,.listhead,.empty,.modal p,.signin p,.sideempty,.overview small,.overview span){color:var(--ui-muted)}
+ html[data-theme=dark] :is(.back,.textaction,.studentgo,.studentarrow,.ownerlink,.personnelopen>span:last-child){color:#ffaaa3}
+ html[data-theme=dark] .loginform input{background:var(--ui-field);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] .modalactions button:first-child{background:var(--ui-raised);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] .rolepreviewbar{background:#302929;color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] .simulatortotal{color:var(--ui-text)!important}
+}

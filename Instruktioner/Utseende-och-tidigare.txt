@@ -1,0 +1,30 @@
+TC Boden – användarmeny, mörkt läge och textstorlek
+
+Innehåller endast uppdaterade filer. Ersätt motsvarande filer i ditt befintliga GitHub-projekt och låt Netlify bygga om. Kopiera innehållet i mappen tc-boden-netlify till projektroten. Ingen SQL-uppdatering behövs för denna uppdatering. Tidigare uppdateringar inklusive Grundschema förutsätts vara installerade.
+
+Nytt
+- Den gamla layouten är kvar. Inga av förslagen på en helt ny design har införts.
+- Kugghjul ersätter nyckeln vid användarnamnet på dator och mobil.
+- En smal menybubbla innehåller endast Byt lösenord, reglage för ljust/mörkt läge och Textstorlek.
+- Ljuslägets reglage har sol och en gul ring. Mörkläget har måne och en ljus rund knapp, enligt bildförslaget.
+- Textstorlek: Normal, Stor och Extra stor. Menyer, kontroller och bedömningstexter förstoras. Dokumentens egen typografi ändras inte.
+- Valen sparas per inloggad användare i den aktuella webbläsaren och finns kvar efter utloggning/återbesök. De synkroniseras inte mellan olika enheter. Första gången följer temat enhetens inställning, tills ett manuellt val görs.
+- Menyn stängs med kugghjulet, Escape, klick utanför eller när fokus lämnar menyn. Byt lösenord öppnar den befintliga lösenordsrutan.
+- Bedömningarnas grön/gul/röd-status behålls med mörkare bakgrunder och läsbara nivåknappar.
+- Dokumentpapperet är fortsatt vitt för att motsvara dokumentets PDF och utskrift. Formaterad text, bilder och tabeller behålls.
+- Utskrifter och exporter använder inte det mörka temat eller gränssnittets textstorlek.
+
+Senaste uppdateringarna ingår
+- Mjukare gränssnitt version 2, inklusive kortvarig cache för instruktörspanelens listor och övergångar för fler vyer.
+- Grundschemas årspilar och rättade ISO-veckonummer samt borttagna enhet/ärendenummer i gruppinställningarna.
+
+Kontroll efter publicering
+Ladda om sidan när Netlify-publiceringen är klar. Öppna kugghjulet, prova mörkt/ljust läge och en större textstorlek. Ladda om för att se att valet ligger kvar. Kontrollera även en elevbedömning, Personal, Grundschema och dokumentredigeraren på din dator och telefon.
+
+Verifiering
+- TypeScript och produktionsbygge godkända.
+- Automatiska React/DOM-tester av meny, fokus, Escape, klick utanför, lösenordsåtgärd, reglage, textstorlek, lagring, kontoisolering, delade dator-/mobilkontroller och enhetens temaväxling godkända.
+- Normalisering och tidig temaladdning före hydrering testade.
+- Viktiga textkombinationer i mörkt läge kontrollerade mot 4,5:1 kontrast.
+- Exportkod, API-behörigheter och kalenderlogik jämförda och oförändrade.
+- Ny visuell kontroll i en riktig webbläsare eller på den publicerade sidan har inte kunnat genomföras här.
