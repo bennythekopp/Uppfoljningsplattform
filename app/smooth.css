@@ -9,7 +9,7 @@
  .itemgreen,.personnelmoment.grön{background:#edf7ef;border-color:#afd3b9}.itemyellow,.personnelmoment.gul{background:#fff8e7;border-color:#e7d59c}.itemred,.personnelmoment.röd{background:#fcefee;border-color:#e3b7b3}
  .itemgreen .details,.itemyellow .details,.itemred .details{background:transparent}
  .personnellevel.grön.selected,.level.grön.chosen{background:#dcefe2;border-color:#85bd96;color:#205b35}.personnellevel.gul.selected,.level.gul.chosen{background:#fff0c6;border-color:#d9bd6d;color:#705513}.personnellevel.röd.selected,.level.röd.chosen{background:#f8dedc;border-color:#d69790;color:#8f322c}
- .smooth-disclosure{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 280ms var(--ui-ease),opacity 220ms ease;min-width:0}.smooth-disclosure.is-open{grid-template-rows:1fr;opacity:1}.smooth-disclosure-inner{min-height:0;overflow:hidden}.student-disclosure{grid-column:1/-1}
+ .smooth-disclosure{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 480ms cubic-bezier(.4,0,.2,1),opacity 400ms ease;min-width:0}.smooth-disclosure.is-open{grid-template-rows:1fr;opacity:1}.smooth-disclosure-inner{min-height:0;overflow:hidden}.student-disclosure{grid-column:1/-1}
  .personnelmomenthead svg:last-child{flex:none;transition:transform var(--ui-time) ease}.personnelmomenthead[aria-expanded=true] svg:last-child{transform:rotate(180deg)}
  .save-status-slot{display:flex;justify-content:flex-end;align-items:center;min-height:34px;margin:0 0 12px}.save-status{display:inline-flex;align-items:center;gap:7px;font-size:12px;line-height:1.4;color:#536258;min-width:184px}.save-status.saved{color:#28643a}.save-status.error,.save-status.unsaved{color:#a12b23}.save-spinner{animation:save-turn 1s linear infinite}.document-save{display:inline-flex;align-items:center;min-width:192px;min-height:32px;justify-content:flex-end;font-variant-numeric:tabular-nums}
  .categorytabs button,.kpnav button{min-height:44px}.categorytabs button:focus-visible,.kpnav button:focus-visible,.personnelmomenthead:focus-visible,.itemtitle:focus-visible{outline:2px solid #a90000;outline-offset:3px}
@@ -18,7 +18,7 @@
  @keyframes save-turn{to{transform:rotate(360deg)}}
 }
 @media screen and (max-width:900px){
- .workspace-sidebar{transition:transform 280ms var(--ui-ease),visibility 280ms;will-change:transform}.draweroverlay{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 280ms ease,visibility 280ms;background:#0006}.draweroverlay.is-open{opacity:1;visibility:visible;pointer-events:auto}.save-status-slot{min-height:32px}.personnelcard{margin-bottom:16px}.iuassessmentcategory{margin-bottom:20px}.primary,.secondary,.personnellevel,.editicon{min-height:44px}.document-save{min-width:0;width:100%;justify-content:flex-start}
+ .workspace-sidebar{transition:transform 480ms cubic-bezier(.4,0,.2,1),visibility 480ms;will-change:transform}.draweroverlay{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 480ms ease,visibility 480ms;background:#0006}.draweroverlay.is-open{opacity:1;visibility:visible;pointer-events:auto}.save-status-slot{min-height:32px}.personnelcard{margin-bottom:16px}.iuassessmentcategory{margin-bottom:20px}.primary,.secondary,.personnellevel,.editicon{min-height:44px}.document-save{min-width:0;width:100%;justify-content:flex-start}
 }
 @media screen and (prefers-reduced-motion:no-preference){
  .primary,.secondary{transition:background-color 180ms ease,border-color 180ms ease,color 180ms ease,box-shadow 180ms ease,transform 140ms ease}

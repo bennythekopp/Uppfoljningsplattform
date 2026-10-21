@@ -1,13 +1,9 @@
-TC BODEN – RÄTTNING AV ÖVERGÅNGAR
+TC BODEN – LUGNARE ÖVERGÅNGAR
 
-Ersätt app/ i ditt befintliga projekt med app/ i detta paket. app/ ska ligga direkt i repositoryts rot bredvid package.json. Paketet innehåller endast uppdaterade filer och de små hjälpfiler de behöver. Behåll resten av projektet.
+Kopiera app/ till projektets rot och ersätt motsvarande filer. Behåll övriga filer. Publicera som vanligt på Netlify och ladda om när publiceringen är klar. Ingen SQL behövs.
 
-Publicera därefter via ditt vanliga GitHub/Netlify-flöde. Vänta tills den nya publiceringen är klar och ladda sedan om sidan. Ingen ny SQL-fil behöver köras för denna rättning.
+Sidbyten: 550 ms upp till 900 px skärmbredd, 650 ms på bredare skärmar. Rörelsen får en lugnare acceleration och inbromsning. Momentens öppning och stängning samt mobilmenyn tar 480 ms. Momentets innehåll behålls under hela stängningen. Tidigare anslutningar för sidornas övergångar ingår också så att samma filer finns med för båda skärmstorlekarna.
 
-I föregående paket använde sidbytena fortfarande den gamla 180 ms-toningen trots att den nya animationsfunktionen fanns med. Rättningen ansluter den nya funktionen till sidornas faktiska innehåll. Övergången börjar före första målningen och kan aktiveras på nytt när innehållet har lästs in. Sidbyten får en tydligare, 320 ms lång toning med en liten förflyttning. Moment fälls ut/in under 280 ms. Mobilmenyn glider under 280 ms. Upprepade byten avbryter tidigare animationer; överordnade och underordnade vyer dubblerar inte förflyttningen.
+Verifierat med React/DOM-tester: datorläget väljer 650 ms och mobilläget 550 ms; formulärtext, fokus och nodidentitet behålls; upprepade byten avbryter föregående animation; minskad rörelse respekteras; momentens innehåll ligger kvar under stängningen och snabb återöppning avbryter bortmonteringen. Produktionsbygge och typkontroll godkända.
 
-Återbesök på instruktörspanelen använder en kort, kontoseparerad minnescache medan färsk information hämtas. Formulär monteras inte om för animationernas skull. Utskriftsregler och bedömningsdata ändras inte.
-
-Systeminställningen Minskad rörelse respekteras. Om den är aktiverad visas inga sådana animationer.
-
-Verifierat: produktionsbygge samt React/DOM-tester av verklig hook-körning, laddning till färdig vy, sidbyten, avbrutna animationer, bevarad formulärnod/text/fokus, återställd rullposition, minskad rörelse, överlappande vyer och separerad cache. Ingen visuell kontroll av din publicerade Netlify-sida har gjorts.
+Ingen visuell kontroll av just din dator eller den publicerade Netlify-sidan har gjorts. Om datorn fortfarande inte visar någon övergång behövs webbläsare och system för fortsatt felsökning. Systemets inställning för minskad rörelse stänger av animationerna avsiktligt.

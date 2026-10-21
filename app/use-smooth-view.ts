@@ -9,7 +9,7 @@ export function useSmoothView(key:string,{ready=true,scroll=false}:{ready?:boole
   if(!ready||!ref.current)return;
   const saved=positions.current.get(key);
   if(scroll&&saved!==undefined)window.scrollTo({top:saved,behavior:'instant'});
-  const animation=animateView(ref.current,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const animation=animateView(ref.current,window.matchMedia('(prefers-reduced-motion: reduce)').matches,window.matchMedia('(max-width:900px)').matches);
   const remember=()=>{positions.current.delete(key);positions.current.set(key,window.scrollY);while(positions.current.size>100)positions.current.delete(positions.current.keys().next().value!)};
   if(scroll)window.addEventListener('scroll',remember,{passive:true});
   return()=>{animation?.cancel();if(scroll){remember();window.removeEventListener('scroll',remember)}};
