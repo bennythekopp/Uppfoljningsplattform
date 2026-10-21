@@ -24,6 +24,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/password':{PUT:all},
  '/api/order':{POST:instructors},
  '/api/moment-visibility':{POST:instructors},
+ '/api/grundschema':{GET:instructors,POST:instructors},
  '/api/panel':{GET:instructors,POST:instructors},
  '/api/documents':{GET:instructors,POST:instructors,PUT:instructors,PATCH:instructors},
  '/api/notes':{GET:instructors,PUT:instructors},

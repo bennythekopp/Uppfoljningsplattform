@@ -2,12 +2,15 @@
 import {generateHTML,type JSONContent} from '@tiptap/core';
 import {yXmlFragmentToProsemirrorJSON} from '@tiptap/y-tiptap';
 import {documentExtensions} from './document-extensions';
-import {outputReport,pdfFileName} from './pdf-print';
+import {pdfFileName} from './pdf-print';
+import {pageSettings,pageGeometry} from './document-page-settings';
+import {outputDocument} from './document-output';
 import type {DocSession} from './document-client';
 export function documentTabs(s:DocSession){return s.doc.getArray<{id:string,title:string}>('tabs').toArray().map(t=>({...t,json:yXmlFragmentToProsemirrorJSON(s.doc.getXmlFragment('tab-'+t.id)) as JSONContent}))}
 function download(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000)}
 export function exportBackup(s:DocSession){import('./document-client').then(({bytes64})=>import('yjs').then(Y=>download(new Blob([JSON.stringify({format:'tc-boden-document-v1',state:bytes64(Y.encodeStateAsUpdate(s.doc))})],{type:'application/json'}),'Dokument-lokal-kopia.json')))}
 export async function exportDocument(s:DocSession,format:'pdf'|'print'|'word',onError:(m:string)=>void){
+ const settings=pageSettings(s.doc.getMap('meta').get('pageSettings')),geometry=pageGeometry(settings);
  const meta=s.doc.getMap('meta'),title=String(meta.get('title')||'Dokument'),allTabs=documentTabs(s),tabs=allTabs.filter(t=>JSON.stringify(t.json).includes('\"text\":')||JSON.stringify(t.json).includes('\"image\"')||JSON.stringify(t.json).includes('\"table\"'));
  if(!tabs.length&&allTabs.length)tabs.push(allTabs[0]);
  if(format==='word'){
@@ -27,11 +30,9 @@ export async function exportDocument(s:DocSession,format:'pdf'|'print'|'word',on
    if(n.type==='horizontalRule')return [new Paragraph({text:'────────────────────────────────'})];
    return [new Paragraph({children:inline(n),heading:n.type==='heading'?({1:d.HeadingLevel.HEADING_1,2:d.HeadingLevel.HEADING_2,3:d.HeadingLevel.HEADING_3}[Number(n.attrs?.level) as 1|2|3]||d.HeadingLevel.HEADING_3):undefined,alignment:({left:d.AlignmentType.LEFT,center:d.AlignmentType.CENTER,right:d.AlignmentType.RIGHT,justify:d.AlignmentType.JUSTIFIED} as Record<string,(typeof d.AlignmentType)[keyof typeof d.AlignmentType]>)[n.attrs?.textAlign||'left'],indent:n.attrs?.indent?{left:Math.max(0,Math.min(8,Number(n.attrs.indent)))*360}:undefined,spacing:{after:160,...(n.attrs?.lineHeight?{line:Math.round(Number(n.attrs.lineHeight)*240)}:{})},keepNext:n.type==='heading'})]
   })}
-  const word=new Document({creator:'TC Boden',title,sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1000,right:1000,bottom:1000,left:1000}}},children:tabs.flatMap(tab=>blocks(tab.json.content||[]))}]});download(await Packer.toBlob(word),pdfFileName(title,'Dokument').replace(/\.pdf$/,'.docx'));return;
+  const word=new Document({creator:'TC Boden',title,sections:[{properties:{page:{size:{width:Math.round(geometry.width*1440/25.4),height:Math.round(geometry.height*1440/25.4)},margin:{top:Math.round(settings.top*1440/25.4),right:Math.round(settings.right*1440/25.4),bottom:Math.round(settings.bottom*1440/25.4),left:Math.round(settings.left*1440/25.4)}}},children:tabs.flatMap(tab=>blocks(tab.json.content||[]))}]});download(await Packer.toBlob(word),pdfFileName(title,'Dokument').replace(/\.pdf$/,'.docx'));return;
  }
  const report=document.createElement('article');report.className='printreport document-report';
- for(const tab of tabs){const section=document.createElement('section');section.className='printcategory';const body=document.createElement('div');body.innerHTML=generateHTML(tab.json,documentExtensions());for(const child of Array.from(body.children)){const moment=document.createElement('section');moment.className='printmoment document-print-block';moment.append(child);section.append(moment)}report.append(section)}
- document.body.append(report);
- if(format==='pdf')outputReport(pdfFileName(title,'Dokument'),()=>report.remove(),onError);
- else{const done=()=>{report.remove();window.removeEventListener('afterprint',done)};window.addEventListener('afterprint',done);window.print();setTimeout(done,60000)}
+ for(const tab of tabs){const section=document.createElement('section');section.className='printcategory document-prose';const body=document.createElement('div');body.innerHTML=generateHTML(tab.json,documentExtensions());for(const child of Array.from(body.children)){const moment=document.createElement('section');moment.className='printmoment document-print-block';moment.append(child);section.append(moment)}report.append(section)}
+ await outputDocument(report,settings,format==='pdf'?pdfFileName(title,'Dokument'):null);
 }

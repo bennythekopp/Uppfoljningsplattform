@@ -3,7 +3,7 @@
 type Block={element:HTMLElement,newPage:boolean,heading:boolean};
 
 /** Lay out real page elements before rasterisation; never slice through a card. */
-export function paginateReport(report:HTMLElement){
+export function paginateReport(report:HTMLElement,size={width:190,height:275}){
  const doc=report.ownerDocument,win=doc.defaultView!,pages:HTMLElement[]=[];
  const blocks:Block[]=[];
  for(const child of Array.from(report.children) as HTMLElement[]){
@@ -22,7 +22,7 @@ export function paginateReport(report:HTMLElement){
  }
  function newPage(){
   const page=report.cloneNode(false) as HTMLElement;page.classList.add('pdf-export-page');
-  page.style.cssText='display:flow-root!important;box-sizing:border-box!important;width:190mm!important;height:275mm!important;min-height:0!important;padding:0!important;margin:0!important;overflow:visible!important';
+  page.style.cssText=`display:flow-root!important;box-sizing:border-box!important;width:${size.width}mm!important;height:${size.height}mm!important;min-height:0!important;padding:0!important;margin:0!important;overflow:visible!important`;
   doc.body.append(page);pages.push(page);return page;
  }
  let page=newPage();

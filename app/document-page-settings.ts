@@ -1,0 +1,4 @@
+export type DocumentPageSettings={orientation:'portrait'|'landscape',top:number,right:number,bottom:number,left:number,guides:boolean};
+export const defaultPageSettings:DocumentPageSettings={orientation:'portrait',top:20,right:20,bottom:20,left:20,guides:true};
+export function pageSettings(value:unknown):DocumentPageSettings{const v=value&&typeof value==='object'?value as Record<string,unknown>:{};const result={...defaultPageSettings,orientation:v.orientation==='landscape'?'landscape' as const:'portrait' as const,guides:typeof v.guides==='boolean'?v.guides:true};for(const key of ['top','right','bottom','left'] as const)if(typeof v[key]==='number'&&Number.isFinite(v[key]))result[key]=Math.min(60,Math.max(0,v[key]));return result}
+export function pageGeometry(s:DocumentPageSettings){const width=s.orientation==='landscape'?297:210,height=s.orientation==='landscape'?210:297;return {width,height,contentWidth:width-s.left-s.right,contentHeight:height-s.top-s.bottom}}

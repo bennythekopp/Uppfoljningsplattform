@@ -9,6 +9,9 @@ import './sorting.css';
 import './role-preview.css';
 import './panel.css';
 import './print.css';
+import './smooth.css';
+import './document-page.css';
+import './grundschema.css';
 export const metadata:Metadata={
  title:'TC Boden | Bedömningsstöd',
  description:'Uppföljning av utbildning och bedömning per elev',
