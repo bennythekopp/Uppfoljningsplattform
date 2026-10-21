@@ -1,7 +1,18 @@
 'use client';
-import {useEffect,useRef} from 'react';
+import {useLayoutEffect,useRef} from 'react';
+import {animateView} from './view-motion';
 /** Animate the current view without remounting forms or losing edits/selection. */
-export function useSmoothView(key:string){
+export function useSmoothView(key:string,{ready=true,scroll=false}:{ready?:boolean,scroll?:boolean}={}){
+ const ref=useRef<HTMLDivElement>(null);
  const positions=useRef(new Map<string,number>());
- useEffect(()=>{let frame=requestAnimationFrame(()=>{const saved=positions.current.get(key);if(saved!==undefined)window.scrollTo({top:saved,behavior:'instant'});const target=document.querySelector<HTMLElement>('.main .content');if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)target?.animate([{opacity:.75},{opacity:1}],{duration:180,easing:'ease-out'})});const remember=()=>positions.current.set(key,window.scrollY);window.addEventListener('scroll',remember,{passive:true});return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',remember)}},[key]);
+ useLayoutEffect(()=>{
+  if(!ready||!ref.current)return;
+  const saved=positions.current.get(key);
+  if(scroll&&saved!==undefined)window.scrollTo({top:saved,behavior:'instant'});
+  const animation=animateView(ref.current,window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const remember=()=>{positions.current.delete(key);positions.current.set(key,window.scrollY);while(positions.current.size>100)positions.current.delete(positions.current.keys().next().value!)};
+  if(scroll)window.addEventListener('scroll',remember,{passive:true});
+  return()=>{animation?.cancel();if(scroll){remember();window.removeEventListener('scroll',remember)}};
+ },[key,ready,scroll]);
+ return ref;
 }
