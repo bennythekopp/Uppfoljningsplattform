@@ -3,7 +3,6 @@ import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
 import {panelBody,panelLog,PanelError,short,type PanelActor} from '../../panel-server';
-import {importedDocumentState} from '../../document-import';
 export const dynamic='force-dynamic';
 type Row={id:string,title:string,state:string,epoch:number,revision:number,created_at:number,updated_at:number};
 function decode(state:string){if(typeof state!=='string'||state.length>3500000||!/^[A-Za-z0-9+/]*={0,2}$/.test(state))throw new PanelError('Dokumentet är för stort eller ogiltigt',413);const doc=new Y.Doc();try{Y.applyUpdate(doc,Buffer.from(state,'base64'));return doc}catch{doc.destroy();throw new PanelError('Ogiltigt dokumentinnehåll')}}
@@ -18,10 +17,9 @@ async function get(req:Request){const url=new URL(req.url),id=short(url.searchPa
  const presence=(await db.prepare('SELECT name,user_email AS email FROM panel_document_presence WHERE document_id=? AND seen_at>?').bind(id,Date.now()-45000).all()).results;
  let state=row.state;const vector=url.searchParams.get('vector');if(vector){if(vector.length>20000||!/^[A-Za-z0-9+/]*={0,2}$/.test(vector))throw new PanelError('Ogiltig synkroniseringsnyckel');const doc=decode(row.state);try{state=Buffer.from(Y.encodeStateAsUpdate(doc,Buffer.from(vector,'base64'))).toString('base64')}catch{throw new PanelError('Ogiltig synkroniseringsnyckel')}finally{doc.destroy()}}
  return Response.json({id,title:row.title,epoch:row.epoch,revision:row.revision,state,comments,presence,needsTabUpgrade});}
-async function create(req:Request){const u=(await currentUser())!,b=await panelBody(req,3600000),id=crypto.randomUUID();return databaseTransaction(async()=>{
+async function create(req:Request){const u=(await currentUser())!,b=await panelBody(req),id=crypto.randomUUID();return databaseTransaction(async()=>{
  let state='';if(b.templateId){const template=await db.prepare("SELECT data FROM panel_items WHERE id=? AND kind='document-template'").bind(short(b.templateId)).first<{data:{state?:string}}>();if(!template)throw new PanelError('Mallen finns inte',404);state=template.data.state||''}
  if(b.copyId)state=(await document(short(b.copyId))).state;
- if(b.importContent){if(state)throw new PanelError('Välj antingen mall eller importerad fil');state=importedDocumentState(short(b.title),b.importContent)}
  const doc=state?decode(state):new Y.Doc(),title=short(b.title)||'Nytt dokument';doc.getMap('meta').set('title',title);
  if(state&&doc.getMap('meta').get('tabsVersion')!==1){const tabs=doc.getArray<any>('tabs'),rows=tabs.toArray(),overview=rows.find(t=>t.title==='Översikt')||{id:crypto.randomUUID(),title:'Översikt'},target=doc.getXmlFragment('tab-'+overview.id);for(const t of rows){if(t.id===overview.id)continue;const source=doc.getXmlFragment('tab-'+t.id);if(hasTabContent(source)){const h=new Y.XmlElement('heading');h.setAttribute('level',2 as any);const text=new Y.XmlText();text.insert(0,t.title);h.insert(0,[text]);target.push([h,...source.toArray().filter(n=>n instanceof Y.XmlElement||n instanceof Y.XmlText).map(n=>n.clone())])}}tabs.delete(0,tabs.length);tabs.push([{...overview,title:'Översikt'}])}
  if(!doc.getArray('tabs').length)doc.getArray('tabs').push([{id:crypto.randomUUID(),title:'Översikt'}]);
