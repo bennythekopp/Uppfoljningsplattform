@@ -1,6 +1,6 @@
-# Instruktörspanel – uppdatering 20 oktober 2026
+# Instruktörspanel – uppdatering 19 oktober 2026
 
-Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Senaste databassteget är **0024_panel_item_scopes.sql efter 0023_panel_notes.sql**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify när de ingår i uppdateringspaketet.
+Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Nya databassteget är **0022 efter 0021**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify.
 
 # TC Boden – Bedömningsstöd på Netlify
 
@@ -262,3 +262,9 @@ Serverns rollregler finns i `app/api-security.ts`. Varje ny API-operation ska ha
 Kör `netlify/database/migrations/0021_order_and_role_preview.sql` efter 0020 och före publicering av denna kod. Ordningen sparas i `display_orders` och används av underlagens laddningsfunktioner. Sparade protokollsnapshotar ändras inte. `app/api/order/route.ts` kontrollerar både medlemskap och föregående ordning innan en ny ordning sparas.
 
 Administratören startar skrivskyddad rollförhandsvisning under Administratörsverktyg → Användare. `currentUser()` ger sessionens effektiva roll; `currentAccount()` används enbart där den verkliga rollen behövs för att kunna starta och avsluta förhandsvisningen. `secureApi` avvisar skrivningar under förhandsvisning. Det finns ingen klientstyrd genväg för att få större behörighet. Se `UPPDATERING.md` för installation och användning.
+
+## Samlad uppdatering 22 oktober 2026
+
+Kör nya databasfiler i nummerordning efter den senast redan tillämpade migreringen. Den här versionen innehåller `0023`–`0029`; den nya administratörsnotisen kräver `0029_admin_notifications.sql`. Om du redan har kört `0027` och `0028`, kör endast `0029` före publicering. `0029` skapar tabeller för meddelanden och individuella läskvitton. Låt Netlify installera beroendena från `package-lock.json` vid driftsättningen.
+
+Inloggningssidans länk till `/setup` är borttagen. Den skyddade engångsinitieringen finns fortsatt på adressen `/setup` när administratörskonto ännu inte är skapat och `ADMIN_SETUP_TOKEN` är konfigurerad.

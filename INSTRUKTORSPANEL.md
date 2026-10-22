@@ -6,10 +6,8 @@
 2. Databasen ska sedan tidigare vara uppdaterad till och med `0020`.
 3. Kör `netlify/database/migrations/0021_order_and_role_preview.sql` om den inte redan har körts.
 4. Kör därefter `netlify/database/migrations/0022_instructor_panel.sql` **en gång** i samma databas som webbplatsen använder. Återkör inte redan tillämpade migrationsfiler.
-5. Kör `netlify/database/migrations/0023_panel_notes.sql` **en gång efter 0022** för Anteckningar. Netlify Database tillämpar den normalt vid publicering.
-   Kör därefter `netlify/database/migrations/0024_panel_item_scopes.sql` för gemensamma och privata uppgifter och påminnelser. Redan tillämpade migrationer ska inte köras igen.
-6. Kopiera ZIP-filens innehåll till roten i det befintliga GitHub-repot och ersätt filerna. Behåll alla andra filer. Ta med både `package.json` och `package-lock.json` om de ingår i ditt paket.
-7. Låt Netlify bygga och publicera uppdateringen. Inga nya miljövariabler eller externa dokumenttjänster krävs. Logga in och ladda om sidan.
+5. Kopiera ZIP-filens innehåll till roten i det befintliga GitHub-repot och ersätt filerna. Behåll alla andra filer. Ta med både `package.json` och `package-lock.json`.
+6. Låt Netlify bygga och publicera uppdateringen. Inga nya miljövariabler eller externa dokumenttjänster krävs. Logga in och ladda om sidan.
 
 Paketet är en kumulativ uppdatering med ändrade och nya filer från dagens eftermiddag/kväll. Det är inte en komplett webbplats. Befintlig databasanslutning (`NETLIFY_DB_URL` eller `DATABASE_URL`) och inloggning används.
 
@@ -21,10 +19,8 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 
 ## Gemensamt och personligt
 
-- Dokument, mallar, anslag och introduktionens checklistesteg är gemensamma.
-- Att göra och Påminnelser har Gemensamt | Privat. Nya poster skapas i vald vy. Befintliga uppgifter är gemensamma; befintliga påminnelser är privata. Privata poster är låsta till sitt konto även på servern.
-- Layout, favoriter, snabbåtgärder och introduktionens avprickningar sparas per inloggat konto i databasen.
-- Anteckningar har en privat yta per konto och en gemensam yta för alla instruktörer och administratörer. Redigering sparas automatiskt i `panel_notes`, utan dokumentlista, export, utskrift, kommentarer eller versionshistorik.
+- Dokument, uppgifter, mallar, anslag och introduktionens checklistesteg är gemensamma.
+- Layout, favoriter, snabbåtgärder, introduktionens avprickningar och påminnelser sparas per inloggat konto i databasen.
 - Skapa introduktionens steg via Introduktion → Nytt steg. Koppla vid behov ett dokument till varje steg. Nya användare har egna avprickningar.
 - Lägg till elever och personal med Lägg till person på respektive översiktssida Elever eller Personal.
 - Outlook-kalendern, Formulär och Min arbetsyta ingår inte.
@@ -33,15 +29,11 @@ De nya modulerna får användas av instruktörer och administratörer. Handledar
 
 Välj Anpassa panelen högst upp till höger. Modulrubrikerna öppnar respektive innehållslista. Lägg till eller ta bort moduler, flytta med draghandtaget och ändra bredd/höjd med hörnhandtaget. Ändringarna visas direkt. Spara behåller layouten för ditt konto; Avbryt återgår till senast sparad layout. Bredd/höjd kan även anges med kontrollerna i varje modul och draghandtaget fungerar med piltangenter. Moduler kan upprepas. Upp till 40 moduler, 12 kolumner och 3–20 rader per modul stöds.
 
-Innehållet i Dokument, Att göra, Mallar, Anslagstavla, Introduktion, Mina påminnelser, Favoriter och Snabbåtgärder kan också flyttas. På översikten låser Anpassa panelen upp draghandtagen för både moduler och deras innehåll. Inne på varje modulsida låser Sortera upp listan. Dragning visar den nya ordningen direkt, även med pekskärm. Spara behåller ordningen och låser läget; Avbryt återgår till den sparade ordningen. Pilar används inte. Ordningen sparas för ditt konto och gäller både på översikten och respektive helsida. Nya poster läggs sist.
-
 På mobilen visas modulerna under varandra i sparad ordning. Höjden kan ändras med pekskärmen; bredden anpassas till skärmen. Breddinställningen används på större skärmar. Dölj en modul genom krysset i redigeringsläget; det raderar inte modulens innehåll.
 
 ## Dokument
 
-På Dokument och Mallar finns Ladda upp. Välj Word (DOCX), HTML eller TXT (högst 2 MB). Filen omvandlas till ett redigerbart dokument i Översikt; en uppladdad mall visas bland dokumentmallarna och kan användas för nya dokument. Word-format kan se något annorlunda ut efter konverteringen. PDF och äldre DOC-filer kan inte importeras som redigerbara dokument.
-
-Skapa dokument och öppna flera dokument i dokumentfliksraden. Nya dokument startar med endast Översikt. Äldre dokument slås samman till Översikt vid första öppningen efter uppdateringen: text och kommentarer bevaras och en version sparas före sammanslagningen. Detta sker bara en gång; flikar du därefter själv lägger till behålls. Dokumentet öppnas alltid på Översikt om den finns. Lägg till flikar med +. Byt namn med pennknappen eller dubbelklick. Välj Sortera och dra flikens handtag med mus eller pekskärm. Den nya ordningen visas direkt; Spara behåller den och Avbryt återgår. Krysset tar bort en flik. Fliknamn sparas automatiskt. Flikordningen sparas med Spara och gäller för alla som kan öppna dokumentet. Tidigare innehåll kan återfinnas i versionshistoriken.
+Skapa dokument och öppna flera dokument i dokumentfliksraden. Nya dokument startar med endast Översikt. Äldre dokument slås samman till Översikt vid första öppningen efter uppdateringen: text och kommentarer bevaras och en version sparas före sammanslagningen. Detta sker bara en gång; flikar du därefter själv lägger till behålls. Dokumentet öppnas alltid på Översikt om den finns. Lägg till flikar med +, dubbelklicka för att byta namn, eller använd krysset för att ta bort en flik. Tidigare innehåll kan återfinnas i versionshistoriken.
 
 Redigeraren har rubriker, stycken, 198 valbara Office-/Windows-typsnitt (visas om de finns på enheten), textstorlek/färg, bakgrundsfärg, genomstrykning, upphöjd/nedsänkt text, indrag, radavstånd, sidbrytning, specialtecken, justering, länkar, rasterbilder, redigerbara tabeller med cellfärg, sammanfogning och delning, listor och checklistor. Sidhuvud och sidfot anges ovanför och under dokumenttexten. Ångra/gör om gäller den aktuella dokumenttexten. Ordräknare och sök/ersätt finns också.
 
