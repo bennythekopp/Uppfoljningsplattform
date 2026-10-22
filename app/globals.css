@@ -90,6 +90,6 @@
   .loginform input { font-size: 16px; }
 }
 /* Compact login mark and immediate shared/private content switches. */
-.signin .logo{width:56px;height:56px;margin-inline:auto;flex:0 0 56px}
+.signin .logo{width:56px;height:56px;margin-inline:auto;flex:0 0 56px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
 .signin .logo img{width:56px!important;height:56px!important;object-fit:contain}
 .instructor-hub .panel-scope-content,.instructor-hub .note-scope-content{animation:none!important;transition:none!important}

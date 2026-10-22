@@ -108,3 +108,48 @@
  html[data-theme=dark] .rolepreviewbar{background:#302929;color:var(--ui-text);border-color:var(--ui-line)}
  html[data-theme=dark] .simulatortotal{color:var(--ui-text)!important}
 }
+
+/* Complete the dark palette for secondary surfaces and interaction states. */
+@media screen{
+ html[data-theme=dark]{--ui-border:var(--ui-line);--ui-shadow:0 2px 8px #0002;--ui-hover:#ffffff0b;--ui-accent-soft:#45292d;--ui-accent-text:#ffaaa3}
+ html[data-theme=dark] :is(.comment,.studenthistoryrow,.simulatorchildeditor,.rolepreviewlauncher,.panel-template-preview,.document-icon-picker){background:var(--ui-surface);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] :is(.studenthistoryrow>button:first-child,.studentopen,.personnelhistorymodal .personnelhistoryrow>button){background:transparent;color:var(--ui-text)}
+ html[data-theme=dark] :is(.studenthistoryrow>button:first-child:hover,.studentopen:hover,.personnelhistorymodal .personnelhistoryrow>button:hover){background:var(--ui-hover)}
+ html[data-theme=dark] :is(.description,.personnelsimrow,.personnelhistory button strong,.studenthistoryrow strong,.document-side h3,.notes-heading h1,.document-comment p,.panel-template-preview p,.panel-template-preview h2,.followupdecision legend){color:var(--ui-text)}
+ html[data-theme=dark] :is(.personnelhistory button small,.previouscomment small,.simulatorgroupopen small,.simulatorgroupchildren small,.document-actions>span,.panel-layout-toolbar small,.panel-template-preview small,.sortmessage,.rolepreviewbar small,.adminiureset p,.personnelmismatch){color:var(--ui-muted)}
+ html[data-theme=dark] :is(.studentavatar,.personnelcount .counticon,.document-presence>span){background:var(--ui-accent-soft);color:var(--ui-accent-text)}
+ html[data-theme=dark] :is(.categorytabs button.active span,.categorytabs button[aria-current=page] span){background:#ffffff26;color:#fff}
+ html[data-theme=dark] :is(.secondary:hover,.categorytabs button:hover,.kpnav button:hover,.personneltabs button:hover,.personnelmore:hover,.personnelmore[aria-expanded=true],.historyclose:hover){background:var(--ui-raised);border-color:#717780;color:var(--ui-text)}
+ html[data-theme=dark] :is(.categorytabs button.active:hover,.kpnav button.active:hover,.personneltabs button.active:hover,.primary:hover){background:#940000;border-color:#c32d2d;color:#fff}
+ html[data-theme=dark] :is(.deleteicon,.studentdelete,.commenthead button,.personnelhistorymodal .personnelhistoryrow .personnelhistorypdf,.personnelhistorymodal .personnelhistoryrow .personnelhistoryprint,.personnelhistorymodal .personnelhistoryrow>.editicon,.examlogdelete,.examlogremove){color:var(--ui-accent-text)}
+ html[data-theme=dark] :is(.deleteicon:hover,.studentdelete:hover,.examlogremove:hover,.personnelhistory .personnelhistoryrow .personnelhistoryprint:hover){background:var(--ui-accent-soft);border-color:#985c54}
+ html[data-theme=dark] :is(.personnelhistorymodal .personnelhistoryrow .personnelhistoryprint,.personnelhistorymodal .personnelhistoryrow .personnelhistorypdf,.examlogremove){border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.examlogtable th,.examlogtable td,.personnelsimrow,.studenthistoryrow,.kpeditrow,.document-icon-picker){border-color:var(--ui-line)}
+ html[data-theme=dark] .followupoutcome{background:var(--ui-raised);border-color:var(--ui-line);color:var(--ui-muted)}
+ html[data-theme=dark] .followupoutcome.approved{background:#203e2c;border-color:#467557;color:#a9e5bc}
+ html[data-theme=dark] .followupoutcome.requires_completion{background:#452927;border-color:#985c54;color:#ffb5aa}
+ html[data-theme=dark] .rowcounts .g{background:#203e2c;color:#a9e5bc}
+ html[data-theme=dark] .rowcounts .y{background:#44381b;color:#f4d778}
+ html[data-theme=dark] .rowcounts .r{background:#452927;color:#ffb5aa}
+ html[data-theme=dark] :is(.activityrestored,.personneldone){color:#a0ddb4!important}
+ html[data-theme=dark] :is(.rolepreviewbar select,.rolepreviewbar button,.activitypagination button,.modalactions button:not(.primary)){background:var(--ui-raised);border-color:var(--ui-line);color:var(--ui-text)}
+ html[data-theme=dark] .rolepreviewbar.previewactive{background:#3b321e;border-color:#877039}
+ html[data-theme=dark] :is(.scenarioselect,.sorthandle){color:var(--ui-muted);background:transparent}
+ html[data-theme=dark] :is(.scenarioselect.active,.panel-task .panel-overdue){color:var(--ui-accent-text)}
+ html[data-theme=dark] .sorthandle:hover{color:var(--ui-accent-text);background:var(--ui-raised)}
+ html[data-theme=dark] .document-formatbar button[aria-pressed=true],html[data-theme=dark] .document-icon-picker button[aria-pressed=true]{background:var(--ui-accent-soft);border-color:#985c54;color:var(--ui-accent-text)}
+ html[data-theme=dark] .instructor-hub .note-links button{color:var(--ui-muted)!important;background:transparent!important}
+ html[data-theme=dark] .instructor-hub .note-links button.active{color:var(--ui-accent-text)!important;border-bottom-color:var(--ui-accent-text)!important}
+ html[data-theme=dark] :is(.note-paper,.notes-preview) :is(.document-prose th,.document-prose td){border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.note-paper,.notes-preview) .document-prose th{background:var(--ui-raised)}
+ html[data-theme=dark] :is(.note-paper,.notes-preview) .document-prose blockquote{color:var(--ui-muted);border-color:var(--ui-line)}
+ html[data-theme=dark] :is(.note-paper,.notes-preview) .document-prose a{color:var(--ui-accent-text)}
+ html[data-theme=dark] .instructor-hub progress,html[data-theme=dark] .instructor-hub progress::-webkit-progress-bar{background:var(--ui-raised)}
+ html[data-theme=dark] .gs-copy-tours select{background:var(--ui-field);color:var(--ui-text);border-color:var(--ui-line)}
+ html[data-theme=dark] .gs-avatar small{background:var(--ui-raised)!important;color:var(--ui-text)!important;border-color:var(--ui-line)}
+ html[data-theme=dark] .gs-message{color:#a0ddb4}
+ html[data-theme=dark] :is(.supportimages img,.supportimages){border-color:var(--ui-line)}
+ /* Paper stays white; the space between its pages follows the canvas. */
+ html[data-theme=dark] .document-paper.paginated:not(.note-paper){background:transparent;box-shadow:none}
+ html[data-theme=dark] .document-page-sheet{background:#fff;border-color:#bbb;box-shadow:0 2px 12px #0005}
+}
