@@ -2,3 +2,11 @@
 @media(max-width:1000px){.page-settings-open{grid-template-columns:minmax(0,1fr)}.document-page-panel{grid-row:1}.document-paper-area{max-width:100%}}
 @media print{.document-page-panel{display:none!important}.document-paper.show-page-guides:after{display:none}}
 .document-page-panel label.page-check{display:flex!important;flex-direction:row!important;align-items:center;justify-content:flex-start;text-align:left;gap:8px}.document-page-panel label.page-check input{display:inline-block!important;flex:0 0 16px!important;width:16px!important;min-height:16px;margin:0!important}
+/* Paper sheets replace the former dashed margin guide. */
+.document-paper.show-page-guides:after{display:none}
+.document-paper.paginated:not(.note-paper){position:relative;isolation:isolate;background:transparent;outline:0;border:0;box-shadow:none;padding:var(--doc-top) var(--doc-right) 0 var(--doc-left);min-height:calc(var(--doc-pages,1) * (var(--doc-height) + 24px) - 24px);margin:0 auto}
+.document-page-sheet{box-sizing:border-box;position:absolute;z-index:-1;left:0;width:100%;height:var(--doc-height);background:#fff;border:1px solid #e1e1e1;box-shadow:0 2px 10px #0002;pointer-events:none}
+.document-paper.paginated:not(.note-paper) .document-prose{position:relative;min-height:0}
+.document-paper.paginated:not(.note-paper) .document-page-break{border:0;height:1px;opacity:0}
+@media print{.document-page-sheet{display:none}}
+.page-settings-thumbnail>div{border:1px solid #ddd}

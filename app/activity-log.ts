@@ -30,6 +30,7 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  }
  if(area==='Elevhistorik'&&typeof input.id==='string'){const old=await db.prepare('SELECT kind FROM personnel_student_archives WHERE id=?').bind(input.id).first<{kind:string}>();qualifier=old?.kind==='student'?'Elevbedömning':old?.kind||''}
  if(area==='Individuell uppföljning'&&typeof input.id==='string'){const old=await db.prepare('SELECT followup_date AS date FROM personnel_followups WHERE id=?').bind(input.id).first<{date:string}>();qualifier=old?.date||''}
+ if(area==='Examen'&&method==='PATCH'&&typeof input.studentId==='string'&&typeof input.logId==='string'){const old=await db.prepare('SELECT data FROM student_examinations WHERE student_id=?').bind(input.studentId).first<{data:{logs:{id:string,date:string,part:string}[]}}>();const log=old?.data.logs.find(item=>item.id===input.logId);qualifier=log?`${log.date} · ${log.part==='op'?'Operativ':'Simulator'}`:''}
  if(area==='Kommentarer'&&!target&&typeof input.id==='string'){const row=await db.prepare('SELECT s.name FROM comments c JOIN students s ON s.id=c.student_id WHERE c.id=?').bind(input.id).first<{name:string}>();target=row?.name||''}
  const recovery=method==='DELETE'?await captureAssessment(area,input):null;
  const response=await handler(req);if(!response.ok)throw response;
@@ -38,6 +39,7 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  let action=method==='DELETE'?'Borttaget':method==='POST'?(input.id?'Ändrat':'Skapat'):'Ändrat';
  if(area==='Användare')action=method==='DELETE'?'Användare borttagen':method==='POST'?'Användare skapad':accountChange.startsWith('Roll:')?'Behörighet ändrad':'Användare ändrad';
  if(area==='Bedömning'||area==='KP'||area==='Examen'||area==='Individuell uppföljning')action=method==='DELETE'?'Bedömning borttagen':method==='PUT'?'Pågående bedömning ändrad':'Bedömning sparad';
+ if(area==='Examen'&&method==='PATCH')action='Genomförandelogg borttagen';
  if(area==='Bedömning')action=method==='DELETE'?'Bedömning borttagen':'Bedömning ändrad';
  if(area==='Kommentarer')action=method==='DELETE'?'Kommentar borttagen':'Kommentar tillagd';
  if(area==='Utkast')action=method==='DELETE'?'Pågående bedömning borttagen':'Pågående bedömning ändrad';
