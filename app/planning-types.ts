@@ -1,4 +1,4 @@
-import {addDays,scheduleTour,type ScheduleConfig} from './grundschema-types';
+import {addDays,scheduleTour,tourStyle,findTour,type ScheduleConfig} from './grundschema-types';
 export type PlanningColumn={id:string,title:string,kind:'shared'|'person',userEmail:string|null,position:number,revision:number};
 export type PlanningCell={day:string,columnId:string,field:'tour'|'task'|'shared',value:string,revision:number,updatedAt:number,updatedBy:string};
 export type PlanningPeriod={id:string,groupId:string,name:string,startDate:string,listChange:boolean,config:ScheduleConfig,assignments:{userEmail:string,row:number}[]};
@@ -7,10 +7,12 @@ export type PlanningLog={id:string,occurredAt:number,actorName:string,action:str
 export const cellKey=(day:string,id:string,field:string)=>JSON.stringify([day,id,field]);
 export function periodFor(periods:PlanningPeriod[],day:string){return [...periods].reverse().find(p=>p.startDate<=day)}
 export function baseTour(periods:PlanningPeriod[],column:PlanningColumn,day:string){const p=periodFor(periods,day),a=p?.assignments.find(a=>a.userEmail===column.userEmail);return p&&a?scheduleTour(p.config,a.row,day):''}
+/** The saved tour colour is also used for its overnight continuation. */
+export function planningTourStyle(code:string,period?:PlanningPeriod){return period&&findTour(period.config,code)?tourStyle(period.config,code):undefined;}
 /** Night starts/finishes come from the saved tour times, with free-text Natt supported. */
 export function nightFlags(code:string,period?:PlanningPeriod){
- const tour=period?.config.tours.find(t=>t.code===code),minutes=(v:string)=>Number(v.slice(0,2))*60+Number(v.slice(3));
- const textual=/^(natt|night)(?:\b|$)/i.test(code),endOnly=/\bav\b/i.test(code);
+ const tour=period?findTour(period.config,code):undefined,label=tour?.code||code,minutes=(v:string)=>Number(v.slice(0,2))*60+Number(v.slice(3));
+ const textual=/^(natt|night)(?:\b|$)/i.test(label),endOnly=/\bav\b/i.test(label);
  return {starts:textual&&!endOnly||!!tour?.passes.some(p=>minutes(p.start)>=18*60&&(p.end==='24:00'||minutes(p.end)<minutes(p.start))),ends:textual||!!tour?.passes.some(p=>minutes(p.start)<6*60&&minutes(p.end)<=12*60&&minutes(p.end)>minutes(p.start))};
 }
 export function nightSegments(days:string[],get:(day:string)=>string,periods:PlanningPeriod[]){

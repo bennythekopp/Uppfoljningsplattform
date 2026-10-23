@@ -5,12 +5,12 @@ import {PanelError,panelBody,staffList,short} from '../../panel-server';
 import {allowedModules} from '../../module-access';
 import {planningDate,planningLog} from '../../planning-server';
 import {baseTour,type PlanningPeriod} from '../../planning-types';
-import {addDays} from '../../grundschema-types';
+import {addDays,tourLogValue} from '../../grundschema-types';
 import type {PlanningColumn} from '../../planning-types';
 export const dynamic='force-dynamic';
 async function settings(u:{role:string,email:string}){const s=(await db.prepare('SELECT editor_emails AS editorEmails,revision FROM planning_settings WHERE id=1').first<{editorEmails:string[],revision:number}>())!;return {...s,canEdit:u.role==='Administratör'||u.role==='Instruktör'&&s.editorEmails.includes(u.email)}}
 async function get(req:Request){const u=(await currentUser())!,url=new URL(req.url),s=await settings(u);
- if(url.searchParams.has('log')){const before=Number(url.searchParams.get('before')||Date.now()+1);return Response.json({log:(await db.prepare('SELECT id,occurred_at AS occurredAt,actor_name AS actorName,action,day::text AS day,column_name AS columnName,field,previous_value AS previousValue,new_value AS newValue FROM planning_log WHERE occurred_at<? ORDER BY occurred_at DESC,id LIMIT 200').bind(before).all()).results})}
+ if(url.searchParams.has('log')){if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan se planeringsloggen.',403);const before=Number(url.searchParams.get('before')||Date.now()+1);return Response.json({log:(await db.prepare('SELECT id,occurred_at AS occurredAt,actor_name AS actorName,action,day::text AS day,column_name AS columnName,field,previous_value AS previousValue,new_value AS newValue FROM planning_log WHERE occurred_at<? ORDER BY occurred_at DESC,id LIMIT 200').bind(before).all()).results})}
  const year=Number(url.searchParams.get('year'));if(!Number.isInteger(year)||year<2020||year>2099)throw new PanelError('Välj ett år mellan 2020 och 2099.');
  const users=await staffList();
  // Stable account columns: names may change without affecting saved cells.
@@ -30,7 +30,8 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
   if((old?.value??null)===b.value)return Response.json({cell:{day,columnId:id,field:b.field,value:b.value,revision:old!.revision,updatedAt:Date.now(),updatedBy:u.name}});
   if((old?.revision||0)!==b.revision) return Response.json({error:'Rutan har ändrats. Din text finns kvar. Välj vilken version du vill behålla.',conflict:old||{value:'',revision:0}}, {status:409});
   const cell=await db.prepare('INSERT INTO planning_cells(day,column_id,field,value,updated_at,updated_by) VALUES(?::date,?,?,?,?,?) ON CONFLICT(day,column_id,field) DO UPDATE SET value=EXCLUDED.value,revision=planning_cells.revision+1,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by RETURNING day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy').bind(day,id,b.field,b.value,Date.now(),u.name).first();
-  await planningLog(u,'Ruta ändrad',{day,columnId:id,columnName:column.title,field:b.field,previous:old?.value??(b.field==='tour'?baseTour((await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date').all<PlanningPeriod>()).results,column,day):''),next:b.value});return Response.json({cell});
+  const periods=b.field==='tour'?(await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date').all<PlanningPeriod>()).results:[],config=periods.filter(p=>p.startDate<=day).at(-1)?.config||{tours:[]},previous=old?.value??(b.field==='tour'?baseTour(periods,column,day):'');
+  await planningLog(u,'Ruta ändrad',{day,columnId:id,columnName:column.title,field:b.field,previous:b.field==='tour'?tourLogValue(config,previous):previous,next:b.field==='tour'?tourLogValue(config,b.value):b.value});return Response.json({cell});
  }
  if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan ändra struktur och behörigheter.',403);
  if(b.action==='editors'){

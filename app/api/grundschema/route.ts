@@ -3,7 +3,7 @@ import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
 import {panelBody,PanelError,panelLog,staffList,short} from '../../panel-server';
 import {recordPlanningPeriod} from '../../planning-server';
-import {stockholmToday} from '../../grundschema-types';
+import {stockholmToday,findTour,tourValue,tourKey} from '../../grundschema-types';
 import type {ScheduleConfig} from '../../grundschema-types';
 export const dynamic='force-dynamic';
 function configInput(raw:any):ScheduleConfig{
@@ -11,11 +11,11 @@ function configInput(raw:any):ScheduleConfig{
  const validDate=(s:unknown,empty=false)=>typeof s==='string'&&(empty&&s===''||/^\d{4}-\d\d-\d\d$/.test(s)&&!Number.isNaN(Date.parse(s))&&new Date(s+'T12:00:00Z').toISOString().slice(0,10)===s);
  if(!raw||!Number.isInteger(raw.year)||raw.year<2020||raw.year>2100||!validDate(raw.startDate)||new Date(raw.startDate+'T12:00:00Z').getUTCDay()!==1||!validDate(raw.validUntil,true)||raw.validUntil&&raw.validUntil<raw.startDate||!Array.isArray(raw.tours)||raw.tours.length>200||!Array.isArray(raw.pattern)||!raw.pattern.length||raw.pattern.length>52)fail();
  const time=(s:unknown)=>typeof s==='string'&&/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(s);
- const codes=new Set<string>();
- const tours=raw.tours.map((t:any)=>{if(!t||typeof t.code!=='string'||!t.code.trim()||t.code.length>20||codes.has(t.code.trim())||!/^#[0-9a-f]{6}$/i.test(t.color)||!Array.isArray(t.passes)||t.passes.length>3)fail();codes.add(t.code.trim());return {code:t.code.trim(),color:t.color,meal:t.meal===true,passes:t.passes.map((p:any)=>{if(!p||!time(p.start)||!(time(p.end)||p.end==='24:00')||p.start===p.end||!short(p.type,50))fail();return {start:p.start,end:p.end,type:short(p.type,50)}})}});
- if(raw.pattern.some((row:any)=>!Array.isArray(row)||row.length!==7||row.some((code:any)=>typeof code!=='string'||code!==''&&!codes.has(code))))fail();
+ const codes=new Set<string>(),ids=new Set<string>();
+ const tours:ScheduleConfig['tours']=raw.tours.map((t:any)=>{if(!t||typeof t.code!=='string'||!t.code.trim()||t.code.length>20||t.id!==undefined&&(typeof t.id!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(t.id)||ids.has(t.id))||!/^#[0-9a-f]{6}$/i.test(t.color)||!Array.isArray(t.passes)||t.passes.length>3)fail();codes.add(t.code.trim());const id=t.id||crypto.randomUUID();ids.add(id);return {id,code:t.code.trim(),color:t.color,meal:t.meal===true,passes:t.passes.map((p:any)=>{if(!p||!time(p.start)||!(time(p.end)||p.end==='24:00')||p.start===p.end||!short(p.type,50))fail();return {start:p.start,end:p.end,type:short(p.type,50)}})}});
+ if(raw.pattern.some((row:any)=>!Array.isArray(row)||row.length!==7||row.some((code:any)=>typeof code!=='string'||code!==''&&!codes.has(code)&&!tours.some(t=>tourKey(t)===code||t.id===findTour({tours},code)?.id))))fail();
  if(!Array.isArray(raw.agreements)||raw.agreements.length>40||raw.agreements.some((a:any)=>!a||typeof a.label!=='string'||a.label.length>300||typeof a.value!=='string'||a.value.length>300))fail();
- return {year:raw.year,startDate:raw.startDate,validUntil:raw.validUntil,unit:short(raw.unit,300),reference:short(raw.reference,120),tours,pattern:raw.pattern,agreements:raw.agreements.map((a:any)=>({label:a.label.trim(),value:a.value.trim()}))};
+ return {year:raw.year,startDate:raw.startDate,validUntil:raw.validUntil,unit:short(raw.unit,300),reference:short(raw.reference,120),tours,pattern:raw.pattern.map((row:string[])=>row.map(value=>value?tourKey(findTour({tours},value)!):'')),agreements:raw.agreements.map((a:any)=>({label:a.label.trim(),value:a.value.trim()}))};
 }
 async function get(){const u=(await currentUser())!;const groups=(await db.prepare(`SELECT id,name,active,visible,wishes_open AS wishesOpen,revision,config FROM schedule_groups ${u.role==='Administratör'?'':'WHERE visible=TRUE'} ORDER BY active DESC,lower(name)`).all()).results;
  const ids=groups.map(g=>g.id);const [users,wishes,assignments]=await Promise.all([staffList(),db.prepare('SELECT group_id AS groupId,user_email AS userEmail,rows,revision FROM schedule_wishes WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT group_id AS groupId,row_number AS row,user_email AS userEmail,locked FROM schedule_assignments WHERE group_id=ANY(?::text[])').bind(ids).all()]);return Response.json({groups,users,wishes:wishes.results,assignments:assignments.results});}

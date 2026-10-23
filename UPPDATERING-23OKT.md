@@ -80,3 +80,41 @@ Hela året är fortfarande åtkomligt, men bara datumen nära den synliga delen 
 De nya filerna `app/planning-tour-picker.tsx` och `app/planning-window.ts` måste följa med vid uppladdningen, tillsammans med uppdaterade `app/planning.tsx`, `app/planning-cell.tsx` och `app/planning.css`. Paketet med enbart prestandarättningen innehåller även den förra cellrättningen.
 
 Kontrollerat lokalt i datorvy och mobil pekvy med 365 dagar, sex personer, tre gemensamma kolumner, fyra gånger långsammare testprocessor och fördröjda sparningar. Kontrollerna omfattar samtliga turer trots befintlig/egen text, färgmarkeringar utan tider, upprepade val under pågående sparning, tangentbord, nattpil, sparfel med återförsök, utkast när man skrollar bort från cellen, sista dagen på året och månadshopp. TypeScript, produktionsbygge och befintliga klienttester har också körts. Testerna använder exempeldata och ändrar inte den publicerade sidan.
+
+
+## Turrutor och nattfärg 23 oktober
+
+Rullisteindikatorn är borttagen från planeringens turrutor. Klicka eller tryck i en ruta för att öppna samtliga turer. Tangentbordsöppning och fri text finns kvar.
+
+Nattmarkeringen använder nu natturens sparade färg från turlistan för datumet, i stället för en fast färg. Samma färg följer med till nattpilens fortsättning nästa dag. Sammanhängande natturer har en sammanhängande pil med text vid starten. En annan tur på slutdagen behåller sin egen färg i nedre halvan. Färgen kan hämtas även när Natt skrivits med små bokstäver. Inget nytt SQL-steg krävs.
+
+Kontrollerat med TypeScript, produktionsbygge, klienttester och webbläsarprov i dator- och mobil pekvy: ingen rullistepil, öppning på klick, fullständig turlista, sparat Natt-val, nattens färg från turlistan, pil över flera dygn, annan tur i nedre halvan, ljust/mörkt läge och uppdaterad färg när turlistan ändras.
+
+
+## Planeringskortets höjd 23 oktober
+
+Den fasta gränsen på 14 datum i instruktörsöversiktens planeringskort är borttagen. Kortet visar fler datum när det görs högre och färre när det görs lägre. Detta sker direkt under Anpassa panelen och behålls efter Spara. På mobil följer Planering också sin sparade modulhöjd. Bara den egna personens kolumner visas som tidigare.
+
+Tabellens synliga område följer kortets storlek och mäts med ResizeObserver. Bara närliggande datum renderas, så att den tidigare prestandarättningen behålls. Årets återstående datum är tillgängliga i kortet.
+
+Kontrollerat i dator- och mobilvy med panelens verkliga storlekskontroller: höjd 3 till 12 visade fler än 14 datum, både under redigering och efter sparning; minskad höjd gav färre datum igen. Datumordning och visning av enbart den inloggade personens rad är bevarade. TypeScript och produktionsbygge är kontrollerade. Ingen ny SQL behövs.
+
+
+## Turvarianter och mjukare ljust läge 23 oktober
+
+Flera turer får ha samma namn, även med olika färger och arbetspass. Varje turvariant har en egen identitet i den sparade turlistan. Namn, färg och tider kan därför redigeras för en variant utan att en annan med samma namn ändras. Grundschemats placeringar och manuella planeringsval behåller rätt variant efter sparning och omladdning. Borttagning tömmer bara de grundschemarutor som använder just den borttagna varianten. Tidigare sparade turlistor och vanliga namnreferenser kan fortfarande läsas.
+
+Rullistorna visar turnamn och färg. Även Grundschema använder samma färgväljare vid placering av turer, så att varianterna går att skilja åt på mobil. En vald Natt-variant behåller sin färg genom nattpilen enligt tidigare regler. Planeringsloggen visar turnamn och färg i läsbar form. Historiska manuella val kan fortfarande visas om turvarianten tas bort från en senare turlista.
+
+De vita gränssnittsytorna i ljust läge är svagt nedtonade till en mjuk, nästan vit nyans. Bakgrund, kort, dialoger och fält följer den tonen. Turer och bedömningar behåller sina valda färger. Dokumentens papper och utskrifts-/exportformat ändras inte av gränssnittets färgjustering.
+
+Paketet inkluderar också de två senaste uppdateringarna: ingen rullistepil i planeringens turrutor, nattfärg från turlistan med sammanhängande pil, samt fler datum när planeringskortet görs högre, live och efter sparning på dator och mobil. Tidigare prestandarättningar finns kvar.
+
+Kontrollerat med TypeScript, produktionsbygge och klienttester. De verkliga API-funktionerna har provats mot en isolerad testdatabas för dubbla turnamn, olika identiteter, grundschemareferenser, oberoende namnändring, avvisning av dubbla identiteter, beständiga planeringsval och läsbara loggar. Webbläsarprov på dator och mobil omfattar val och omladdning av rätt färgvariant, val i Grundschema, oberoende redigering/borttagning, nattkedjor med olika färgvarianter samt de nya ljusa ytorna och bevarat mörkt läge.
+
+Ingen ny SQL behövs om 0030 redan är tillämpad. Ersätt och lägg till samtliga filer i valt paket, behåll mappstrukturen och låt Netlify bygga/publicera.
+
+## Planeringslogg endast för administratörer
+- Knapp och loggfönster visas bara för administratörer.
+- Servern nekar övriga roller åtkomst till planeringsloggen, även om de får se eller redigera planeringen.
+- Ingen ny SQL behövs.

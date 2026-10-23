@@ -1,5 +1,5 @@
 export type SchedulePass={start:string,end:string,type:string};
-export type ScheduleTour={code:string,passes:SchedulePass[],meal:boolean,color:string};
+export type ScheduleTour={id?:string,code:string,passes:SchedulePass[],meal:boolean,color:string};
 export type ScheduleAgreement={label:string,value:string};
 export type ScheduleConfig={year:number,startDate:string,unit:string,reference:string,validUntil:string,tours:ScheduleTour[],pattern:string[][],agreements:ScheduleAgreement[]};
 export type ScheduleGroup={id:string,name:string,active:boolean,visible:boolean,wishesOpen:boolean,revision:number,config:ScheduleConfig};
@@ -18,7 +18,19 @@ export function isoWeek(day:string){const d=new Date(day+'T00:00:00Z');d.setUTCD
 export function passMinutes(pass:SchedulePass){if(!pass.start||!pass.end)return 0;const m=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3));return (m(pass.end)-m(pass.start)+1440)%1440}
 export function duration(minutes:number){return Math.floor(minutes/60)+':'+String(minutes%60).padStart(2,'0')}
 export function tourPeriod(tour:ScheduleTour){if(!tour.passes.length)return 0;let elapsed=0,last=-1;for(const p of tour.passes){if(!p.start||!p.end)continue;const start=Number(p.start.slice(0,2))*60+Number(p.start.slice(3));if(last>=0)elapsed+=(start-last+1440)%1440;elapsed+=passMinutes(p);last=Number(p.end.slice(0,2))*60+Number(p.end.slice(3))}return elapsed}
-export function tourStyle(config:ScheduleConfig,code:string){const color=config.tours.find(t=>t.code===code)?.color||'#ffffff';const v=color.replace('#','');const brightness=parseInt(v.slice(0,2),16)*.299+parseInt(v.slice(2,4),16)*.587+parseInt(v.slice(4,6),16)*.114;return {backgroundColor:color,color:brightness<145?'#ffffff':code==='FP'?'#b00000':'#292929'}}
+// Names are labels. Stable IDs distinguish variants with the same label; the
+// reference also keeps a safe snapshot for historical/deleted tour variants.
+const tourPrefix='@tour:';
+export function tourKey(tour:ScheduleTour){return tour.id?'@tour-id:'+tour.id:tourValue(tour)}
+export function tourValue(tour:ScheduleTour){return tourPrefix+JSON.stringify({id:tour.id||'',code:tour.code,color:tour.color,passes:tour.passes,meal:tour.meal})}
+function referenceTour(value:string):ScheduleTour|undefined{if(!value.startsWith(tourPrefix))return;try{const t=JSON.parse(value.slice(tourPrefix.length));if(!t||typeof t.code!=='string'||!t.code.trim()||t.code.length>20||!/^#[0-9a-f]{6}$/i.test(t.color)||typeof t.id!=='string'||t.id.length>100||!Array.isArray(t.passes)||t.passes.length>3)return;if(t.passes.some((p:any)=>!p||typeof p.start!=='string'||!/^\d\d:\d\d$/.test(p.start)||typeof p.end!=='string'||!/^\d\d:\d\d$/.test(p.end)||typeof p.type!=='string'||p.type.length>50))return;return {...t,id:t.id||undefined,meal:t.meal===true}}catch{return}}
+export function findTour(config:Pick<ScheduleConfig,'tours'>,value:string):ScheduleTour|undefined{if(value.startsWith('@tour-id:'))return config.tours.find(t=>t.id===value.slice(9))||config.tours.find(t=>t.code===value);const snapshot=referenceTour(value);if(snapshot){const identified=snapshot.id?config.tours.find(t=>t.id===snapshot.id):undefined;return identified||(!snapshot.id?config.tours.find(t=>t.code===snapshot.code&&t.color.toLowerCase()===snapshot.color.toLowerCase()&&JSON.stringify(t.passes)===JSON.stringify(snapshot.passes)):undefined)||snapshot}const key=value.trim().toLocaleLowerCase('sv-SE');return config.tours.find(t=>t.code===value)||config.tours.find(t=>t.code.trim().toLocaleLowerCase('sv-SE')===key)}
+export function tourLabel(config:Pick<ScheduleConfig,'tours'>,value:string){return findTour(config,value)?.code||value}
+export function tourLogValue(config:Pick<ScheduleConfig,'tours'>,value:string){const tour=findTour(config,value);return tour?tour.code+' · '+tour.color:value}
+export function normalizeScheduleConfig(config:ScheduleConfig):ScheduleConfig{const tours=config.tours.map(t=>({...t,id:t.id||crypto.randomUUID()})),lookup={tours};return {...config,tours,pattern:config.pattern.map(row=>row.map(value=>{const tour=findTour(lookup,value);return tour?tourKey(tours.find(t=>t.id===tour.id)||tours.find(t=>t.code===tour.code&&t.color===tour.color)||tour):value}))}}
+export function copyScheduleTours(source:ScheduleConfig,target:ScheduleConfig){const same=(a:ScheduleTour,b:ScheduleTour)=>a.code===b.code&&a.color===b.color&&a.meal===b.meal&&JSON.stringify(a.passes)===JSON.stringify(b.passes);const copied=source.tours.map(t=>({...structuredClone(t),id:target.tours.find(v=>same(t,v))?.id||t.id||crypto.randomUUID()})),referenced=new Set(target.pattern.flat().map(v=>findTour(target,v)?.id));return [...copied,...target.tours.filter(t=>referenced.has(t.id)&&!copied.some(v=>v.id===t.id))]}
+export function tourStyle(config:Pick<ScheduleConfig,'tours'>,value:string){const tour=findTour(config,value),color=tour?.color||'#ffffff';const v=color.slice(1),brightness=parseInt(v.slice(0,2),16)*.299+parseInt(v.slice(2,4),16)*.587+parseInt(v.slice(4,6),16)*.114;return {backgroundColor:color,color:brightness<145?'#ffffff':(tour?.code||value)==='FP'?'#b00000':'#292929'}}
+
 export function defaultScheduleConfig(year=2027):ScheduleConfig{
  const pass=(start:string,end:string,type:string)=>({start,end,type});
  const tour=(code:string,passes:SchedulePass[],color='#dedede',meal=true)=>({code,passes,color,meal});

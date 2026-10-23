@@ -153,3 +153,14 @@
  html[data-theme=dark] .document-paper.paginated:not(.note-paper){background:transparent;box-shadow:none}
  html[data-theme=dark] .document-page-sheet{background:#fff;border-color:#bbb;box-shadow:0 2px 12px #0005}
 }
+
+/* Slightly softer light surfaces; assessment and tour colours stay exact. */
+@media screen{
+ html:not([data-theme=dark]){--ui-surface:#f8f9f7;--ui-field:#fafbf9;--ui-canvas:#f1f3f1}
+ html:not([data-theme=dark]) :is(body,.main){background:var(--ui-canvas)}
+ html:not([data-theme=dark]) :is(.topbar,.panel-module,.panel-layout-toolbar,.panel-catalog,.panel-full-list,.panel-template-preview,.panel-intro-progress,.document-formatbar,.document-side,.document-page-panel,.personnelcard,.personnelselector,.personnelscores>div,.personneladd,.personnelcount,.personnelsearch,.personnelempty,.summary,.overview>div,.search,.studentlist,.student,.item:not(.itemgreen):not(.itemyellow):not(.itemred),.modal,.personnelmenu,.personnelhistory button,.simulatorgroup,.archivepreview,.gs-card,.document-tab-entry,.panel-ordered-row.is-sortable,.loginform){background:var(--ui-surface)}
+ html:not([data-theme=dark]) :is(.content input,.content select,.content textarea,.modal input,.modal select,.modal textarea,.loginform input):not(:where(.planning-table *,.gs-calendar *,.gs-pattern *,.gs-tours *,input[type=color])){background-color:var(--ui-field)}
+ html:not([data-theme=dark]) .planning-page{--planning-bg:var(--ui-surface)}
+ html:not([data-theme=dark]) .planning-tour-options{background:var(--ui-surface)}
+ html:not([data-theme=dark]) :is(.secondary,.categorytabs button,.kpnav button,.personneltabs button):not(.active){background-color:var(--ui-surface)}
+}
