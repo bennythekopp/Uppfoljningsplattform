@@ -1,9 +1,8 @@
-TC BODEN – LUGNARE ÖVERGÅNGAR
+TC Boden – prestandarättning för Planering, 23 oktober 2026
 
-Kopiera app/ till projektets rot och ersätt motsvarande filer. Behåll övriga filer. Publicera som vanligt på Netlify och ladda om när publiceringen är klar. Ingen SQL behövs.
+Ersätt filerna med samma sökvägar i ditt befintliga GitHub-repository.
+app/planning-cell.tsx är en NY fil och måste läggas till.
+Låt Netlify bygga och publicera. Ingen ny SQL behövs om 0030 redan har körts.
 
-Sidbyten: 550 ms upp till 900 px skärmbredd, 650 ms på bredare skärmar. Rörelsen får en lugnare acceleration och inbromsning. Momentens öppning och stängning samt mobilmenyn tar 480 ms. Momentets innehåll behålls under hela stängningen. Tidigare anslutningar för sidornas övergångar ingår också så att samma filer finns med för båda skärmstorlekarna.
-
-Verifierat med React/DOM-tester: datorläget väljer 650 ms och mobilläget 550 ms; formulärtext, fokus och nodidentitet behålls; upprepade byten avbryter föregående animation; minskad rörelse respekteras; momentens innehåll ligger kvar under stängningen och snabb återöppning avbryter bortmonteringen. Produktionsbygge och typkontroll godkända.
-
-Ingen visuell kontroll av just din dator eller den publicerade Netlify-sidan har gjorts. Om datorn fortfarande inte visar någon övergång behövs webbläsare och system för fortsatt felsökning. Systemets inställning för minskad rörelse stänger av animationerna avsiktligt.
+Samma rättning ingår i de uppdaterade stora ZIP-paketen från 23 oktober.
+Synlighet och redigeringsbehörighet beskrivs i UPPDATERING-23OKT.md.
