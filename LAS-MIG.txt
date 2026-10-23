@@ -1,8 +1,10 @@
-TC Boden – prestandarättning för Planering, 23 oktober 2026
+TC Boden – ny rättning för turval och årsark, 23 oktober 2026
 
 Ersätt filerna med samma sökvägar i ditt befintliga GitHub-repository.
-app/planning-cell.tsx är en NY fil och måste läggas till.
+Nya filer som måste följa med: app/planning-cell.tsx, app/planning-tour-picker.tsx och app/planning-window.ts.
 Låt Netlify bygga och publicera. Ingen ny SQL behövs om 0030 redan har körts.
 
-Samma rättning ingår i de uppdaterade stora ZIP-paketen från 23 oktober.
-Synlighet och redigeringsbehörighet beskrivs i UPPDATERING-23OKT.md.
+Alla turer visas i rullistan även när rutan är ifylld. Bara turnamn och färg visas. Egen text går fortfarande att skriva.
+Årsarket renderar bara området nära synliga datum och håller kvar en fokuserad ruta.
+Paketet inkluderar även den föregående cellrättningen.
+Samma ändringar ingår i de uppdaterade stora ZIP-paketen från 23 oktober.

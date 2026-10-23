@@ -70,3 +70,13 @@ Kontrollerat med TypeScript, produktionsbygge, klienttester och webbläsartest m
 Administratören öppnar Instruktörspanelen → Modulsynlighet → Planering. Låt "Välj vilka användare som ser modulen" vara ibockad, välj instruktörer och chefer och tryck Spara. Chefer får en egen Planering-länk ovanför Elever och kan enbart läsa. Instruktörer öppnar Planering från instruktörspanelens meny. Om panelkortet saknas i en personlig layout kan instruktören välja Anpassa panelen → Lägg till modul → Planering → Spara.
 
 För att även låta en instruktör redigera: öppna Planering → Redigeringsbehörighet, välj personen och spara. Synlighet måste ges först. Menyer hos andra inloggade användare uppdateras inom ungefär 30 sekunder; de kan också ladda om sidan.
+
+## Ny rättning för turval och större årsark 23 oktober
+
+Den tidigare cellrättningen räckte inte för turval i stora årsark. Planering använder nu en egen skrivbar rullista i stället för webbläsarens datalist. Listan visar alltid alla turer i turlistan som gäller för datumet, även när cellen redan innehåller en tur eller egen text. Varje rad innehåller bara turnamn och färgmarkering; klockslag visas inte. Piltangenter och Enter fungerar, liksom klick och pekskärm. Egen text kan fortfarande skrivas och sparas när rutan lämnas. Ett turval avslutar redigeringen och sparas i bakgrunden.
+
+Hela året är fortfarande åtkomligt, men bara datumen nära den synliga delen får aktiva inmatningsfält. En fokuserad ruta hålls kvar även när man skrollar bort från den. Flerradiga uppgifter får behålla sin höjd. Månadsknappar, årsskrollning, smala Datum/Tur-kolumner, personernas färger och nattpilar behålls. Någon ny databasuppdatering behövs inte.
+
+De nya filerna `app/planning-tour-picker.tsx` och `app/planning-window.ts` måste följa med vid uppladdningen, tillsammans med uppdaterade `app/planning.tsx`, `app/planning-cell.tsx` och `app/planning.css`. Paketet med enbart prestandarättningen innehåller även den förra cellrättningen.
+
+Kontrollerat lokalt i datorvy och mobil pekvy med 365 dagar, sex personer, tre gemensamma kolumner, fyra gånger långsammare testprocessor och fördröjda sparningar. Kontrollerna omfattar samtliga turer trots befintlig/egen text, färgmarkeringar utan tider, upprepade val under pågående sparning, tangentbord, nattpil, sparfel med återförsök, utkast när man skrollar bort från cellen, sista dagen på året och månadshopp. TypeScript, produktionsbygge och befintliga klienttester har också körts. Testerna använder exempeldata och ändrar inte den publicerade sidan.

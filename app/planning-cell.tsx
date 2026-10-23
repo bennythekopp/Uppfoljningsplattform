@@ -1,5 +1,6 @@
 'use client';
 import {memo,useCallback,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
+import PlanningTourPicker from './planning-tour-picker';
 import {addDays,tourStyle} from './grundschema-types';
 import {baseTour,cellKey,nightFlags,periodFor,type PlanningCell,type PlanningColumn,type PlanningData} from './planning-types';
 import {planningEntry,editPlanning,savePlanning,resolvePlanning,subscribePlanningCell,planningCellVersion,type planningSession} from './planning-client';
@@ -23,7 +24,7 @@ function resizeTextarea(el:HTMLTextAreaElement){resizeQueue.add(el);if(resizeFra
  els.forEach((el,i)=>{el.style.height=heights[i]+'px'});
 })}
 
-export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:PlanningCell['field'],list?:string}){
+export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:PlanningCell['field']}){
  const key=cellKey(p.day,p.column.id,p.field);useCellVersion(p.session,key);
  const e=entry(p,p.field),textarea=useRef<HTMLTextAreaElement>(null);
  useLayoutEffect(()=>{const el=textarea.current;if(el)resizeTextarea(el);return()=>{if(el)resizeQueue.delete(el)}},[e.value,p.canEdit]);
@@ -33,10 +34,10 @@ export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:Planni
   onBlur:()=>{void savePlanning(p.session,e).catch(()=>{})},
   onKeyDown:(event:React.KeyboardEvent<HTMLInputElement|HTMLTextAreaElement>)=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();event.currentTarget.blur()}if(event.key==='Escape'){editPlanning(p.session,e,e.cell.value);event.currentTarget.blur()}}
  };
- return <>{p.field==='tour'?<input {...attrs} list={p.list}/>:<textarea {...attrs} ref={textarea} rows={1}/>}{e.saving&&<i className="cell-saving"/>}{e.error&&<div className="planning-cell-error" role="alert"><span>{e.error}</span>{e.conflict?<><button onMouseDown={event=>event.preventDefault()} onClick={()=>void resolvePlanning(p.session,e,true).catch(()=>{})}>Behåll min text</button><button onClick={()=>void resolvePlanning(p.session,e,false)}>Använd sparad text</button></>:<button onClick={()=>void savePlanning(p.session,e).catch(()=>{})}>Försök igen</button>}</div>}</>;
+ return <>{p.field==='tour'?<PlanningTourPicker inputProps={attrs} tours={periodFor(p.data.periods,p.day)?.config.tours||[]} onSelect={value=>{editPlanning(p.session,e,value);void savePlanning(p.session,e).catch(()=>{})}}/>:<textarea {...attrs} ref={textarea} rows={1}/>}{e.saving&&<i className="cell-saving"/>}{e.error&&<div className="planning-cell-error" role="alert"><span>{e.error}</span>{e.conflict?<><button onMouseDown={event=>event.preventDefault()} onClick={()=>void resolvePlanning(p.session,e,true).catch(()=>{})}>Behåll min text</button><button onClick={()=>void resolvePlanning(p.session,e,false)}>Använd sparad text</button></>:<button onClick={()=>void savePlanning(p.session,e).catch(()=>{})}>Försök igen</button>}</div>}</>;
 });
 
-export const PlanningTourCell=memo(function PlanningTourCell(p:CellProps&{listPrefix:string}){
+export const PlanningTourCell=memo(function PlanningTourCell(p:CellProps){
  const previous=addDays(p.day,-1);
  useCellVersion(p.session,cellKey(p.day,p.column.id,'tour'));
  useCellVersion(p.session,cellKey(previous,p.column.id,'tour'));
@@ -44,6 +45,6 @@ export const PlanningTourCell=memo(function PlanningTourCell(p:CellProps&{listPr
  const style=period&&code&&period.config.tours.some(t=>t.code===code)?tourStyle(period.config,code):undefined;
  return <td style={style as CSSProperties} data-neutral={style?.backgroundColor==='#ffffff'||style?.backgroundColor==='#dedede'?code==='FP'?'free':'neutral':undefined} className={'planning-tour '+(starts?'night-start ':'')+(continues?'night-through ':'')+(half?'night-half ':'')+(focused?'is-focused':'')} onFocusCapture={()=>setFocused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setFocused(false)}}>
   {(starts||continues)&&!focused&&<div className="night-visual" aria-hidden="true">{starts&&!continues&&<span>Natt</span>}{continues&&<i className={starts?'':'night-arrow-end'}/>}</div>}
-  <PlanningInput {...p} field="tour" list={p.listPrefix+'-'+(period?.id||'none')}/>
+  <PlanningInput {...p} field="tour"/>
  </td>;
 });
