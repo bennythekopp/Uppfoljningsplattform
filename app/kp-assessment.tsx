@@ -1,4 +1,5 @@
 'use client';
+import {useRefreshCurrent} from './refresh-current';
 import SmoothDisclosure from './smooth-disclosure';
 import {useSmoothView} from './use-smooth-view';
 import SaveStatus from './save-status';
@@ -12,6 +13,7 @@ import {kpKey,kpRequest,kpBody,queueKP,flushKP,type KPStore,type KPEntry} from '
 const emptyAnswer=():KPAnswer=>({level:'',comment:'',checked:[]});
 export default function KPAssessment({student,kind,user,store,onStatus,onPrintReady}:{student:{id:string,name:string},kind:KPKind,user:{name:string,role:string},store:KPStore,onStatus:(row:KPStatusRow)=>void,onPrintReady:(ready:boolean)=>void}){
  const key=kpKey(student.id,kind),readOnly=user.role==='Chef';const [entry,setEntry]=useState<KPEntry|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[expanded,setExpanded]=useState<string|null>(null),[printing,setPrinting]=useState<false|'print'|'pdf'>(false),[removing,setRemoving]=useState(false);
+ useRefreshCurrent(async()=>{await flushKP(store);const loaded=await kpRequest('/api/kp/assessments?studentId='+encodeURIComponent(student.id)+'&kind='+kind);if(loaded.record){store.entries[key]=loaded;setEntry(loaded)}});
  const viewRef=useSmoothView(key,{ready:!loading});
  useEffect(()=>{let active=true;setLoading(true);setEntry(null);setExpanded(null);setMessage('');onPrintReady(false);flushKP(store).then(()=>kpRequest('/api/kp/assessments?studentId='+encodeURIComponent(student.id)+'&kind='+kind)).then(value=>{if(!active)return;const loaded:KPEntry={...value,record:value.record||{data:{outcome:'',date:new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Stockholm'}),assessor:user.name,examPercent:null,answers:{}},savedData:null,isDraft:false,revision:0}};store.entries[key]=loaded;setEntry(loaded)}).catch(e=>{if(active){setEntry(store.entries[key]||null);setMessage(e.message)}}).finally(()=>{if(active)setLoading(false)});return()=>{active=false;onPrintReady(false)}},[student.id,kind]);
  useEffect(()=>{onPrintReady(!!entry?.record.savedData&&!entry.record.isDraft&&!loading&&!busy)},[entry,loading,busy]);

@@ -1,4 +1,5 @@
 'use client';
+import {useRefreshCurrent} from './refresh-current';
 import SmoothDisclosure from './smooth-disclosure';
 import {useSmoothView} from './use-smooth-view';
 import SaveStatus from './save-status';
@@ -15,6 +16,7 @@ import ExamPrint from './exam-print';
 const emptyAnswer=():KPAnswer=>({level:'',comment:'',checked:[]});
 export default function ExamAssessment({student,user,store,onPrintReady}:{student:{id:string,name:string},user:{name:string,role:string},store:ExamStore,onPrintReady:(ready:boolean)=>void}){
  const readOnly=user.role==='Chef';const [entry,setEntry]=useState<ExamEntry|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[expanded,setExpanded]=useState<string|null>(null),[printing,setPrinting]=useState<false|'print'|'pdf'>(false),[removing,setRemoving]=useState(false),[removingLog,setRemovingLog]=useState<string|null>(null),[part,setPart]=useState<'op'|'simulator'>('op'),[viewScenario,setViewScenario]=useState<string|null>(null);
+ useRefreshCurrent(async()=>{await flushExam(store);const loaded=await kpRequest('/api/exam/assessments?studentId='+encodeURIComponent(student.id));if(loaded.record){store.entries[student.id]=loaded;setEntry(loaded)}});
  const viewRef=useSmoothView(JSON.stringify([student.id,part,viewScenario]),{ready:!loading});
  useEffect(()=>{let active=true;onPrintReady(false);flushExam(store).then(()=>kpRequest('/api/exam/assessments?studentId='+encodeURIComponent(student.id))).then(value=>{if(!active)return;const loaded:ExamEntry={...value,record:value.record||{data:{outcome:'',comment:'',answers:{},logs:[],session:{date:new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Stockholm'}),route:'',scenarioId:value.template.find((g:{part:string})=>g.part==='simulator')?.id||'',assessor:readOnly?'':user.name,coAssessor:''}},savedData:null,isDraft:false,revision:0}};store.entries[student.id]=loaded;setEntry(loaded)}).catch(e=>{if(active){setEntry(store.entries[student.id]||null);setMessage(e.message)}}).finally(()=>{if(active)setLoading(false)});return()=>{active=false;onPrintReady(false)}},[student.id]);
  useEffect(()=>{onPrintReady(!!entry?.record.savedData&&!entry.record.isDraft&&!loading&&!busy)},[entry,loading,busy]);

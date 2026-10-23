@@ -1,4 +1,5 @@
 'use client';
+import {useRefreshCurrent} from './refresh-current';
 import {useEffect,useState} from 'react';
 import {yXmlFragmentToProsemirrorJSON} from '@tiptap/y-tiptap';
 import {EditorContent,useEditor} from '@tiptap/react';
@@ -16,7 +17,7 @@ function useNote(scope:NoteScope,user:string,readonly:boolean){
   function changed(){refresh(n=>n+1)}
   const interval=setInterval(()=>{if(current)void refreshNote(current)},2500);
   return()=>{alive=false;clearInterval(interval);if(current){current.listeners.delete(changed);void saveNote(current).catch(()=>{})}}
- },[scope,user,readonly]);return {session,loading,error};
+ },[scope,user,readonly]);useRefreshCurrent(async()=>{if(session)await refreshNote(session)});return {session,loading,error};
 }
 function FormattedNote({session}:{session:NoteSession}){
  const editor=useEditor({extensions:documentExtensions(),immediatelyRender:false,shouldRerenderOnTransaction:true,editable:false,editorProps:{attributes:{class:'document-prose',lang:'sv',spellcheck:'false','aria-label':'Förhandsvisning av anteckningar'}}},[session]);

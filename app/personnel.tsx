@@ -1,4 +1,5 @@
 'use client';
+import {useRefreshCurrent} from './refresh-current';
 import SmoothDisclosure from './smooth-disclosure';
 import {useSmoothView} from './use-smooth-view';
 import SaveStatus from './save-status';
@@ -74,6 +75,7 @@ export default function Personnel({draftStore,userName,onStudentsChanged,templat
  const printPersonId=useRef(selectedPersonId);printPersonId.current=selectedPersonId;
  const year=useStockholmYear();
  async function reload(){const list=await request('/api/personnel') as Person[];setPeople(list);onPeopleChanged(list);return list}
+ useRefreshCurrent(async()=>{await reload();if(selected){setRecords(await request('/api/personnel/followups?personId='+encodeURIComponent(selected.id)))}});
  const viewRef=useSmoothView(JSON.stringify([selected?.id,kind]),{ready:!loading});
  useEffect(()=>{reload().catch(e=>setMessage(e.message)).finally(()=>setLoading(false));request('/api/personnel/responsibles').then(setResponsibles).catch(e=>setMessage(e.message)).finally(()=>setResponsiblesLoading(false))},[year]);
  useEffect(()=>{setSelected(people.find(person=>person.id===selectedPersonId)||null)},[selectedPersonId,people]);

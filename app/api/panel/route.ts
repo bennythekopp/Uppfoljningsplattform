@@ -1,3 +1,4 @@
+import {allowedModules,requireModule,panelItemModule} from '../../module-access';
 import * as Y from 'yjs';
 import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
@@ -5,41 +6,58 @@ import {db,databaseTransaction} from '../../database';
 import {panelBody,panelLog,PanelError,short,staffList} from '../../panel-server';
 import {importedDocumentState} from '../../document-import';
 export const dynamic='force-dynamic';
-async function get(){const u=(await currentUser())!;const [items,documents,prefs,reads,users]=await Promise.all([
+const shortcutModules:Record<string,any>={'new-document':'documents','new-task':'tasks','new-notice':'notices','new-reminder':'reminders'};
+async function get(){const u=(await currentUser())!,allowed=await allowedModules(u);const [items,documents,prefs,reads,users]=await Promise.all([
  db.prepare('SELECT id,kind,owner_email AS ownerEmail,data,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_items WHERE owner_email IS NULL OR owner_email=? ORDER BY updated_at DESC').bind(u.email).all(),
  db.prepare('SELECT id,title,state,epoch,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_documents WHERE deleted_at IS NULL ORDER BY updated_at DESC').all(),
  db.prepare('SELECT data,revision FROM panel_preferences WHERE user_email=?').bind(u.email).first<{data:unknown,revision:number}>(),
  db.prepare('SELECT notice_id AS noticeId,user_email AS userEmail FROM panel_notice_reads').all(),staffList()]);
- const preferences={...(prefs?.data||{})} as {layout?:any[],notesModuleInitialized?:boolean};
- if(preferences.layout&&!preferences.notesModuleInitialized&&!preferences.layout.some(m=>m.kind==='notes'))preferences.layout=[...preferences.layout,{id:'notes',kind:'notes',x:4,y:Math.max(0,...preferences.layout.map(m=>m.y+m.h)),w:4,h:5}];
- if(preferences.layout&&!preferences.layout.some(m=>m.kind==='grundschema')&&!(preferences as any).grundschemaModuleInitialized)preferences.layout=[...preferences.layout,{id:'grundschema',kind:'grundschema',x:0,y:Math.max(0,...preferences.layout.map(m=>m.y+m.h)),w:12,h:3}];
- return Response.json({items:items.results,documents:documents.results.map((r:any)=>{const d=new Y.Doc();try{Y.applyUpdate(d,Buffer.from(r.state,'base64'));const m=d.getMap('meta');const {state,...rest}=r;return {...rest,icon:m.get('icon'),iconColor:m.get('iconColor')}}finally{d.destroy()}}),preferences,preferenceRevision:prefs?.revision||0,reads:reads.results,users});}
+ const preferences={...(prefs?.data||{})} as any;
+ const favoriteVisible=(f:any)=>f.documentId?allowed.includes('documents'):!f.view||f.view==='overview'||allowed.includes(f.view);
+ if(!allowed.includes('favorites'))delete preferences.favorites;else if(preferences.favorites)preferences.favorites=preferences.favorites.filter(favoriteVisible);
+ if(!allowed.includes('shortcuts'))delete preferences.shortcuts;else if(preferences.shortcuts)preferences.shortcuts=preferences.shortcuts.filter((id:string)=>!shortcutModules[id]||allowed.includes(shortcutModules[id]));
+ if(!allowed.includes('introduction'))delete preferences.introduction;
+ if(preferences.orders)preferences.orders=Object.fromEntries(Object.entries(preferences.orders).filter(([kind])=>allowed.includes(kind as any)));
+ if(preferences.layout&&!preferences.notesModuleInitialized&&!preferences.layout.some((m:any)=>m.kind==='notes'))preferences.layout=[...preferences.layout,{id:'notes',kind:'notes',x:4,y:Math.max(0,...preferences.layout.map((m:any)=>m.y+m.h)),w:4,h:5}];
+ if(preferences.layout&&!preferences.layout.some((m:any)=>m.kind==='grundschema')&&!(preferences as any).grundschemaModuleInitialized)preferences.layout=[...preferences.layout,{id:'grundschema',kind:'grundschema',x:0,y:Math.max(0,...preferences.layout.map((m:any)=>m.y+m.h)),w:12,h:3}];
+ if(preferences.layout&&!preferences.layout.some((m:any)=>m.kind==='planning')&&!(preferences as any).planningModuleInitialized)preferences.layout=[...preferences.layout,{id:'planning',kind:'planning',x:0,y:Math.max(0,...preferences.layout.map((m:any)=>m.y+m.h)),w:12,h:5}];
+ if(preferences.layout)preferences.layout=preferences.layout.filter((m:any)=>allowed.includes(m.kind));
+ return Response.json({allowedModules:allowed,items:items.results.filter((i:any)=>allowed.includes(panelItemModule(i.kind)!)),documents:(allowed.includes('documents')?documents.results:[]).map((r:any)=>{const d=new Y.Doc();try{Y.applyUpdate(d,Buffer.from(r.state,'base64'));const m=d.getMap('meta');const {state,...rest}=r;return {...rest,icon:m.get('icon'),iconColor:m.get('iconColor')}}finally{d.destroy()}}),preferences,preferenceRevision:prefs?.revision||0,reads:allowed.includes('notices')?reads.results:[],users});}
 async function mutate(req:Request){const u=(await currentUser())!,b=await panelBody(req,4000000);return databaseTransaction(async()=>{
  if(b.action==='preference'){
+  if(['favorites','shortcuts','introduction'].includes(b.key))await requireModule(u,b.key);
   if(!['layout','favorites','shortcuts','introduction','orders'].includes(b.key))throw new PanelError('Ogiltig inställning');
-  if(b.key==='layout'&&(!Array.isArray(b.value)||b.value.length>40||b.value.some((m:any)=>!m||typeof m.id!=='string'||!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts','notes','grundschema'].includes(m.kind)||!['x','y','w','h'].every(k=>Number.isInteger(m[k]))||m.x<0||m.y<0||m.y>1000||m.w<2||m.w>12||m.x+m.w>12||m.h<3||m.h>20)||new Set(b.value.map((m:any)=>m.id)).size!==b.value.length))throw new PanelError('Ogiltig layout');
-  if(b.key==='favorites'&&(!Array.isArray(b.value)||b.value.length>100||b.value.some((f:any)=>!f||typeof f.id!=='string'||typeof f.title!=='string'||f.title.length>300||f.documentId&&typeof f.documentId!=='string'||f.view&&!['overview','documents','tasks','templates','notices','introduction','reminders','notes','grundschema'].includes(f.view))))throw new PanelError('Ogiltiga favoriter');
+  if(b.key==='layout'&&(!Array.isArray(b.value)||b.value.length>40||b.value.some((m:any)=>!m||typeof m.id!=='string'||!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts','notes','grundschema','planning'].includes(m.kind)||!['x','y','w','h'].every(k=>Number.isInteger(m[k]))||m.x<0||m.y<0||m.y>1000||m.w<2||m.w>12||m.x+m.w>12||m.h<3||m.h>20)||new Set(b.value.map((m:any)=>m.id)).size!==b.value.length))throw new PanelError('Ogiltig layout');
+  if(b.key==='favorites'&&(!Array.isArray(b.value)||b.value.length>100||b.value.some((f:any)=>!f||typeof f.id!=='string'||typeof f.title!=='string'||f.title.length>300||f.documentId&&typeof f.documentId!=='string'||f.view&&!['overview','documents','tasks','templates','notices','introduction','reminders','notes','grundschema','planning'].includes(f.view))))throw new PanelError('Ogiltiga favoriter');
   if(b.key==='shortcuts'&&(!Array.isArray(b.value)||b.value.length>10||b.value.some((v:any)=>!['new-document','new-notice','new-task','new-reminder','people','assessments'].includes(v))))throw new PanelError('Ogiltiga snabbåtgärder');
   if(b.key==='introduction'&&(!b.value||Array.isArray(b.value)||typeof b.value!=='object'||Object.keys(b.value).length>1000||Object.values(b.value).some(v=>typeof v!=='boolean')))throw new PanelError('Ogiltiga framsteg');
   const orders=b.key==='orders'?b.value:b.key==='layout'?b.orders:undefined;
-  if((b.key==='orders'||orders!==undefined)&&(!orders||Array.isArray(orders)||typeof orders!=='object'||Object.keys(orders).some(k=>!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts','notes','grundschema'].includes(k))||Object.values(orders).some((ids:any)=>!Array.isArray(ids)||ids.length>1000||ids.some((id:any)=>typeof id!=='string'||id.length>100)||new Set(ids).size!==ids.length)))throw new PanelError('Ogiltig ordning');
+  if((b.key==='orders'||orders!==undefined)&&(!orders||Array.isArray(orders)||typeof orders!=='object'||Object.keys(orders).some(k=>!['notices','documents','tasks','templates','introduction','reminders','favorites','shortcuts','notes','grundschema','planning'].includes(k))||Object.values(orders).some((ids:any)=>!Array.isArray(ids)||ids.length>1000||ids.some((id:any)=>typeof id!=='string'||id.length>100)||new Set(ids).size!==ids.length)))throw new PanelError('Ogiltig ordning');
   await db.prepare('INSERT INTO panel_preferences(user_email,data,revision) VALUES(?,?::jsonb,1) ON CONFLICT(user_email) DO NOTHING').bind(u.email,'{}').run();
-  const old=await db.prepare('SELECT revision FROM panel_preferences WHERE user_email=? FOR UPDATE').bind(u.email).first<{revision:number}>();
+  const old=await db.prepare('SELECT revision,data FROM panel_preferences WHERE user_email=? FOR UPDATE').bind(u.email).first<{revision:number,data:any}>();
   if(old!.revision!==(b.revision||1))throw new PanelError('Dina inställningar har ändrats på en annan flik. Uppdatera och försök igen.',409);
-  await db.prepare('UPDATE panel_preferences SET data=data || ?::jsonb,revision=revision+1 WHERE user_email=?').bind(JSON.stringify({[b.key]:b.value,...(b.key==='layout'?{notesModuleInitialized:true,grundschemaModuleInitialized:true}:{}),...(b.key==='layout'&&orders!==undefined?{orders}:{})}),u.email).run();
+  const permitted=await allowedModules(u),prior=old!.data||{};
+  if(b.key==='layout')b.value=[...b.value.filter((m:any)=>permitted.includes(m.kind)),...(prior.layout||[]).filter((m:any)=>!permitted.includes(m.kind))];
+  if(b.key==='favorites'){const visible=(f:any)=>f.documentId?permitted.includes('documents'):!f.view||f.view==='overview'||permitted.includes(f.view);b.value=[...b.value.filter(visible),...(prior.favorites||[]).filter((f:any)=>!visible(f))]}
+  if(b.key==='shortcuts'){const visible=(id:string)=>!shortcutModules[id]||permitted.includes(shortcutModules[id]);b.value=[...b.value.filter(visible),...(prior.shortcuts||[]).filter((id:string)=>!visible(id))]}
+  const mergedOrders=orders===undefined?undefined:{...Object.fromEntries(Object.entries(prior.orders||{}).filter(([kind])=>!permitted.includes(kind as any))),...Object.fromEntries(Object.entries(orders).filter(([kind])=>permitted.includes(kind as any)))};if(b.key==='orders')b.value=mergedOrders;
+  await db.prepare('UPDATE panel_preferences SET data=data || ?::jsonb,revision=revision+1 WHERE user_email=?').bind(JSON.stringify({[b.key]:b.value,...(b.key==='layout'?{notesModuleInitialized:true,grundschemaModuleInitialized:true,planningModuleInitialized:true}:{}),...(b.key==='layout'&&mergedOrders!==undefined?{orders:mergedOrders}:{})}),u.email).run();
   await panelLog(u,'Personlig panel ändrad',b.key);return Response.json({ok:true});
  }
  if(b.action==='read'){
+  await requireModule(u,'notices');
   const found=await db.prepare("SELECT id FROM panel_items WHERE id=? AND kind='notice'").bind(short(b.id)).first();if(!found)throw new PanelError('Anslaget finns inte',404);
   await db.prepare('INSERT INTO panel_notice_reads(notice_id,user_email,read_at) VALUES(?,?,?) ON CONFLICT(notice_id,user_email) DO NOTHING').bind(b.id,u.email,Date.now()).run();return Response.json({ok:true});
  }
  let old:any=null;if(b.id){old=await db.prepare('SELECT * FROM panel_items WHERE id=? AND (owner_email IS NULL OR owner_email=?) FOR UPDATE').bind(short(b.id),u.email).first();if(!old)throw new PanelError('Innehållet finns inte',404);if(old.revision!==b.revision)throw new PanelError('Innehållet har ändrats. Uppdatera och försök igen.',409)}
+ if(old)await requireModule(u,panelItemModule(old.kind)!);
  if(b.action==='delete'){if(!old)throw new PanelError('Välj innehåll');await db.prepare('DELETE FROM panel_items WHERE id=?').bind(old.id).run();await panelLog(u,'Modulinnehåll borttaget',old.owner_email?(old.kind==='reminder'?'Privat påminnelse':'Privat uppgift'):old.data.title);return Response.json({ok:true})}
  if(b.action!=='save')throw new PanelError('Okänd åtgärd');
  const kind=old?.kind||b.kind;if(!['task','notice','introduction','reminder','document-template','email-template'].includes(kind))throw new PanelError('Ogiltig modul');
  if(!old&&b.scope!==undefined&&!['shared','private'].includes(b.scope))throw new PanelError('Välj Gemensamt eller Privat');
+ await requireModule(u,panelItemModule(kind)!);
  const owner=old?old.owner_email:['task','reminder'].includes(kind)&&(b.scope==='private'||b.scope===undefined&&kind==='reminder')?u.email:null;
- const raw=b.data||{},title=short(raw.title);if(!title)throw new PanelError('Ange en rubrik');
+ const raw=b.data||{};if(raw.documentId||raw.sourceDocumentId)await requireModule(u,'documents');const title=short(raw.title);if(!title)throw new PanelError('Ange en rubrik');
  const data:any={title,body:short(raw.body,30000)};
  if(['task','reminder'].includes(kind)){data.due=short(raw.due,30);if(data.due&&!/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(data.due))throw new PanelError('Ogiltigt datum');data.done=raw.done===true;data.assignee=short(raw.assignee);if(data.assignee&&!(await staffList()).some((s:any)=>s.email===data.assignee))throw new PanelError('Ansvarig måste vara instruktör eller administratör');data.priority=['normal','high'].includes(raw.priority)?raw.priority:'normal'}
  if(kind==='notice')data.important=raw.important===true;

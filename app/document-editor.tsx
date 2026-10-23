@@ -1,4 +1,5 @@
 'use client';
+import {useRefreshCurrent} from './refresh-current';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {pageSettings,pageGeometry} from './document-page-settings';
 import DocumentPagePanel from './document-page-panel';
@@ -22,6 +23,7 @@ export default function DocumentEditor({id,user,favorite,onFavorite,onChanged,on
  const [tabOrder,setTabOrder]=useState<string[]|null>(null);
  const tabSort=useLiveSort((_group,from,to)=>setTabOrder(previous=>previous?movePanelIds(previous,from,to):previous),true);
  useEffect(()=>{alive.current=true;let stop:()=>void=()=>{};void openDocument(id,user.email,readOnly).then(s=>{if(!alive.current)return;setSession(s);setTabId(s.doc.getArray<any>('tabs').toArray().find(t=>t.title==='Översikt')?.id||s.doc.getArray<any>('tabs').get(0)?.id||'');const update=()=>{if(alive.current)tick(v=>v+1)};s.listeners.add(update);s.doc.on('update',update);void saveDocument(s,true).catch(()=>{});let cycles=0;const timer=setInterval(()=>{void refreshDocument(s);if(++cycles%10===0)void saveDocument(s,true).catch(()=>{})},2000);stop=()=>{s.listeners.delete(update);s.doc.off('update',update);clearInterval(timer);void saveDocument(s).catch(()=>{})}}).catch(e=>setError(e.message));return()=>{alive.current=false;stop()}},[id,user.email,readOnly]);
+ useRefreshCurrent(async()=>{if(session)await refreshDocument(session)});
  useEffect(()=>{if(session?.stale)editor?.setEditable(false)},[session?.stale,editor]);
  if(!session)return <p>{error||'Öppnar dokument…'}</p>;
  const s=session,meta=s.doc.getMap('meta'),title=String(meta.get('title')||'Dokument'),tabs=sortPanelRows(s.doc.getArray<{id:string,title:string}>('tabs').toArray(),tabOrder||undefined),activeTab=tabs.find(t=>t.id===tabId)||tabs[0];

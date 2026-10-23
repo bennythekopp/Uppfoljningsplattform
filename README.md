@@ -1,6 +1,6 @@
-# Instruktörspanel – uppdatering 19 oktober 2026
+# TC Boden – uppdatering 23 oktober 2026
 
-Läs [INSTRUKTORSPANEL.md](INSTRUKTORSPANEL.md) och [UPPDATERING.md](UPPDATERING.md) innan installation. Nya databassteget är **0022 efter 0021**. Uppdaterade package.json och package-lock.json måste följa med till GitHub/Netlify.
+Läs [UPPDATERING-23OKT.md](UPPDATERING-23OKT.md) för installation och samtliga nya funktioner. Nytt databassteg: **0030 efter 0029**.
 
 # TC Boden – Bedömningsstöd på Netlify
 

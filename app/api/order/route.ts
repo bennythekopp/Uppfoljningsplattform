@@ -27,6 +27,8 @@ async function reorder(req:Request){try{
  if(typeof scope!=='string'||scope.length>240||!valid(ids)||!valid(previousIds))return error('Ogiltig ordning',400);
  return await databaseTransaction(async()=>{
   await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind('display-order:'+scope).first();
+  if(scope.startsWith('exam-')){await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind('template-order:exam').first();await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind(JSON.stringify(['exam','template'])).first();await db.prepare('LOCK TABLE exam_templates,display_orders IN SHARE ROW EXCLUSIVE MODE').run()}
+  else if(scope.startsWith('iu-')){await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind('template-order:iu').first();await db.prepare('LOCK TABLE iu_moments,iu_operational_categories,display_orders IN SHARE ROW EXCLUSIVE MODE').run()}
   const current=await currentIds(scope);if(!current)return error('Underlaget finns inte',400);
   if(JSON.stringify(current)!==JSON.stringify(previousIds))return error('Underlaget har ändrats. Uppdatera listan och försök igen.',409);
   if(ids.length!==current.length||ids.some(id=>!current.includes(id)))return error('Ordningen måste innehålla samma moment som listan.',400);

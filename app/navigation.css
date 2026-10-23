@@ -15,3 +15,7 @@
 }
 @media(prefers-reduced-motion:reduce){.workspace-sidebar{transition:none}}
 @media print{.mobileheader,.mobileaccount,.draweroverlay,.workspace-sidebar{display:none!important}.app{padding-top:0!important}}
+/* Transparent marks, including the mobile signed-in header. */
+.brandmark,.brandmark img,.mobileheader>img{background:transparent!important;border:0!important;box-shadow:none!important}
+.pull-refresh{position:fixed;left:50%;top:90px;z-index:65;width:38px;height:38px;background:var(--card,#fff);color:#b00000;border-radius:50%;box-shadow:0 3px 12px #0003;display:grid;place-items:center;transition:transform .18s ease-out;pointer-events:none}.pull-refresh.loading svg{animation:pull-spin .85s linear infinite}@keyframes pull-spin{to{transform:rotate(360deg)}}[data-theme=dark] .pull-refresh{background:#303538;color:#ffaaa3}.gs-effective-date{font-size:12px;display:flex;align-items:center;gap:8px}.gs-effective-date input{max-width:150px}
+@media screen and (max-width:900px){html:has(.app){overscroll-behavior-y:contain}}

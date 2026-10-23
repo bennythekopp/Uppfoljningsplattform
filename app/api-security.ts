@@ -1,6 +1,8 @@
 import 'server-only';
 import {currentUser,currentAccount,error,sha256,type Role} from './auth';
 import {db} from './database';
+import {requireModule} from './module-access';
+import {PanelError} from './panel-server';
 import {loginIP} from './login-security';
 
 type Actor={email:string,name:string,role:Role,previewRole?:Role|null,accountRole?:Role};
@@ -24,6 +26,9 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/password':{PUT:all},
  '/api/order':{POST:instructors},
  '/api/moment-visibility':{POST:instructors},
+ '/api/module-access':{GET:studentReaders,POST:['Administratör']},
+ '/api/planning':{GET:studentReaders,POST:instructors,PUT:instructors,DELETE:instructors},
+ '/api/moment-transfer':{POST:instructors},
  '/api/grundschema':{GET:instructors,POST:instructors},
  '/api/panel':{GET:instructors,POST:instructors},
  '/api/notifications':{GET:all,POST:all},
@@ -100,6 +105,8 @@ export function secureApi(route:string,handler:Handler):Handler{
    if(actor?.previewRole&&!['GET','HEAD','OPTIONS'].includes(req.method)&&!['/api/admin/role-preview','/api/session','/api/logout'].includes(route)){
     return privateResponse(error('Förhandsvisningen är skrivskyddad. Avsluta den för att göra ändringar.',403));
    }
+   const gated={'/api/documents':'documents','/api/notes':'notes','/api/grundschema':'grundschema','/api/planning':'planning'} as const;
+   if(actor&&route in gated){try{await requireModule(actor,gated[route as keyof typeof gated])}catch(e){if(e instanceof PanelError){await securityEvent(req,route,actor,'Åtkomst nekad','Modulen är dold för användaren');return privateResponse(error(e.message,e.status));}throw e}}
    const response=await handler(req);
    if(route==='/api/login'&&(response.status===401||response.status===429)){
     await securityEvent(req,route,null,response.status===429?'Inloggning spärrad':'Misslyckad inloggning',response.status===429?'För många inloggningsförsök':'Felaktiga inloggningsuppgifter');

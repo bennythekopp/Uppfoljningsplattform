@@ -2,6 +2,8 @@ import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
 import {panelBody,PanelError,panelLog,staffList,short} from '../../panel-server';
+import {recordPlanningPeriod} from '../../planning-server';
+import {stockholmToday} from '../../grundschema-types';
 import type {ScheduleConfig} from '../../grundschema-types';
 export const dynamic='force-dynamic';
 function configInput(raw:any):ScheduleConfig{
@@ -38,7 +40,7 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
  if(b.action==='delete'){await db.prepare('DELETE FROM schedule_groups WHERE id=?').bind(g.id).run();await panelLog(u,'Schemagrupp borttagen',g.name);return Response.json({ok:true})}
  if(b.action==='activate'){
   await db.prepare('UPDATE schedule_groups SET active=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE active=TRUE AND id<>?').bind(now,u.email,g.id).run();
-  await db.prepare('UPDATE schedule_groups SET active=TRUE,visible=TRUE,wishes_open=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();await panelLog(u,'Aktivt schema valt',g.name);return Response.json({ok:true});
+  await db.prepare('UPDATE schedule_groups SET active=TRUE,visible=TRUE,wishes_open=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();await recordPlanningPeriod(u,g.id,b.effectiveDate||stockholmToday());await panelLog(u,'Aktivt schema valt',g.name);return Response.json({ok:true});
  }
  if(b.action==='assign'){
   if(!Number.isInteger(b.row)||b.row<1||b.row>g.config.pattern.length)throw new PanelError('Välj en giltig rad.');
@@ -51,14 +53,14 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
     await db.prepare('INSERT INTO schedule_assignments(group_id,row_number,user_email,locked,updated_at,updated_by) VALUES(?,?,?,TRUE,?,?) ON CONFLICT(group_id,row_number) DO UPDATE SET user_email=EXCLUDED.user_email,locked=TRUE,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by').bind(g.id,b.row,email,now,u.email).run();
    }else await db.prepare('DELETE FROM schedule_assignments WHERE group_id=? AND row_number=?').bind(g.id,b.row).run();
   }
-  await db.prepare('UPDATE schedule_groups SET revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();await panelLog(u,b.unlock?'Schemarad upplåst':'Schemarad tilldelad',g.name+' · Rad '+b.row+(b.userEmail?' · '+(await staffList()).find((p:any)=>p.email===b.userEmail)?.name:''));return Response.json({ok:true});
+  await db.prepare('UPDATE schedule_groups SET revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();if(g.active&&!b.unlock)await recordPlanningPeriod(u,g.id,b.effectiveDate||stockholmToday());await panelLog(u,b.unlock?'Schemarad upplåst':'Schemarad tilldelad',g.name+' · Rad '+b.row+(b.userEmail?' · '+(await staffList()).find((p:any)=>p.email===b.userEmail)?.name:''));return Response.json({ok:true});
  }
  if(b.action==='save'){
   const config=configInput(b.config),name=short(b.name,120);if(!name)throw new PanelError('Ange gruppens namn.');
   // Re-indexing a live cycle would silently invalidate saved wishes/assignments.
   if(config.pattern.length!==g.config.pattern.length){const used=await db.prepare('SELECT (SELECT COUNT(*) FROM schedule_wishes WHERE group_id=?) + (SELECT COUNT(*) FROM schedule_assignments WHERE group_id=?) AS count').bind(g.id,g.id).first<any>();if(Number(used?.count)>0)throw new PanelError('Antalet veckor kan inte ändras när gruppen har önskemål eller tilldelningar. Skapa en ny grupp för en annan rotation.');}
   const visible=g.active?true:b.visible===true,open=!g.active&&visible&&b.wishesOpen===true;
-  await db.prepare('UPDATE schedule_groups SET name=?,config=?::jsonb,visible=?,wishes_open=?,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(name,JSON.stringify(config),visible,open,now,u.email,g.id).run();await panelLog(u,'Turlista och schemagrupp ändrad',name);return Response.json({ok:true});
+  await db.prepare('UPDATE schedule_groups SET name=?,config=?::jsonb,visible=?,wishes_open=?,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(name,JSON.stringify(config),visible,open,now,u.email,g.id).run();if(g.active)await recordPlanningPeriod(u,g.id,b.effectiveDate||stockholmToday());await panelLog(u,'Turlista och schemagrupp ändrad',name);return Response.json({ok:true});
  }
  throw new PanelError('Okänd åtgärd.');
 });}
