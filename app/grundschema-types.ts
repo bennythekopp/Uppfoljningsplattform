@@ -40,3 +40,5 @@ export function defaultScheduleConfig(year=2027):ScheduleConfig{
  pattern:[['INS','INSf','INSk','INSe','8400','8400','8630'],['INS','INS','INS','8630','FP','FP','FP'],['INS','4400','8400','8230','8232','FP','FP'],['INS','INS','INSe','INS','8630','FP','FP'],['INS','INSf','INS','8630','FP','FP','FP']],
  agreements:[{label:'Arbetstiden får vara max',value:'11:00'},{label:'Viloperioden ska vara minst',value:'09:00'},{label:'Fridagsperioden kan vara 24 + 12',value:'Ja'},{label:'Sjudagarsperioden börjar/slutar kl.',value:'14:00'},{label:'Mer än 11 nätter/person/4 veckor får förekomma',value:'Nej'},{label:'Begränsningsperioden är listans längd',value:'Ja'}]};
 }
+
+export function scheduleGroupsForView(groups:ScheduleGroup[],view:"current"|"proposals"){return groups.filter(g=>view==="current"?g.active:!g.active&&g.visible)}

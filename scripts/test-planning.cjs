@@ -4,6 +4,9 @@ const cache=new Map();function load(name){const file=path.resolve(__dirname,'../
 const dates=load('grundschema-types'),planning=load('planning-types'),client=load('planning-client');
 (async()=>{
  assert.equal(dates.isoWeek('2027-01-01'),53);assert.equal(dates.isoWeek('2027-01-04'),1);assert.equal(dates.isoWeek('2027-01-11'),2);assert.equal(dates.isoWeek('2028-01-03'),1);assert.equal(dates.yearDays(2028).length,366);assert.equal(dates.addDays('2028-02-28',1),'2028-02-29');
+ const groups=[{id:'active',active:true,visible:true},{id:'proposal1',active:false,visible:true},{id:'hidden',active:false,visible:false},{id:'proposal2',active:false,visible:true}];
+ assert.deepEqual(dates.scheduleGroupsForView(groups,'current').map(g=>g.id),['active']);
+ assert.deepEqual(dates.scheduleGroupsForView(groups,'proposals').map(g=>g.id),['proposal1','proposal2']);
  const config=dates.defaultScheduleConfig(2026);config.startDate='2026-01-05';const old={id:'old',groupId:'g1',name:'Old',startDate:'2026-01-01',config:{...config,pattern:[Array(7).fill('INS')]},assignments:[{userEmail:'test',row:1}]},next={...old,id:'new',startDate:'2026-10-26',config:{...config,pattern:[Array(7).fill('FP')]}};
  const column={id:'test',title:'Test',userEmail:'test',kind:'person',position:1,revision:1};assert.equal(planning.baseTour([old,next],column,'2026-10-25'),'INS');assert.equal(planning.baseTour([old,next],column,'2026-10-26'),'FP');
  assert.deepEqual(planning.nightFlags('8230',old),{starts:true,ends:false});assert.deepEqual(planning.nightFlags('8231',old),{starts:true,ends:true});assert.deepEqual(planning.nightFlags('8232',old),{starts:false,ends:true});assert.equal(planning.nightFlags('INS',old).starts,false);
