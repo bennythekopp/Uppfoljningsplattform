@@ -45,3 +45,6 @@ export function defaultScheduleConfig(year=2027):ScheduleConfig{
 export function scheduleGroupsForView(groups:ScheduleGroup[],view:"current"|"proposals"){return groups.filter(g=>view==="current"?g.active:!g.active&&g.visible)}
 
 export function membershipFor(memberships:ScheduleMembership[],email:string,day:string){return memberships.find(m=>m.userEmail===email&&m.startDate<=day&&(!m.endDate||day<m.endDate))}
+
+/** IDs, not tour names, determine order so equal-named colour variants stay distinct. */
+export function moveScheduleTours(tours:ScheduleTour[],from:string,to:string){const a=tours.findIndex(t=>t.id===from),b=tours.findIndex(t=>t.id===to);if(a<0||b<0||a===b)return tours;const next=[...tours],[moved]=next.splice(a,1);next.splice(b,0,moved);return next}

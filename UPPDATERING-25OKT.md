@@ -21,7 +21,7 @@ Migreringen är omkörbar. Bedömningar, dokument och sparade planeringstexter r
 - Personkopplingarna är daterade och får inte överlappa. När Anna finns i A och sedan i B från 2027-01-04 slutar A för Anna 2027-01-03. Övriga personer i A fortsätter.
 - Redan inlagda senare övergångar bevaras: ett nytt mellanschema gäller fram till nästa daterade övergång för personen.
 - Tilldelning eller borttagning av en person i ett redan aktivt schema gäller tidigast idag, eller från schemats start om startdatumet ligger framåt i tiden.
-- Varje persons giltighetsperiod visas vid namnet i inplaceringen. Planering och Grundschema-modulen på panelen väljer schemat per person och datum.
+- Personernas giltighetsperioder bevaras internt men visas inte vid namnen i inplaceringen. Planering och Grundschema-modulen på panelen väljer schemat per person och datum.
 - Ett databasskydd stoppar överlappande personperioder även vid direkta skrivningar till databasen.
 
 ## Introduktion för nya instruktörer
@@ -33,3 +33,21 @@ Migreringen är omkörbar. Bedömningar, dokument och sparade planeringstexter r
 - TypeScript, planeringskontroller och produktionsbygge.
 - API-/databaskontroller av datumbyten, flera grupper samma startdatum, bevarade senare övergångar, överlappningsskydd, migrering av äldre historik, omkörning och rollbehörigheter.
 - Webbläsarkontroller på dator/mobil i mörkt/ljust läge: färger, Semester, egen färg, omladdning, läsvy, scrollning och personliga avprickningar.
+
+## Sortering av turer i Turlista
+- Administratören väljer Turlista och trycker Sortera vid Turer. Dra turerna i handtagen på vänster sida; raderna flyttas direkt med mjuk rörelse.
+- Klar låser sorteringen. Spara ändringar sparar den nya ordningen i gruppens turlista.
+- Samma ordning används i turväljaren i Grundschema och Planering när den uppdaterade turlistan gäller.
+- Turer med samma namn behåller sina egna färger, tider och placeringar. Sparade bedömningar och tidigare planeringsperioder påverkas inte.
+- Sorteringen behöver ingen ytterligare SQL utöver 0031 som ingår i paketet.
+
+## Anpassad textstorlek på turer
+- Turnamn anpassar automatiskt textstorleken till rutans bredd i Planering (även läsvy och panelmodul), Grundschema och turkodsfältet i Turlista.
+- Alla sju veckodagar ryms i varje grundschemaruta och i redigeringen, utan sidscrollning. Kolumnerna är lika breda och två grundscheman ryms fortsatt bredvid varandra på datorn.
+- Texten mäts om vid ändrad rutbredd, turnamn, textstorlek eller typsnitt. Korta namn behåller normal storlek; längre namn minskas. Fritexten i Uppgift påverkas inte.
+- Den årliga inplaceringen behåller sidscrollning mellan datum; de sju veckodagarna i själva grundschemat ryms alltid. Ingen ytterligare SQL behövs.
+
+## Radbrytning i Inplacering
+- Långa turnamn radbryts i inplaceringens datumrutor med normal textstorlek. Radhöjden växer så hela texten ryms.
+- Giltighetsdatumen under personernas namn är borttagna från Inplacering. Schemakopplingarna och datumreglerna används fortfarande internt.
+- Planering, veckogrundschema och turkodsfälten behåller automatisk textstorlek. Ingen ytterligare SQL behövs.

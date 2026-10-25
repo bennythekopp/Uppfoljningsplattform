@@ -2,6 +2,7 @@
 import {memo,useCallback,useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {Palette,X} from 'lucide-react';
+import {TourText} from './tour-text';
 import PlanningTourPicker from './planning-tour-picker';
 import {addDays,tourLabel,findTour} from './grundschema-types';
 import {baseTour,cellKey,nightFlags,personPeriodFor,planningTourStyle,pairedPlanningStyle,type PlanningCell,type PlanningColumn,type PlanningData} from './planning-types';
@@ -30,7 +31,7 @@ export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:Planni
  const key=cellKey(p.day,p.column.id,p.field);useCellVersion(p.session,key);
  const e=entry(p,p.field),textarea=useRef<HTMLTextAreaElement>(null);
  useLayoutEffect(()=>{const el=textarea.current;if(el)resizeTextarea(el);return()=>{if(el)resizeQueue.delete(el)}},[e.value,p.canEdit]);
- if(!p.canEdit)return <span className="planning-read">{p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value}</span>;
+ if(!p.canEdit)return p.field==='tour'?<TourText className="planning-read">{tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value)}</TourText>:<span className="planning-read">{e.value}</span>;
  const attrs={className:e.error?'cell-error':'',value:p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value,maxLength:4000,'aria-label':p.column.title+' '+(p.field==='tour'?'tur':p.field==='task'?'uppgift':'')+' '+p.day,title:e.error||(p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value),
   onChange:(event:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>editPlanning(p.session,e,event.target.value),
   onBlur:()=>{void savePlanning(p.session,e).catch(()=>{})},

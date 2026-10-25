@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useId,useLayoutEffect,useRef,useState,type InputHTMLAttributes} from 'react';
+import {useTourTextFit} from './tour-text';
 import {createPortal} from 'react-dom';
 import './planning.css';
 import {findTour,tourValue,type ScheduleTour} from './grundschema-types';
@@ -11,6 +12,7 @@ export default function PlanningTourPicker({inputProps,selectedValue,allowEmpty=
  const input=useRef<HTMLInputElement>(null),popup=useRef<HTMLDivElement>(null),wrap=useRef<HTMLDivElement>(null),id=useId();
  const [open,setOpen]=useState(false),[active,setActive]=useState(-1),[position,setPosition]=useState({left:0,top:0,width:170,maxHeight:264});
  const value=selectedValue??String(inputProps.value??''),selected=findTour({tours},value),selectedIndex=tours.indexOf(selected!);
+ useTourTextFit(input,String(inputProps.value??''));
  function show(){if(inputProps.disabled)return;setActive(selectedIndex);setOpen(true)}
  function choose(code:string){if(inputProps.disabled)return;onSelect(code);setOpen(false);input.current?.blur()}
  useLayoutEffect(()=>{if(!open)return;let frame:number|null=null;
