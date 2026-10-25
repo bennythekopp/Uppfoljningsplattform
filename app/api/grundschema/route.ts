@@ -2,7 +2,7 @@ import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
 import {panelBody,PanelError,panelLog,staffList,short} from '../../panel-server';
-import {recordPlanningPeriod} from '../../planning-server';
+import {recordPlanningPeriod,publishScheduleMemberships,setScheduleMembership,endScheduleMembership} from '../../planning-server';
 import {stockholmToday,findTour,tourValue,tourKey} from '../../grundschema-types';
 import type {ScheduleConfig} from '../../grundschema-types';
 export const dynamic='force-dynamic';
@@ -18,7 +18,7 @@ function configInput(raw:any):ScheduleConfig{
  return {year:raw.year,startDate:raw.startDate,validUntil:raw.validUntil,unit:short(raw.unit,300),reference:short(raw.reference,120),tours,pattern:raw.pattern.map((row:string[])=>row.map(value=>value?tourKey(findTour({tours},value)!):'')),agreements:raw.agreements.map((a:any)=>({label:a.label.trim(),value:a.value.trim()}))};
 }
 async function get(){const u=(await currentUser())!;const groups=(await db.prepare(`SELECT id,name,active,visible,wishes_open AS wishesOpen,revision,config FROM schedule_groups ${u.role==='Administratör'?'':'WHERE visible=TRUE'} ORDER BY active DESC,lower(name)`).all()).results;
- const ids=groups.map(g=>g.id);const [users,wishes,assignments]=await Promise.all([staffList(),db.prepare('SELECT group_id AS groupId,user_email AS userEmail,rows,revision FROM schedule_wishes WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT group_id AS groupId,row_number AS row,user_email AS userEmail,locked FROM schedule_assignments WHERE group_id=ANY(?::text[])').bind(ids).all()]);return Response.json({groups,users,wishes:wishes.results,assignments:assignments.results});}
+ const ids=groups.map(g=>g.id);const [users,wishes,assignments,memberships]=await Promise.all([staffList(),db.prepare('SELECT group_id AS groupId,user_email AS userEmail,rows,revision FROM schedule_wishes WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT group_id AS groupId,row_number AS row,user_email AS userEmail,locked FROM schedule_assignments WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships WHERE group_id=ANY(?::text[]) ORDER BY start_date').bind(ids).all()]);return Response.json({groups,users,wishes:wishes.results,assignments:assignments.results,memberships:memberships.results});}
 async function post(req:Request){const u=(await currentUser())!,b=await panelBody(req,500000);return databaseTransaction(async()=>{
  // One short serialized transaction coordinates activation, assignment and wishes.
  await db.prepare('LOCK TABLE schedule_groups IN SHARE ROW EXCLUSIVE MODE').run();
@@ -39,12 +39,12 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
  if(g.revision!==b.revision)throw new PanelError('Schemat har ändrats. Läs in det igen innan du sparar.',409);
  if(b.action==='delete'){await db.prepare('DELETE FROM schedule_groups WHERE id=?').bind(g.id).run();await panelLog(u,'Schemagrupp borttagen',g.name);return Response.json({ok:true})}
  if(b.action==='activate'){
-  await db.prepare('UPDATE schedule_groups SET active=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE active=TRUE AND id<>?').bind(now,u.email,g.id).run();
-  await db.prepare('UPDATE schedule_groups SET active=TRUE,visible=TRUE,wishes_open=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();await recordPlanningPeriod(u,g.id,g.config.startDate);await panelLog(u,'Aktivt schema valt',g.name);return Response.json({ok:true});
+  if(g.active)return Response.json({ok:true});
+  await db.prepare('UPDATE schedule_groups SET active=TRUE,visible=TRUE,wishes_open=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();await recordPlanningPeriod(u,g.id,g.config.startDate);await publishScheduleMemberships(u,g.id);await panelLog(u,'Aktivt schema valt',g.name);return Response.json({ok:true});
  }
  if(b.action==='assign'){
   if(!Number.isInteger(b.row)||b.row<1||b.row>g.config.pattern.length)throw new PanelError('Välj en giltig rad.');
-  const old=await db.prepare('SELECT locked FROM schedule_assignments WHERE group_id=? AND row_number=?').bind(g.id,b.row).first<any>();
+  const old=await db.prepare('SELECT locked,user_email AS userEmail FROM schedule_assignments WHERE group_id=? AND row_number=?').bind(g.id,b.row).first<any>();
   if(b.unlock===true){if(!old)throw new PanelError('Raden är inte tilldelad.');await db.prepare('UPDATE schedule_assignments SET locked=FALSE,updated_at=?,updated_by=? WHERE group_id=? AND row_number=?').bind(now,u.email,g.id,b.row).run()}
   else{
    if(old?.locked)throw new PanelError('Lås upp raden innan du ändrar tilldelningen.',409);
@@ -53,19 +53,20 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
     await db.prepare('INSERT INTO schedule_assignments(group_id,row_number,user_email,locked,updated_at,updated_by) VALUES(?,?,?,TRUE,?,?) ON CONFLICT(group_id,row_number) DO UPDATE SET user_email=EXCLUDED.user_email,locked=TRUE,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by').bind(g.id,b.row,email,now,u.email).run();
    }else await db.prepare('DELETE FROM schedule_assignments WHERE group_id=? AND row_number=?').bind(g.id,b.row).run();
   }
-  await db.prepare('UPDATE schedule_groups SET revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();if(g.active&&!b.unlock)await recordPlanningPeriod(u,g.id,b.effectiveDate||stockholmToday());await panelLog(u,b.unlock?'Schemarad upplåst':'Schemarad tilldelad',g.name+' · Rad '+b.row+(b.userEmail?' · '+(await staffList()).find((p:any)=>p.email===b.userEmail)?.name:''));return Response.json({ok:true});
+  if(g.active&&!b.unlock){const from=stockholmToday()>g.config.startDate?stockholmToday():g.config.startDate;if(old?.userEmail&&old.userEmail!==short(b.userEmail))await endScheduleMembership(g.id,old.userEmail,from);if(short(b.userEmail))await setScheduleMembership(u,g.id,short(b.userEmail),b.row,from,g.config.validUntil)}
+  await db.prepare('UPDATE schedule_groups SET revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(now,u.email,g.id).run();if(g.active&&!b.unlock)await recordPlanningPeriod(u,g.id,stockholmToday()>g.config.startDate?stockholmToday():g.config.startDate);await panelLog(u,b.unlock?'Schemarad upplåst':'Schemarad tilldelad',g.name+' · Rad '+b.row+(b.userEmail?' · '+(await staffList()).find((p:any)=>p.email===b.userEmail)?.name:''));return Response.json({ok:true});
  }
  if(b.action==='save'){
   const config=configInput(b.config),name=short(b.name,120);if(!name)throw new PanelError('Ange gruppens namn.');
   // Re-indexing a live cycle would silently invalidate saved wishes/assignments.
   if(config.pattern.length!==g.config.pattern.length){const used=await db.prepare('SELECT (SELECT COUNT(*) FROM schedule_wishes WHERE group_id=?) + (SELECT COUNT(*) FROM schedule_assignments WHERE group_id=?) AS count').bind(g.id,g.id).first<any>();if(Number(used?.count)>0)throw new PanelError('Antalet veckor kan inte ändras när gruppen har önskemål eller tilldelningar. Skapa en ny grupp för en annan rotation.');}
   const activate=b.active===true&&!g.active,active=g.active||activate;
-  if(activate)await db.prepare('UPDATE schedule_groups SET active=FALSE,revision=revision+1,updated_at=?,updated_by=? WHERE active=TRUE AND id<>?').bind(now,u.email,g.id).run();
+
   const visible=active?true:b.visible===true,open=!active&&visible&&b.wishesOpen===true;
-  await db.prepare('UPDATE schedule_groups SET name=?,config=?::jsonb,active=?,visible=?,wishes_open=?,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(name,JSON.stringify(config),active,visible,open,now,u.email,g.id).run();if(active)await recordPlanningPeriod(u,g.id,activate?config.startDate:stockholmToday());if(activate)await panelLog(u,'Aktivt schema valt',name);await panelLog(u,'Turlista och schemagrupp ändrad',name);return Response.json({ok:true});
+  await db.prepare('UPDATE schedule_groups SET name=?,config=?::jsonb,active=?,visible=?,wishes_open=?,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(name,JSON.stringify(config),active,visible,open,now,u.email,g.id).run();if(active)await recordPlanningPeriod(u,g.id,activate||config.startDate>stockholmToday()?config.startDate:stockholmToday());if(activate){await publishScheduleMemberships(u,g.id);await panelLog(u,'Aktivt schema valt',name);}await panelLog(u,'Turlista och schemagrupp ändrad',name);return Response.json({ok:true});
  }
  throw new PanelError('Okänd åtgärd.');
 });}
-function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Grundschemat kunde inte läsas eller sparas. Kontrollera att 0027_grundschema.sql är tillämpad.',e instanceof PanelError?e.status:503)}}}
+function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Grundschemat kunde inte läsas eller sparas. Kontrollera att databasuppdatering 0031 är tillämpad.',e instanceof PanelError?e.status:503)}}}
 export const GET=secureApi('/api/grundschema',handle(get));
 export const POST=secureApi('/api/grundschema',handle(post));

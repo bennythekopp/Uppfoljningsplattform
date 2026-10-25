@@ -5,7 +5,8 @@ export type ScheduleConfig={year:number,startDate:string,unit:string,reference:s
 export type ScheduleGroup={id:string,name:string,active:boolean,visible:boolean,wishesOpen:boolean,revision:number,config:ScheduleConfig};
 export type ScheduleWish={groupId:string,userEmail:string,rows:number[],revision:number};
 export type ScheduleAssignment={groupId:string,row:number,userEmail:string,locked:boolean};
-export type ScheduleData={groups:ScheduleGroup[],users:{email:string,name:string}[],wishes:ScheduleWish[],assignments:ScheduleAssignment[]};
+export type ScheduleMembership={id:string,userEmail:string,groupId:string,row:number,startDate:string,endDate:string|null};
+export type ScheduleData={memberships?:ScheduleMembership[],groups:ScheduleGroup[],users:{email:string,name:string}[],wishes:ScheduleWish[],assignments:ScheduleAssignment[]};
 export const weekdays=['Mån','Tis','Ons','Tor','Fre','Lör','Sön'];
 export const months=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
 export function initials(name:string){const p=name.trim().split(/\s+/).filter(Boolean);return (p.length>1?p[0][0]+p[p.length-1][0]:p[0]?.slice(0,2)||'?').toLocaleUpperCase('sv')}
@@ -42,3 +43,5 @@ export function defaultScheduleConfig(year=2027):ScheduleConfig{
 }
 
 export function scheduleGroupsForView(groups:ScheduleGroup[],view:"current"|"proposals"){return groups.filter(g=>view==="current"?g.active:!g.active&&g.visible)}
+
+export function membershipFor(memberships:ScheduleMembership[],email:string,day:string){return memberships.find(m=>m.userEmail===email&&m.startDate<=day&&(!m.endDate||day<m.endDate))}
