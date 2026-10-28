@@ -85,6 +85,7 @@ export function AssessmentApp(){
  const payload=(method:string,body:unknown):RequestInit=>({method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  async function refresh(){try{setMe(await json('/api/me'))}catch{setMe(null)}finally{setReady(true)}}
  useEffect(()=>{refresh()},[]);
+ useEffect(()=>{if(me&&allowedPanelModules.includes('planning')&&new URLSearchParams(location.search).get('view')==='planning'){setTab('planning');const url=new URL(location.href);url.searchParams.delete('view');history.replaceState(null,'',url)}},[me?.email,allowedPanelModules]);
  useEffect(()=>{document.title=me&&(me.role==='Administratör'||me.role==='Instruktör')?'Instruktörer | TC Boden':'TC Boden | Bedömningsstöd'},[me?.role]);
  useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{const store=followupDrafts.current;if(planningPending()||documentsPending()||notesPending()||store.pending||store.error||Object.keys(store.jobs).length||kpStore.current.pending||kpStore.current.error||Object.keys(kpStore.current.jobs).length||examStore.current.pending||examStore.current.error||Object.keys(examStore.current.jobs).length){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[]);
  useEffect(()=>{clearPanelCache();activateDocuments(me?.email||'');activateNotes(me?.email||'');followupDrafts.current=createFollowupDraftStore();kpStore.current=createKPStore();examStore.current=createExamStore();setKpStatuses([]);setDrafts({})},[me?.email]);

@@ -1,3 +1,5 @@
+import {savePlanningCell} from '../../planning-cell-server';
+import {suggestionAction,readSuggestions,mailSettings} from '../../planning-suggestions-server';
 import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
@@ -20,27 +22,10 @@ async function get(req:Request){const u=(await currentUser())!,url=new URL(req.u
  db.prepare('SELECT day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM planning_cells WHERE day>=?::date AND day<?::date').bind(addDays(year+'-01-01',-1),(year+1)+'-01-01').all(),
  db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all(),
  db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all()]);
- return Response.json({columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:u.role==='Administratör'?s.editorEmails:[],users:u.role==='Administratör'?users:[]});}
+ return Response.json({suggestions:u.role==='Chef'?[]:await readSuggestions(year),canSuggest:u.role==='Instruktör'&&!s.canEdit,mailSettings:u.role==='Administratör'?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:u.role==='Administratör'?s.editorEmails:[],users:u.role==='Administratör'?users:[]});}
 async function post(req:Request){const u=(await currentUser())!,b=await panelBody(req,40000);return databaseTransaction(async()=>{
- const s=await settings(u);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
- if(b.action==='cell'){
-  const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM planning_columns WHERE id=? AND deleted_at IS NULL').bind(id).first<PlanningColumn>();if(!column)throw new PanelError('Kolumnen finns inte längre.',404);
-  if(!(column.kind==='shared'?['shared','color'].includes(b.field):['tour','task','color'].includes(b.field))||typeof b.value!=='string'||b.value.length>4000||!Number.isInteger(b.revision)||b.revision<0)throw new PanelError('Kontrollera rutans innehåll.');
-  if(b.field==='color'&&b.value!==''&&!/^#[0-9a-f]{6}$/i.test(b.value))throw new PanelError('Välj en giltig färg.');
-  await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind(JSON.stringify([day,id])).first();
-  const old=await db.prepare('SELECT value,revision FROM planning_cells WHERE day=?::date AND column_id=? AND field=? FOR UPDATE').bind(day,id,b.field).first<{value:string,revision:number}>();
-  if((old?.value??null)===b.value)return Response.json({cell:{day,columnId:id,field:b.field,value:b.value,revision:old!.revision,updatedAt:Date.now(),updatedBy:u.name}});
-  if((old?.revision||0)!==b.revision) return Response.json({error:'Rutan har ändrats. Din text finns kvar. Välj vilken version du vill behålla.',conflict:old||{value:'',revision:0}}, {status:409});
-  const cell=await db.prepare('INSERT INTO planning_cells(day,column_id,field,value,updated_at,updated_by) VALUES(?::date,?,?,?,?,?) ON CONFLICT(day,column_id,field) DO UPDATE SET value=EXCLUDED.value,revision=planning_cells.revision+1,updated_at=EXCLUDED.updated_at,updated_by=EXCLUDED.updated_by RETURNING day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy').bind(day,id,b.field,b.value,Date.now(),u.name).first();
-  const periods=b.field==='tour'?(await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all<PlanningPeriod>()).results:[],memberships=b.field==='tour'?(await db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all<any>()).results:[],config=personPeriodFor(periods,column,day,memberships)?.config||{tours:[]},previous=old?.value??(b.field==='tour'?baseTour(periods,column,day,memberships):'');
-  const linkedCells=[];
-  if(b.field==='tour'&&findTour(config,b.value)?.code.trim().toLocaleLowerCase('sv-SE')==='semester'){
-   // Choosing Semester resets a prior manual colour, so both cells follow its
-   // saved tour colour. A later explicit colour choice can still override it.
-   const color=await db.prepare("UPDATE planning_cells SET value='',revision=revision+1,updated_at=?,updated_by=? WHERE day=?::date AND column_id=? AND field='color' AND value<>'' RETURNING day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy").bind(Date.now(),u.name,day,id).first();if(color)linkedCells.push(color);
-  }
-  await planningLog(u,b.field==='color'?'Cellfärg ändrad':'Ruta ändrad',{day,columnId:id,columnName:column.title,field:b.field,previous:b.field==='tour'?tourLogValue(config,previous):previous,next:b.field==='tour'?tourLogValue(config,b.value):b.value});return Response.json({cell,linkedCells});
- }
+ const s=await settings(u);if(['propose','review','mail-settings','mail-resolve'].includes(b.action))return suggestionAction(u,b,s.canEdit);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
+ if(b.action==='cell')return savePlanningCell(u,b);
  if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan ändra struktur och behörigheter.',403);
  if(b.action==='editors'){
   if(!Array.isArray(b.emails)||b.emails.length>1000||b.emails.some((v:unknown)=>typeof v!=='string')||new Set(b.emails).size!==b.emails.length)throw new PanelError('Välj användare.');
@@ -57,5 +42,5 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
  }
  throw new PanelError('Okänd åtgärd.');
 });}
-const handle=(fn:(r:Request)=>Promise<Response>)=>async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Planeringen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0031.',e instanceof PanelError?e.status:503)}};
+const handle=(fn:(r:Request)=>Promise<Response>)=>async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Planeringen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0032.',e instanceof PanelError?e.status:503)}};
 export const GET=secureApi('/api/planning',handle(get));export const POST=secureApi('/api/planning',handle(post));

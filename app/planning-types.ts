@@ -2,7 +2,9 @@ import {addDays,scheduleTour,tourStyle,findTour,membershipFor,type ScheduleMembe
 export type PlanningColumn={id:string,title:string,kind:'shared'|'person',userEmail:string|null,position:number,revision:number};
 export type PlanningCell={day:string,columnId:string,field:'tour'|'task'|'shared'|'color',value:string,revision:number,updatedAt:number,updatedBy:string};
 export type PlanningPeriod={id:string,groupId:string,name:string,startDate:string,listChange:boolean,config:ScheduleConfig,assignments:{userEmail:string,row:number}[]};
-export type PlanningData={memberships?:ScheduleMembership[],columns:PlanningColumn[],cells:PlanningCell[],periods:PlanningPeriod[],canEdit:boolean,settingsRevision:number,editorEmails:string[],users:{email:string,name:string}[]};
+export type PlanningSuggestion={id:string,seq:number,day:string,columnId:string,columnName:string,field:"tour"|"task"|"shared",previousValue:string,proposedValue:string,previousLabel:string,proposedLabel:string,baseRevision:number,authorEmail:string,authorName:string,createdAt:number,status:string};
+export type PlanningMailSettings={enabled:boolean,recipientEmail:string,recipientUser:string,cadence:"daily"|"workday",sendTime:string,revision:number,lastSentAt:number|null,lastError:string,configured:boolean,needsReview:boolean};
+export type PlanningData={suggestions?:PlanningSuggestion[],canSuggest?:boolean,mailSettings?:PlanningMailSettings,memberships?:ScheduleMembership[],columns:PlanningColumn[],cells:PlanningCell[],periods:PlanningPeriod[],canEdit:boolean,settingsRevision:number,editorEmails:string[],users:{email:string,name:string}[]};
 export type PlanningLog={id:string,occurredAt:number,actorName:string,action:string,day:string|null,columnName:string,field:string,previousValue:string,newValue:string};
 export const cellKey=(day:string,id:string,field:string)=>JSON.stringify([day,id,field]);
 export function periodFor(periods:PlanningPeriod[],day:string){return [...periods].reverse().find(p=>p.startDate<=day)}

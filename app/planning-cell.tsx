@@ -2,6 +2,8 @@
 import {memo,useCallback,useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {Palette,X} from 'lucide-react';
+import {SuggestionInput,SuggestionBadge} from './planning-suggestions';
+import type {PlanningSuggestion} from './planning-types';
 import {TourText} from './tour-text';
 import PlanningTourPicker from './planning-tour-picker';
 import {addDays,tourLabel,findTour} from './grundschema-types';
@@ -9,7 +11,7 @@ import {baseTour,cellKey,nightFlags,personPeriodFor,planningTourStyle,pairedPlan
 import {planningEntry,editPlanning,savePlanning,resolvePlanning,subscribePlanningCell,planningCellVersion,type planningSession} from './planning-client';
 
 type Session=ReturnType<typeof planningSession>;
-type CellProps={session:Session,day:string,column:PlanningColumn,data:PlanningData,cells:Map<string,PlanningCell>,canEdit:boolean};
+type CellProps={session:Session,day:string,column:PlanningColumn,data:PlanningData,cells:Map<string,PlanningCell>,canEdit:boolean,canSuggest?:boolean,suggestions?:PlanningSuggestion[],onReview?:(suggestions:PlanningSuggestion[])=>void};
 function useCellVersion(session:Session,key:string){
  const subscribe=useCallback((notify:()=>void)=>subscribePlanningCell(session,key,notify),[session,key]);
  const snapshot=useCallback(()=>planningCellVersion(session,key),[session,key]);
@@ -31,6 +33,7 @@ export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:Planni
  const key=cellKey(p.day,p.column.id,p.field);useCellVersion(p.session,key);
  const e=entry(p,p.field),textarea=useRef<HTMLTextAreaElement>(null);
  useLayoutEffect(()=>{const el=textarea.current;if(el)resizeTextarea(el);return()=>{if(el)resizeQueue.delete(el)}},[e.value,p.canEdit]);
+ if(p.canSuggest)return <SuggestionInput session={p.session} source={e} day={p.day} column={p.column} field={p.field} data={p.data} suggestions={p.suggestions||[]}/>;
  if(!p.canEdit)return p.field==='tour'?<TourText className="planning-read">{tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value)}</TourText>:<span className="planning-read">{e.value}</span>;
  const attrs={className:e.error?'cell-error':'',value:p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value,maxLength:4000,'aria-label':p.column.title+' '+(p.field==='tour'?'tur':p.field==='task'?'uppgift':'')+' '+p.day,title:e.error||(p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value),
   onChange:(event:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>editPlanning(p.session,e,event.target.value),
@@ -48,14 +51,14 @@ export const PlanningTourCell=memo(function PlanningTourCell(p:CellProps){
  const paired=pairedPlanningStyle(entry(p,'color').value,code,period),style=paired||planningTourStyle(code,period),nightStyle=paired||(starts?style:planningTourStyle(prevCode,personPeriodFor(p.data.periods,p.column,previous,p.data.memberships)));
  return <td style={style as CSSProperties} data-colored={paired?true:undefined} data-neutral={paired?undefined:(style?.backgroundColor==='#ffffff'||style?.backgroundColor==='#dedede'?tourLabel(period?.config||{tours:[]},code)==='FP'?'free':'neutral':undefined)} className={'planning-tour '+(starts?'night-start ':'')+(continues?'night-through ':'')+(half?'night-half ':'')+(focused?'is-focused':'')} onFocusCapture={()=>setFocused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setFocused(false)}}>
   {(starts||continues)&&!focused&&<div className="night-visual" aria-hidden="true" style={nightStyle||{backgroundColor:'var(--planning-bg)',color:'var(--planning-text)'}}>{starts&&!continues&&<span>Natt</span>}{continues&&<i className={starts?'':'night-arrow-end'}/>}</div>}
-  <PlanningInput {...p} field="tour"/>
+  <PlanningInput {...p} field="tour"/><SuggestionBadge suggestions={p.suggestions||[]} onReview={p.onReview}/>
  </td>;
 });
 
 export const PlanningTextCell=memo(function PlanningTextCell(p:CellProps&{field:'task'|'shared'}){
  useCellVersion(p.session,cellKey(p.day,p.column.id,'color'));useCellVersion(p.session,cellKey(p.day,p.column.id,'tour'));
  const color=entry(p,'color'),code=p.column.kind==='person'?entry(p,'tour').value:'',period=personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships),style=pairedPlanningStyle(color.value,code,period);
- return <td className={'planning-'+p.field} data-colored={style?true:undefined} style={style}><PlanningInput {...p}/>{p.canEdit&&<CellColor {...p} color={color}/>}</td>;
+ return <td className={'planning-'+p.field} data-colored={style?true:undefined} style={style}><PlanningInput {...p}/><SuggestionBadge suggestions={p.suggestions||[]} onReview={p.onReview}/>{p.canEdit&&<CellColor {...p} color={color}/>}</td>;
 });
 function CellColor(p:CellProps&{color:ReturnType<typeof planningEntry>}){
  const [open,setOpen]=useState(false),[custom,setCustom]=useState('#327b76'),[position,setPosition]=useState({left:0,top:0}),button=useRef<HTMLButtonElement>(null),popup=useRef<HTMLDivElement>(null);
