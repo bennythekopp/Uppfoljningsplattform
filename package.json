@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:planning": "node scripts/test-planning.cjs"
+    "test:planning": "node scripts/test-planning.cjs",
+    "test:october29": "node scripts/test-october29.cjs",
+    "test:planning-update": "node scripts/test-planning-update.cjs"
   },
   "dependencies": {
     "@netlify/database": "latest",

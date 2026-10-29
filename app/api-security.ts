@@ -27,7 +27,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/order':{POST:instructors},
  '/api/moment-visibility':{POST:instructors},
  '/api/module-access':{GET:studentReaders,POST:['Administratör']},
- '/api/planning':{GET:studentReaders,POST:instructors,PUT:instructors,DELETE:instructors},
+ '/api/planning':{GET:studentReaders,POST:studentReaders,PUT:instructors,DELETE:instructors},
  '/api/moment-transfer':{POST:instructors},
  '/api/grundschema':{GET:instructors,POST:instructors},
  '/api/panel':{GET:instructors,POST:instructors},

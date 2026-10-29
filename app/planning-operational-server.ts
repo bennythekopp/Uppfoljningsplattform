@@ -1,0 +1,6 @@
+import 'server-only';
+import {db} from './database';
+import {PanelError,type PanelActor} from './panel-server';
+import {planningLog} from './planning-server';
+export async function operationalSettings(){return (await db.prepare('SELECT config,revision FROM planning_operational_settings WHERE id=1').first())!}
+export async function saveOperational(u:PanelActor,b:any){if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan ange vilka turer som räknas.',403);const cfg=b.config;if(!cfg||!Array.isArray(cfg.tourKeys)||cfg.tourKeys.length>3000||cfg.tourKeys.some((v:unknown)=>typeof v!=='string'||v.length>4000)||new Set(cfg.tourKeys).size!==cfg.tourKeys.length||!['dates','continuous'].includes(cfg.nightPolicy)||!Number.isInteger(b.revision))throw new PanelError('Välj turer och hur nattpass ska räknas.');const saved=await db.prepare('UPDATE planning_operational_settings SET config=?::jsonb,revision=revision+1,updated_at=?,updated_by=? WHERE id=1 AND revision=? RETURNING revision').bind(JSON.stringify(cfg),Date.now(),u.email,b.revision).first();if(!saved)throw new PanelError('Inställningarna har ändrats. Läs in igen.',409);await planningLog(u,'Räkneregler för operativa pass ändrade',{next:JSON.stringify(cfg)});return Response.json({ok:true})}

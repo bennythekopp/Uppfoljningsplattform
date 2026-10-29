@@ -32,7 +32,7 @@ function resizeTextarea(el:HTMLTextAreaElement){resizeQueue.add(el);if(resizeFra
 export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:PlanningCell['field']}){
  const key=cellKey(p.day,p.column.id,p.field);useCellVersion(p.session,key);
  const e=entry(p,p.field),textarea=useRef<HTMLTextAreaElement>(null);
- useLayoutEffect(()=>{const el=textarea.current;if(el)resizeTextarea(el);return()=>{if(el)resizeQueue.delete(el)}},[e.value,p.canEdit]);
+ useLayoutEffect(()=>{const el=textarea.current;if(!el)return;resizeTextarea(el);let width=el.getBoundingClientRect().width;const observer=new ResizeObserver(()=>{const next=el.getBoundingClientRect().width;if(Math.abs(next-width)>.5){width=next;resizeTextarea(el)}});observer.observe(el);return()=>{observer.disconnect();resizeQueue.delete(el)}},[e.value,p.canEdit]);
  if(p.canSuggest)return <SuggestionInput session={p.session} source={e} day={p.day} column={p.column} field={p.field} data={p.data} suggestions={p.suggestions||[]}/>;
  if(!p.canEdit)return p.field==='tour'?<TourText className="planning-read">{tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value)}</TourText>:<span className="planning-read">{e.value}</span>;
  const attrs={className:e.error?'cell-error':'',value:p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value,maxLength:4000,'aria-label':p.column.title+' '+(p.field==='tour'?'tur':p.field==='task'?'uppgift':'')+' '+p.day,title:e.error||(p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value),

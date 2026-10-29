@@ -1,0 +1,2 @@
+/** The last recorded examination day, not today's save date. Clamp month ends. */
+export function examReminderDue(logs:{date:string}[]){const date=logs.map(l=>l.date).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort().at(-1);if(!date)throw Error('Examinationsdatum saknas');const [y,m,d]=date.split('-').map(Number),target=new Date(Date.UTC(y,m-1+4,1)),end=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(d,end)).padStart(2,'0')}`}

@@ -2,7 +2,7 @@ import 'server-only';
 import {db} from './database';
 import {PanelError,type PanelActor} from './panel-server';
 import {stockholmToday,addDays} from './grundschema-types';
-export function planningDate(v:unknown){if(typeof v!=='string'||!/^20\d\d-\d\d-\d\d$/.test(v)||Number.isNaN(Date.parse(v))||new Date(v+'T12:00:00Z').toISOString().slice(0,10)!==v)throw new PanelError('Ange ett giltigt datum.');return v}
+export function planningDate(v:unknown){if(typeof v!=='string'||!/^2[01]\d\d-\d\d-\d\d$/.test(v)||Number.isNaN(Date.parse(v))||new Date(v+'T12:00:00Z').toISOString().slice(0,10)!==v)throw new PanelError('Ange ett giltigt datum.');return v}
 export async function planningLog(u:PanelActor,action:string,detail:{day?:string,columnId?:string,columnName?:string,field?:string,previous?:string,next?:string}={}){await db.prepare('INSERT INTO planning_log(id,occurred_at,actor_email,actor_name,action,day,column_id,column_name,field,previous_value,new_value) VALUES(?,?,?,?,?,?::date,?,?,?,?,?)').bind(crypto.randomUUID(),Date.now(),u.email,u.name,action,detail.day||null,detail.columnId||null,detail.columnName||'',detail.field||'',detail.previous||'',detail.next||'').run()}
 /** Snapshot the dated base. Manual planning cells are never rewritten. Caller holds schedule lock. */
 export async function recordPlanningPeriod(u:PanelActor,groupId:string,from=stockholmToday()){
