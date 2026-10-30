@@ -15,6 +15,9 @@ Packa upp zip-filen och lägg in samtliga filer på motsvarande sökvägar i dit
 - Pull to refresh gäller bara planeringsområdet. Planeringen följer fingret nedåt och indikatorn visas under veckoväljaren. Släpp efter tröskeln för att hämta om planeringen. Vågrät dragning byter inte till uppdateringsgest.
 - Liggande läge visar fortfarande alla personers kolumner med vågrät skroll. Nattmarkeringar, färger och offlinefunktion behålls.
 
+## Inloggning (tillagt)
+Appens inloggningssida använder nu samma logotyp, rubrik, formulär och gemensamma stilar som hemsidan, med undertiteln **Planering**. Ljust och mörkt läge följer hemsidans tema. Menyraden visas efter inloggning. Befintliga konton och inloggningsfunktion behålls.
+
 ## Backupknappar
 Koppla från och Öppna backupmappen använder standardstilen för sekundära knappar. Mappknappen ligger till höger på raden ovanför intervallväljaren.
 
