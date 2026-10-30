@@ -102,7 +102,7 @@
  html[data-theme=dark] :is(.items,.statline span,.loginform,.rolebadge,.notice,.document-search,.hiddenmomentbadge){background:var(--ui-surface);border-color:var(--ui-line);color:var(--ui-text)}
  html[data-theme=dark] :is(.itemtitle,.comment p,.commenthead,.statline b,.summary strong,.summary strong span,.signin h1,.loginform label,.document-page-panel h2,.document-side strong,.gs-calendar tbody th){color:var(--ui-text)}
  html[data-theme=dark] :is(.itemtitle small,.itemtitle em,.commenthead time,.details small,.summary small,.listhead,.empty,.modal p,.signin p,.sideempty,.overview small,.overview span){color:var(--ui-muted)}
- html[data-theme=dark] :is(.back,.textaction,.studentgo,.studentarrow,.ownerlink,.personnelopen>span:last-child){color:#ffaaa3}
+ html[data-theme=dark] :is(.back,.textaction,.studentgo,.studentarrow,.ownerlink,.personnelopen>.personnelgo){color:#ffaaa3}
  html[data-theme=dark] .loginform input{background:var(--ui-field);color:var(--ui-text);border-color:var(--ui-line)}
  html[data-theme=dark] .modalactions button:first-child{background:var(--ui-raised);color:var(--ui-text);border-color:var(--ui-line)}
  html[data-theme=dark] .rolepreviewbar{background:#302929;color:var(--ui-text);border-color:var(--ui-line)}

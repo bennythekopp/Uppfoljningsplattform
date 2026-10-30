@@ -47,7 +47,7 @@
  .planning-table tbody td{border-color:var(--ui-line,#ddd)}.planning-table .planning-week-start>*{border-top-width:2px}.planning-table thead th{font-weight:600}
  .tcpa-grid .tcpa-night{background-image:none!important;background-color:var(--planning-color,#b90000)!important}
 }
-@media screen and (max-width:1300px){.personnelopen.studentkpstatusopen{grid-template-columns:43px minmax(130px,1fr) minmax(220px,1fr)}.studentkpstatusopen>.personnelstatuses{grid-column:2}.personnelopen.studentkpstatusopen>span:last-child{grid-column:3;justify-self:end}}
+@media screen and (max-width:1300px){.personnelopen.studentkpstatusopen{grid-template-columns:43px minmax(130px,1fr) minmax(220px,1fr)}.studentkpstatusopen>.personnelstatuses{grid-column:2}.personnelopen.studentkpstatusopen>.personnelgo{grid-column:3;justify-self:end}}
 @media screen and (max-width:900px){
  .site-header-actions{gap:2px}.site-header-actions .notification-trigger,.site-help-trigger{width:36px;height:40px}
  .role-workspace:has(>.rolepreviewbar) .mobileheader{top:94px}
@@ -56,7 +56,7 @@
  .notes-heading h1{font-size:23px}.notes-save{font-size:11px}.notes-editor .note-paper{padding:14px}
  .help-guides{grid-template-columns:1fr}.help-popup{padding:16px}.help-guides p{min-height:0}
 }
-@media screen and (max-width:650px){.personnelopen.studentkpstatusopen{grid-template-columns:33px minmax(0,1fr);gap:10px}.studentkpstatusopen>.student-supervisors{grid-column:2;grid-row:2}.studentkpstatusopen>.personnelstatuses{grid-column:2;grid-row:3}.personnelopen.studentkpstatusopen>span:last-child{grid-column:2;grid-row:4;justify-self:start}.notes-heading h1{width:100%}}
+@media screen and (max-width:650px){.personnelopen.studentkpstatusopen{grid-template-columns:33px minmax(0,1fr);gap:10px}.studentkpstatusopen>.student-supervisors{grid-column:2;grid-row:2}.studentkpstatusopen>.personnelstatuses{grid-column:2;grid-row:3}.personnelopen.studentkpstatusopen>.personnelgo{grid-column:2;grid-row:4;justify-self:start}.notes-heading h1{width:100%}}
 .student-print-summary{display:flex;align-items:flex-start;gap:16px;justify-content:space-between}.supervisor-print{font-size:9pt;line-height:1.45;max-width:55%;break-inside:avoid}.supervisor-print strong{display:block}
 @media print{.student-print-summary{display:flex!important;break-inside:avoid;margin:4mm 0}.student-print-summary .studentprintkpresults{flex:none;margin:0}.supervisor-print{color:#111}.site-header-actions,.tc-modal{display:none!important}}
 @media screen{

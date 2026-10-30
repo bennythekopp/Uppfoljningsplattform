@@ -14,6 +14,7 @@ import './document-page.css';
 import './grundschema.css';
 import './appearance.css';
 import './update-v5.css';
+import './update-v6.css';
 import AppearanceProvider from './appearance-provider';
 import {appearanceBootScript} from './appearance-settings';
 export const metadata:Metadata={

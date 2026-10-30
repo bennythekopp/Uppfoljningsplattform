@@ -1,0 +1,36 @@
+@media screen {
+ .admin-tool-tabs{flex-wrap:wrap}
+ .admin-tool-tabs>button{flex:0 1 auto}
+ .admin-relocated-tool{margin-top:24px}
+ .admin-relocated-tool>h2{font-size:22px;margin:0 0 18px}
+ /* Hover the whole flex row, including the separate menu trigger area. */
+ .personnelroster{--roster-hover:#f6f6f6}
+ html[data-theme=dark] .personnelroster{--roster-hover:#2d3236}
+ .personnelrosterrow:hover,.personnelrosterrow:focus-within{background:var(--roster-hover)}
+ .personnelrosterrow>.personnelopen:hover,.personnelrosterrow>.personnelopen:focus-visible{background:transparent!important}
+ .personnelrosterrow:last-child{border-radius:0 0 11px 11px}
+ .personnelopen.personnelstatusopen.personnelwithoutgo{grid-template-columns:40px minmax(110px,1fr) minmax(260px,1.5fr)}
+ .personnelopen.studentkpstatusopen.personnelwithoutgo{grid-template-columns:43px minmax(110px,1fr) minmax(220px,1.2fr) minmax(160px,auto)}
+ .supervisor-change-icon{display:inline-block;position:relative;width:16px;height:16px;flex:none}
+ .supervisor-change-icon>svg:last-child{position:absolute;right:-4px;bottom:-2px;background:var(--ui-surface,#fff);border-radius:2px}
+ .personnelmenu>button>svg{flex:none}
+}
+@media screen and (max-width:1300px){
+ .personnelopen.studentkpstatusopen.personnelwithoutgo{grid-template-columns:43px minmax(130px,1fr) minmax(220px,1fr)}
+}
+@media screen and (max-width:1100px){
+ .personnelopen.personnelstatusopen.personnelwithoutgo{grid-template-columns:40px minmax(0,1fr)}
+ .personnelopen.studentkpstatusopen.personnelwithoutgo{grid-template-columns:43px minmax(130px,1fr) minmax(220px,1fr)}
+}
+@media screen and (max-width:650px){
+ .personnelopen.personnelstatusopen.personnelwithoutgo,.personnelopen.studentkpstatusopen.personnelwithoutgo{grid-template-columns:33px minmax(0,1fr)}
+ .admin-tool-tabs>button{max-width:100%;white-space:normal}
+}
+
+/* Match other secondary buttons in all three supervisor dialogs. */
+@media screen {
+ .supervisor-dialog .modalactions{flex-wrap:wrap}
+ .supervisor-dialog .modalactions>button.secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 18px;border:1px solid var(--ui-line,#d7d7d7);border-radius:9px;background:var(--ui-raised,#f4f4f4);color:var(--ui-text,#292929);font:inherit;font-weight:700;line-height:1.4;white-space:nowrap}
+ .supervisor-dialog .modalactions>button.secondary:hover:not(:disabled){background:var(--ui-field,#ececec)}
+ .supervisor-dialog .modalactions>button.secondary:focus-visible{outline:2px solid var(--ui-accent-text,#a90000);outline-offset:3px}
+}
