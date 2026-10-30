@@ -1,6 +1,6 @@
 import {planningPermissions} from '../../planning-permissions';
 import {planningYearRange} from '../../planning-dates';
-import {operationalSettings,saveOperational} from '../../planning-operational-server';
+import {operationalSettings,saveOperational,saveOperationalCount} from '../../planning-operational-server';
 import {savePlanningCell} from '../../planning-cell-server';
 import {suggestionAction,readSuggestions,mailSettings} from '../../planning-suggestions-server';
 import {secureApi} from '../../api-security';
@@ -33,9 +33,9 @@ async function get(req:Request){const u=(await currentUser())!,url=new URL(req.u
  db.prepare('SELECT day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM planning_cells WHERE day>=?::date AND day<?::date').bind(start,end).all(),
  db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all(),
  db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all()]);
- return Response.json({operational:op?await operationalSettings():undefined,suggestions:s.canEdit||s.canSuggest?await readSuggestions(range.start,range.end):[],canSuggest:s.canSuggest,mailSettings:u.role==='Administratör'?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:u.role==='Administratör'?s.editorEmails:[],suggesterEmails:u.role==='Administratör'?s.suggesterEmails:[],taskWidth:s.taskWidth,taskWidthRevision:s.taskWidthRevision,permissionUsers:u.role==='Administratör'?(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Instruktör','Chef') AND disabled_at IS NULL ORDER BY lower(name)").all()).results:[],users:u.role==='Administratör'?users:[]});}
+ return Response.json({operationalOverrides:op?(await db.prepare('SELECT column_id AS columnId,month,count,revision FROM planning_operational_overrides WHERE month>=? AND month<?').bind((year-1)+'-08',(year+1)+'-01').all()).results:undefined,operational:op?await operationalSettings():undefined,suggestions:s.canEdit||s.canSuggest?await readSuggestions(range.start,range.end):[],canSuggest:s.canSuggest,mailSettings:u.role==='Administratör'?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:u.role==='Administratör'?s.editorEmails:[],suggesterEmails:u.role==='Administratör'?s.suggesterEmails:[],taskWidth:s.taskWidth,taskWidthRevision:s.taskWidthRevision,permissionUsers:u.role==='Administratör'?(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Instruktör','Chef') AND disabled_at IS NULL ORDER BY lower(name)").all()).results:[],users:u.role==='Administratör'?users:[]});}
 async function post(req:Request){const u=(await currentUser())!,b=await panelBody(req,40000);return databaseTransaction(async()=>{
- const s=await settings(u,['editors','width'].includes(b.action)?'update':'share');if(b.action==='operational-settings')return saveOperational(u,b);if(['propose','review','mail-settings','mail-resolve'].includes(b.action))return suggestionAction(u,b,s.canEdit,s.canSuggest);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
+ const s=await settings(u,['editors','width'].includes(b.action)?'update':'share');if(b.action==='operational-count')return saveOperationalCount(u,b);if(b.action==='operational-settings')return saveOperational(u,b);if(['propose','review','mail-settings','mail-resolve'].includes(b.action))return suggestionAction(u,b,s.canEdit,s.canSuggest);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
  if(b.action==='cell')return savePlanningCell(u,b);
  if(b.action==='width'){
   if(!Number.isInteger(b.width)||b.width<70||b.width>800||!Number.isInteger(b.revision))throw new PanelError('Kolumnbredden måste vara mellan 70 och 800.');
@@ -69,5 +69,5 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
  }
  throw new PanelError('Okänd åtgärd.');
 });}
-const handle=(fn:(r:Request)=>Promise<Response>)=>async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Planeringen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0034.',e instanceof PanelError?e.status:503)}};
+const handle=(fn:(r:Request)=>Promise<Response>)=>async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Planeringen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0035.',e instanceof PanelError?e.status:503)}};
 export const GET=secureApi('/api/planning',handle(get));export const POST=secureApi('/api/planning',handle(post));
