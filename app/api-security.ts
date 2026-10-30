@@ -52,7 +52,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/admin/activity':{GET:['Administratör']},
  '/api/admin/activity/restore':{POST:['Administratör']},
  '/api/admin/backups/googledrive':{POST:['Administratör']},
- '/api/admin/backups/googledrive/callback':{GET:['Administratör']},
+ '/api/admin/backups/googledrive/callback':{GET:'public',POST:['Administratör']},
  '/api/admin/backups':{GET:['Administratör'],POST:['Administratör']},
  '/api/admin/iu-reset':{POST:['Administratör']},
 };
