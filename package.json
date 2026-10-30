@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test:planning": "node scripts/test-planning.cjs",
     "test:october29": "node scripts/test-october29.cjs",
-    "test:planning-update": "node scripts/test-planning-update.cjs"
+    "test:planning-update": "node scripts/test-planning-update.cjs",
+    "test:backup": "node scripts/test-backup-options.cjs && node scripts/test-backup-integration.cjs"
   },
   "dependencies": {
     "@netlify/database": "latest",
@@ -29,17 +30,21 @@
     "@tiptap/starter-kit": "^3.32.0",
     "@tiptap/y-tiptap": "^3.0.10",
     "docx": "^9.12.0",
+    "exceljs": "^4.4.0",
     "lucide-react": "^1.31.0",
     "mammoth": "^1.11.0",
     "next": "16.3.4",
+    "pdfkit": "^0.20.2",
     "pg": "^8.16.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "^22.19.19",
+    "@types/pdfkit": "^0.17.7",
     "@types/pg": "^8.15.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

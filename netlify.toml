@@ -3,3 +3,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["pdfkit", "exceljs"]

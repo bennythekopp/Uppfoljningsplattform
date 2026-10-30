@@ -1,3 +1,5 @@
+> **Aktuell säkerhetskopiering: Google Drive.** Följ GOOGLE-DRIVE-INSTALLATION.md och migration 0038. Äldre OneDrive-/SharePoint-anvisningar är historiska.
+
 # TC Boden – uppdatering 23 oktober 2026
 
 Läs [UPPDATERING-23OKT.md](UPPDATERING-23OKT.md) för installation och samtliga nya funktioner. Nytt databassteg: **0030 efter 0029**.

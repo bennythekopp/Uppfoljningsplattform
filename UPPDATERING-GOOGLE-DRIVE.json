@@ -1,0 +1,28 @@
+{
+  "updated": [
+    ".env.example",
+    "README.md",
+    "app/admin-backups.tsx",
+    "app/api/admin/backups/route.ts",
+    "app/api-security.ts",
+    "app/document-fonts.ts",
+    "app/workspace.tsx",
+    "lib/backup/oauth.ts",
+    "lib/backup/onedrive.ts",
+    "lib/backup/queue.ts",
+    "lib/backup/sharepoint.ts",
+    "lib/backup/worker.ts",
+    "scripts/test-backup-integration.cjs",
+    "GOOGLE-DRIVE-INSTALLATION.md",
+    "lib/backup/googledrive.ts",
+    "netlify/database/migrations/0038_google_drive.sql",
+    "app/api/admin/backups/googledrive/route.ts",
+    "app/api/admin/backups/googledrive/callback/route.ts"
+  ],
+  "removed": [
+    "app/api/admin/backups/onedrive/route.ts",
+    "app/api/admin/backups/onedrive/callback/route.ts"
+  ],
+  "migration": "0038_google_drive.sql",
+  "notes": "Komplett projekt med Google Drive. Ta bort gamla OneDrive-routefiler vid uppdatering av befintligt repository. Publicering och riktig Google-anslutning har inte utförts."
+}
