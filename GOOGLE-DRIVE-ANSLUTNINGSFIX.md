@@ -1,22 +1,17 @@
-# Rättning v2: Behörighet saknas efter Google-inloggning
+# Google Drive-anslutning – fix v3
 
-## Installera
-1. Packa upp denna zip-fil.
-2. Lägg filerna i samma sökvägar i ditt befintliga GitHub-projekt. Ersätt app/api-security.ts och app/api/admin/backups/googledrive/callback/route.ts. Testfilen och denna instruktion kan också läggas in.
-3. Publicera ändringen med en ny produktionsdeploy i Netlify. Om automatiska byggen är pausade måste du starta deployen manuellt.
-4. När deployen är klar: öppna hemsidans vanliga adress, logga in som administratör, avsluta eventuell rollförhandsvisning och välj Administratörsverktyg → Säkerhetskopiering → Anslut Google Drive.
-5. Starta en NY anslutning; återanvänd inte den gamla callback-adressen. Google-svaret är kortlivat och kan bara användas en gång.
-6. Om en Fortsätt-knapp visas, tryck på den. Normalt sker fortsättningen automatiskt.
+Ersätter både fix v1 och v2. Alla filer i paketet behövs.
 
-Ingen ny databasmigrering eller ändring av Google/Netlify-miljövariabler behövs för just denna rättning. Tidigare Google Drive-konfiguration och migration 0038 måste redan finnas.
+1. Packa upp zip-filen och ersätt/lägg till filerna på exakt samma sökvägar i GitHub-projektet.
+2. Publicera en ny produktionsdeploy i Netlify. Vänta tills den är klar. Starta deployen manuellt om automatisk publicering är pausad.
+3. Öppna hemsidans startsida i samma webbläsare och logga in som administratör. Avsluta eventuell rollförhandsvisning.
+4. Öppna Administratörsverktyg → Säkerhetskopiering → Anslut Google Drive. Starta ett helt nytt försök; gamla callback-adresser fungerar inte.
+5. Godkänn Google-åtkomsten inom tio minuter. Testa sedan anslutningen på hemsidan.
 
-## Ändring
-Google återvänder först till en offentlig mellansida utan dataåtkomst. Den skickar sedan svaret från samma webbplats till en skyddad POST-handler. Då följer den befintliga SameSite=Strict-inloggningskakan med. Administratörsbehörighet, ursprungskontroll, sessionsbundet engångs-state och PKCE verifieras som tidigare. Mellansidan använder no-store, strict-origin, escapade fält och strikt innehållspolicy. Slutredirect använder no-referrer. strict-origin anges både som HTTP-header och HTML-meta för att native form POST ska behålla sitt riktiga Origin utan att callback-frågesträngen skickas i Referer.
+Ingen ny databasmigrering eller ändring av miljövariabler behövs för denna rättning. Den tidigare Google-konfigurationen och migration 0038 ska finnas kvar.
 
-## Kontroller
-Backupintegrationstester med lokal databas och simulerade Google-svar: godkända. Inkluderar saknad session, främmande ursprung, HTML-injektion, engångs-state och rollförhandsvisning. Riktig Google-inloggning behöver provköras efter publicering.
+## Vad ändrades?
+Mellanledets HTML/formulär tas bort. När en administratör startar anslutningen skapas en tillfällig HttpOnly-kaka med SameSite=Lax som bara skickas till callback-sökvägen. Den gäller högst tio minuter och tas bort när återkomsten hanterats. Endast callback använder den. Alla andra API:er använder fortfarande den vanliga SameSite=Strict-kakan. Servern verifierar fortfarande sessionens giltighet, administratörsroll, eventuell rollförhandsvisning, sessionsbundet engångs-state och PKCE. Att bara ha den tillfälliga kakan ger ingen åtkomst till vanliga API:er.
 
-Produktionsbygge inklusive TypeScript: godkänt.
-
-## Varför v2 behövs
-Den första rättningen skickade no-referrer på mellansidan. Det kan få formulär-POST att skicka Origin: null, som korrekt avvisas av ursprungskontrollen. v2 ändrar mellansidan till strict-origin. Ursprungs- och administratörskontrollerna är kvar.
+## Verifiering
+Produktionsbygge och TypeScript godkända. Backupintegration med lokal databas och simulerade Google-svar godkänd: callback utan vanlig kaka men med tillfällig kaka, saknad/ogiltig kaka, fel roll, engångssvar, kryptering och övriga backupkontroller. Riktig webbläsarinloggning med Google måste fortfarande provköras efter publicering.

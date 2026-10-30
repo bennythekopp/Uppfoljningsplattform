@@ -52,7 +52,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/admin/activity':{GET:['Administratör']},
  '/api/admin/activity/restore':{POST:['Administratör']},
  '/api/admin/backups/googledrive':{POST:['Administratör']},
- '/api/admin/backups/googledrive/callback':{GET:'public',POST:['Administratör']},
+ '/api/admin/backups/googledrive/callback':{GET:['Administratör']},
  '/api/admin/backups':{GET:['Administratör'],POST:['Administratör']},
  '/api/admin/iu-reset':{POST:['Administratör']},
 };
@@ -91,11 +91,11 @@ async function securityEvent(req:Request,route:string,actor:Actor|null,action:st
  await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
   .bind(id,now,actor?.email||'',actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+' · '+req.method+' '+route).run();
 }
-export function secureApi(route:string,handler:Handler):Handler{
+export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise<Actor|null>):Handler{
  return async(req:Request)=>{
   try{
    const policy=policies[route]?.[req.method];
-   const actor=policy==='public'?null:route==='/api/admin/role-preview'?await currentAccount():await currentUser();
+   const actor=policy==='public'?null:authenticate?await authenticate():route==='/api/admin/role-preview'?await currentAccount():await currentUser();
    if(foreignMutation(req)){
     await securityEvent(req,route,actor,'Åtkomst nekad','Begäran från annan webbplats');
     return privateResponse(error('Begäran måste göras från den här webbplatsen.',403));
