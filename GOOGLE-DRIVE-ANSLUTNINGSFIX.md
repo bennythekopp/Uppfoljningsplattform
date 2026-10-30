@@ -1,4 +1,4 @@
-# Rättning: Behörighet saknas efter Google-inloggning
+# Rättning v2: Behörighet saknas efter Google-inloggning
 
 ## Installera
 1. Packa upp denna zip-fil.
@@ -11,9 +11,12 @@
 Ingen ny databasmigrering eller ändring av Google/Netlify-miljövariabler behövs för just denna rättning. Tidigare Google Drive-konfiguration och migration 0038 måste redan finnas.
 
 ## Ändring
-Google återvänder först till en offentlig mellansida utan dataåtkomst. Den skickar sedan svaret från samma webbplats till en skyddad POST-handler. Då följer den befintliga SameSite=Strict-inloggningskakan med. Administratörsbehörighet, ursprungskontroll, sessionsbundet engångs-state och PKCE verifieras som tidigare. Mellansidan använder no-store, no-referrer, escapade fält och strikt innehållspolicy.
+Google återvänder först till en offentlig mellansida utan dataåtkomst. Den skickar sedan svaret från samma webbplats till en skyddad POST-handler. Då följer den befintliga SameSite=Strict-inloggningskakan med. Administratörsbehörighet, ursprungskontroll, sessionsbundet engångs-state och PKCE verifieras som tidigare. Mellansidan använder no-store, strict-origin, escapade fält och strikt innehållspolicy. Slutredirect använder no-referrer. strict-origin anges både som HTTP-header och HTML-meta för att native form POST ska behålla sitt riktiga Origin utan att callback-frågesträngen skickas i Referer.
 
 ## Kontroller
 Backupintegrationstester med lokal databas och simulerade Google-svar: godkända. Inkluderar saknad session, främmande ursprung, HTML-injektion, engångs-state och rollförhandsvisning. Riktig Google-inloggning behöver provköras efter publicering.
 
 Produktionsbygge inklusive TypeScript: godkänt.
+
+## Varför v2 behövs
+Den första rättningen skickade no-referrer på mellansidan. Det kan få formulär-POST att skicka Origin: null, som korrekt avvisas av ursprungskontrollen. v2 ändrar mellansidan till strict-origin. Ursprungs- och administratörskontrollerna är kvar.
