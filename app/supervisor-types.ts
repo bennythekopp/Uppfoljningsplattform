@@ -1,0 +1,6 @@
+import {addDays,stockholmToday} from './grundschema-types';
+export type SupervisorEvent={id:string,studentId:string,supervisorEmail:string|null,supervisorName:string,from:string};
+export type SupervisorData={events:SupervisorEvent[],revisions:Record<string,number>,supervisors:{email:string,name:string}[]};
+export function validAssignmentDate(value:unknown):value is string{return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&value>='2000-01-01'&&value<='2099-12-31'&&Number.isFinite(new Date(value+'T12:00:00Z').getTime())&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value}
+export function supervisorPeriods(events:SupervisorEvent[],studentId:string){const rows=events.filter(e=>e.studentId===studentId).sort((a,b)=>a.from.localeCompare(b.from));return rows.map((e,i)=>({...e,to:rows[i+1]?addDays(rows[i+1].from,-1):null})).filter(e=>!!e.supervisorEmail)}
+export function supervisorAt(events:SupervisorEvent[],studentId:string,today=stockholmToday()){const rows=events.filter(e=>e.studentId===studentId).sort((a,b)=>a.from.localeCompare(b.from));const current=rows.filter(e=>e.from<=today).at(-1);return {current:current?.supervisorEmail?current:undefined,next:rows.find(e=>e.from>today)}}

@@ -13,7 +13,7 @@ export function personPeriodFor(periods:PlanningPeriod[],column:PlanningColumn,d
  const membership=membershipFor(memberships,column.userEmail||'',day);return membership?[...periods].reverse().find(p=>p.groupId===membership.groupId&&p.startDate<=day):undefined;
 }
 export function baseTour(periods:PlanningPeriod[],column:PlanningColumn,day:string,memberships?:ScheduleMembership[]){const p=personPeriodFor(periods,column,day,memberships),a=memberships===undefined?p?.assignments.find(a=>a.userEmail===column.userEmail):membershipFor(memberships,column.userEmail||'',day);return p&&a&&(!p.config.validUntil||day<=p.config.validUntil)?scheduleTour(p.config,a.row,day):''}
-export function colorStyle(value:string){if(!/^#[0-9a-f]{6}$/i.test(value))return;const channels=[1,3,5].map(i=>parseInt(value.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4),luminance=channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;return {backgroundColor:value,color:luminance>.179?'#171b1c':'#ffffff'}}
+export function colorStyle(value:string){if(!/^#[0-9a-f]{6}$/i.test(value))return;const channels=[1,3,5].map(i=>parseInt(value.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4),luminance=channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;return {'--planning-color':value,backgroundColor:value,color:luminance>.179?'#171b1c':'#ffffff'}}
 export function pairedPlanningStyle(manual:string,code:string,period?:PlanningPeriod){const explicit=colorStyle(manual);if(explicit)return explicit;const tour=period?findTour(period.config,code):undefined;return tour?.code.trim().toLocaleLowerCase('sv-SE')==='semester'?colorStyle(tour.color):undefined}
 
 /** The saved tour colour is also used for its overnight continuation. */

@@ -1,0 +1,69 @@
+/* Header controls belong to the bar, including on mobile. */
+@media screen{
+ .main>.topbar{position:sticky;top:0;z-index:31;gap:12px}
+ .site-header-actions{display:flex;align-items:center;gap:10px;flex:none}
+ .site-header-actions .site-notifications{position:relative!important;top:auto!important;right:auto!important;z-index:auto;color:inherit}
+ .site-header-actions .topmeta{margin:0}
+ .site-help-trigger{display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;background:transparent;color:inherit;flex:none}
+ .site-help-trigger:focus-visible{outline:2px solid #c33;outline-offset:2px;border-radius:5px}
+ .role-workspace:has(>.rolepreviewbar) .main>.topbar{top:62px}
+ .mobileheader>.site-header-actions{padding:0;flex:none}
+ .mobileheader>div:not(.site-header-actions){padding-right:0;min-width:0}
+ .tc-modal{width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid var(--ui-line,#ddd);border-radius:12px;padding:24px;background:var(--ui-surface,#fff);color:var(--ui-text,#292929);box-shadow:0 20px 70px #0005}
+ .tc-modal::backdrop{background:#0009}
+ .tc-modal>header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+ .tc-modal h2{font-size:23px;margin:0;color:inherit}.tc-modal>header>button{border:0;background:transparent;color:inherit;padding:6px;display:grid;place-items:center}
+ .tc-modal label{display:block;font-size:14px;font-weight:600;margin:18px 0}
+ .tc-modal :is(select,input){display:block;margin-top:8px;width:100%;padding:11px;border:1px solid var(--ui-line,#ccc);background:var(--ui-field,#fff);color:inherit;border-radius:7px;min-width:0}
+ .help-popup{width:min(1200px,calc(100vw - 32px))}.help-guides{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+ .help-guides section{border:1px solid var(--ui-line,#ddd);border-radius:9px;padding:12px;min-width:0}.help-guides h3{font-size:16px;margin:0 0 8px}.help-guides p{font-size:13px;color:var(--ui-muted,#666);min-height:32px}
+ .help-image{display:block;width:100%;padding:0;border:0;background:transparent;cursor:zoom-in}.help-image img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:contain}.help-guides .secondary{width:100%;justify-content:center;margin-top:12px}
+ .help-popup footer{display:flex;justify-content:flex-end;margin-top:18px}.help-image-scroll{overflow:auto;max-height:70dvh;touch-action:pan-x pan-y pinch-zoom}.help-image-scroll img{display:block;width:100%;min-width:850px;height:auto}.help-return{margin-bottom:12px}
+ .student-supervisors{display:grid;grid-template-columns:repeat(2,minmax(95px,1fr));gap:16px;min-width:0;color:var(--ui-text,#292929);text-align:left}
+ .student-supervisors>span{display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+ .student-supervisors small{display:block;font-size:11px;font-weight:400;color:var(--ui-muted,#666)}
+ .personnelopen.studentkpstatusopen{grid-template-columns:43px minmax(110px,1fr) minmax(220px,1.2fr) minmax(160px,auto) auto;gap:12px}
+ .my-student{margin-bottom:20px;border-left:3px solid #c00000}.my-student .personnelopen{width:100%}
+ /* Continuous note editor fills its screen; long notes scroll inside the paper. */
+ body:has(.notes-workspace) .app{height:100dvh;min-height:0;overflow:hidden}
+ .main:has(.notes-workspace){display:flex;flex-direction:column;height:100dvh;min-height:0}
+ .main:has(.notes-workspace)>.topbar{flex:none}
+ .main .content:has(.notes-workspace){flex:1;min-height:0;width:100%;max-width:none;padding:16px 24px;overflow:hidden}
+ .instructor-hub:has(.notes-workspace){height:100%;display:flex;flex-direction:column;min-height:0}
+ .notes-workspace{height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;gap:12px}
+ .notes-heading{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;flex:none}.notes-heading h1{font-size:25px;margin:0}.notes-save{margin-left:auto;font-size:12px;color:var(--ui-muted,#666)}
+ .note-links{display:inline-flex;align-items:center;gap:10px}.note-links button{padding:5px 0;background:transparent;border:0;color:var(--ui-muted,#666)}.note-links button.active{color:var(--ui-accent-text,#ad0000);border-bottom:2px solid #c00000}
+ .notes-editor{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;border:1px solid var(--ui-line,#ddd);border-radius:9px;overflow:hidden;background:var(--ui-surface,#fff)}
+ .notes-editor .document-formatbar{position:static;display:flex;flex-wrap:wrap;flex:none;max-width:100%;gap:3px;padding:8px;margin:0;border:0;border-bottom:1px solid var(--ui-line,#ddd);border-radius:0}
+ .notes-editor .document-formatbar :is(button,select){min-width:0;max-width:100%;min-height:32px}
+ .notes-editor .note-paper{flex:1;min-height:0;width:100%;max-width:100%;overflow:auto;margin:0;padding:18px 22px;background:var(--ui-surface,#fff);color:var(--ui-text,#292929);border:0;box-shadow:none;overscroll-behavior:contain}
+ .notes-editor .document-prose{min-height:100px;padding:0;overflow-wrap:anywhere;color:inherit;max-width:100%}.notes-editor .document-prose img{max-width:100%;height:auto}.notes-editor .document-prose table{max-width:100%;table-layout:fixed;width:100%}
+ .notes-editor .document-wordcount{flex:none;margin:0;padding:8px 12px;color:var(--ui-muted,#666);font-size:11px;border-top:1px solid var(--ui-line,#ddd)}
+ /* Display colors only; original values remain stored and available for edits. */
+ :is(.planning-table,.tcpa-grid){--planning-base:var(--ui-surface,#fff);--planning-tint:13%;--planning-ink:var(--ui-text,#252525)}
+ html[data-theme=dark] :is(.planning-table,.tcpa-grid){--planning-tint:18%;--planning-base:#25292d;--planning-ink:#f1f3f5}
+ :is(.planning-table,.tcpa-grid) [style*="--planning-color"]{background-color:color-mix(in srgb,var(--planning-color) var(--planning-tint),var(--planning-base))!important;color:var(--planning-ink)!important;background-image:linear-gradient(to right,var(--planning-color) 0 3px,transparent 3px)!important}
+ :is(.planning-table,.tcpa-grid) [style*="--planning-color"] :is(input,textarea,button){color:inherit}
+ .planning-table tbody td{border-color:var(--ui-line,#ddd)}.planning-table .planning-week-start>*{border-top-width:2px}.planning-table thead th{font-weight:600}
+ .tcpa-grid .tcpa-night{background-image:none!important;background-color:var(--planning-color,#b90000)!important}
+}
+@media screen and (max-width:1300px){.personnelopen.studentkpstatusopen{grid-template-columns:43px minmax(130px,1fr) minmax(220px,1fr)}.studentkpstatusopen>.personnelstatuses{grid-column:2}.personnelopen.studentkpstatusopen>span:last-child{grid-column:3;justify-self:end}}
+@media screen and (max-width:900px){
+ .site-header-actions{gap:2px}.site-header-actions .notification-trigger,.site-help-trigger{width:36px;height:40px}
+ .role-workspace:has(>.rolepreviewbar) .mobileheader{top:94px}
+ .main:has(.notes-workspace){height:calc(100dvh - 66px)}
+ .main .content:has(.notes-workspace){padding:12px 12px calc(80px + env(safe-area-inset-bottom))}
+ .notes-heading h1{font-size:23px}.notes-save{font-size:11px}.notes-editor .note-paper{padding:14px}
+ .help-guides{grid-template-columns:1fr}.help-popup{padding:16px}.help-guides p{min-height:0}
+}
+@media screen and (max-width:650px){.personnelopen.studentkpstatusopen{grid-template-columns:33px minmax(0,1fr);gap:10px}.studentkpstatusopen>.student-supervisors{grid-column:2;grid-row:2}.studentkpstatusopen>.personnelstatuses{grid-column:2;grid-row:3}.personnelopen.studentkpstatusopen>span:last-child{grid-column:2;grid-row:4;justify-self:start}.notes-heading h1{width:100%}}
+.student-print-summary{display:flex;align-items:flex-start;gap:16px;justify-content:space-between}.supervisor-print{font-size:9pt;line-height:1.45;max-width:55%;break-inside:avoid}.supervisor-print strong{display:block}
+@media print{.student-print-summary{display:flex!important;break-inside:avoid;margin:4mm 0}.student-print-summary .studentprintkpresults{flex:none;margin:0}.supervisor-print{color:#111}.site-header-actions,.tc-modal{display:none!important}}
+@media screen{
+ .notes-heading .note-links button,.notes-heading .note-links button.active{background:transparent!important;border-radius:0;padding:5px 0;min-width:0}
+ .notes-heading .note-links button.active{color:var(--ui-accent-text,#ad0000)!important}
+ .planning-table tr.planning-today>*{border-top-color:#a58b45;border-bottom-color:#a58b45}
+}
+@media screen{
+ .tcpa-grid td[style*="--planning-color"] .tcpa-tour-value[style*="--planning-color"]{background-color:transparent!important;background-image:none!important}
+}

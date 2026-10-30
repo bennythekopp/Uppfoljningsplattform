@@ -1,0 +1,24 @@
+const fs=require('fs'),assert=require('node:assert/strict'),Module=require('module'),crypto=require('crypto'),path=require('path'),root=path.resolve(__dirname,'..'),ts=require(root+'/node_modules/typescript'),{PGlite}=require('@electric-sql/pglite');let engine,token='';require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:1,target:9,esModuleInterop:true}}).outputText,f);const extraCookies=new Map(),cookieOptions=new Map();const jar={get:n=>n==='tc_session'?(token?{value:token}:undefined):(extraCookies.has(n)?{value:extraCookies.get(n)}:undefined),set:(n,v,o)=>{if(n==='tc_session')token=v;else{if(o?.maxAge===0)extraCookies.delete(n);else extraCookies.set(n,v);cookieOptions.set(n,o)}},delete:n=>{if(n==='tc_session')token='';else extraCookies.delete(n)}},orig=Module._load;Module._load=function(id){if(id==='server-only')return {};if(id==='next/headers')return {cookies:async()=>jar};if(id==='pg'){const query=async(sql,args)=>{if(sql.includes('pg_try_advisory_lock'))return {rows:[{locked:true}],rowCount:1};if(sql.includes('pg_advisory_unlock'))return {rows:[],rowCount:1};if(sql.includes('pg_advisory_xact_lock'))return {rows:[],rowCount:1};const r=await engine.query(sql,args);return {rows:r.rows,rowCount:r.affectedRows||r.rows.length}};return {__esModule:true,default:{types:{setTypeParser(){}},Pool:class{query(...args){return query(...args)}async connect(){return {query,release(){}}}}}}}return orig.apply(this,arguments)};process.env.DATABASE_URL='postgres://qa';process.env.NETLIFY='true';process.env.APP_ORIGIN='https://handledare.netlify.app';
+(async()=>{engine=new PGlite();for(const f of fs.readdirSync(root+'/netlify/database/migrations').sort())await engine.exec(fs.readFileSync(root+'/netlify/database/migrations/'+f,'utf8').replace("PERFORM pg_advisory_xact_lock(hashtextextended('schedule-membership:'||NEW.user_email,0));",'PERFORM 1;'));
+for(const [role,key,email,name]of[['Administratör','a','admin@test','Anna Svensson'],['Instruktör','b','instructor@test','Erik Nilsson'],['Chef','c','chief@test','Chef'],['Handledare','d','supervisor@test','Handledare Ett']]){token=key.repeat(64);await engine.query('INSERT INTO users(email,username,name,role,created_at) VALUES($1,$2,$3,$4,0)',[email,key,name,role]);await engine.query('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at) VALUES($1,$2,$3,$4)',[crypto.createHash('sha256').update(token).digest('hex'),email,Date.now()+3600000,Date.now()])}token='a'.repeat(64);await engine.query("INSERT INTO students(id,name,created_at,created_by) VALUES('student','Test Elev',0,'qa')");
+const api=require(root+'/app/api/student-supervisors/route.ts');
+async function call(body,headers={}){const r=await api[body?'POST':'GET'](new Request(process.env.APP_ORIGIN+'/api/student-supervisors',{method:body?'POST':'GET',headers:{origin:process.env.APP_ORIGIN,'content-type':'application/json',...headers},...(body?{body:JSON.stringify(body)}:{})}));return {status:r.status,data:await r.json()}}
+const assign={studentId:'student',supervisorEmail:'supervisor@test',from:'2026-10-19',revision:0};
+assert.equal((await call(assign)).status,200);assert.equal((await call(assign)).status,409);
+assert.equal((await call({...assign,from:'2026-02-30',revision:1})).status,400);
+assert.equal((await call({...assign,supervisorEmail:'chief@test',revision:1})).status,400);
+assert.equal((await call({...assign,revision:1},{origin:'https://evil.test'})).status,403);
+for(const k of ['c','d']){token=k.repeat(64);assert.equal((await call({...assign,revision:1})).status,403);assert.equal((await call()).status,200);assert.equal((await call()).data.supervisors.length,0)}
+token='b'.repeat(64);assert.equal((await call({...assign,from:'2026-11-02',supervisorEmail:null,revision:1})).status,200);
+const data=(await call()).data;assert.equal(data.events.length,2);assert.equal(data.revisions.student,2);assert.equal(data.supervisors.length,1);
+const {supervisorAt,supervisorPeriods}=require(root+'/app/supervisor-types.ts');
+assert.equal(supervisorAt(data.events,'student','2026-10-30').current.supervisorName,'Handledare Ett');
+assert.equal(supervisorAt(data.events,'student','2026-10-30').next.from,'2026-11-02');
+assert.equal(supervisorAt(data.events,'student','2026-11-02').current,undefined);
+assert.equal(supervisorPeriods(data.events,'student')[0].to,'2026-11-01');
+assert.equal((await call({...assign,from:'2026-12-01',revision:2})).status,200);
+assert.equal((await call()).data.events.length,3);
+assert.equal((await engine.query("SELECT count(*) AS n FROM activity_log WHERE area='Elever'")).rows[0].n,3);
+token='';assert.equal((await call()).status,403);
+console.log('PASS supervisor API: roles, CSRF, conflicts, invalid dates, future changes/removal, history, audit.');await engine.close();
+})().catch(e=>{console.error(e);process.exitCode=1});

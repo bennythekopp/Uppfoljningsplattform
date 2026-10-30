@@ -1,6 +1,7 @@
 'use client';
 import { useEffect,useRef,useState,type ReactNode } from 'react';
 import { Menu,X } from 'lucide-react';
+import HelpPopup from './help-popup';
 import NotificationBell from './notification-bell';
 export default function WorkspaceNavigation({children,account,siteName='TC Boden',email,role}:{children:ReactNode,account:ReactNode,siteName?:string,email:string,role:string}){
  const roleLabel=role==='Administratör'?'Instruktör':role;
@@ -22,6 +23,6 @@ export default function WorkspaceNavigation({children,account,siteName='TC Boden
   window.addEventListener('keydown',keys);window.addEventListener('resize',resize);
   return()=>{document.body.style.overflow=oldOverflow;window.removeEventListener('keydown',keys);window.removeEventListener('resize',resize);trigger.current?.focus()};
  },[open]);
- return <><NotificationBell email={email} role={role}/><header className="mobileheader"><button ref={trigger} type="button" className="menutrigger" aria-label="Öppna meny" aria-expanded={open} aria-controls="workspace-navigation" onClick={()=>setOpen(true)}><Menu size={26}/></button><img src="/logo.png" alt="" width={34} height={34}/><div><strong>{siteName}</strong><small>{roleLabel}</small></div></header><button type="button" aria-hidden={!open} inert={!open} className={'draweroverlay '+(open?'is-open':'')} aria-label="Stäng meny" tabIndex={-1} onClick={()=>setOpen(false)}/>
+ return <><header className="mobileheader"><button ref={trigger} type="button" className="menutrigger" aria-label="Öppna meny" aria-expanded={open} aria-controls="workspace-navigation" onClick={()=>setOpen(true)}><Menu size={26}/></button><img src="/logo.png" alt="" width={34} height={34}/><div><strong>{siteName}</strong><small>{roleLabel}</small></div><div className="site-header-actions"><NotificationBell email={email} role={role}/><HelpPopup/></div></header><button type="button" aria-hidden={!open} inert={!open} className={'draweroverlay '+(open?'is-open':'')} aria-label="Stäng meny" tabIndex={-1} onClick={()=>setOpen(false)}/>
  <aside ref={drawer} id="workspace-navigation" className={'sidebar workspace-sidebar '+(open?'draweropen':'')} role={open?'dialog':undefined} aria-modal={open||undefined} aria-label="Sidomeny"><div className="brand"><span className="brandmark"><img src="/logo.png" alt="TC Boden" width={38} height={38}/></span><span>{siteName}<small>{roleLabel}</small></span><button type="button" className="drawerclose" aria-label="Stäng meny" onClick={()=>setOpen(false)}><X size={24}/></button></div><div className="navigation-scroll" onClick={e=>{if((e.target as HTMLElement).closest('[data-nav-target]'))setOpen(false)}}>{children}</div><div className="sidebottom">{account}</div></aside><div className="mobileaccount sidebottom">{account}</div></>;
 }

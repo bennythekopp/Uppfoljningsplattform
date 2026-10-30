@@ -18,6 +18,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/session':{GET:'public',POST:'public'},
  '/api/logout':{POST:'public'},
  '/api/me':{GET:all},
+ '/api/student-supervisors':{GET:all,POST:instructors},
  '/api/students':{GET:all,POST:instructors,PUT:instructors,DELETE:instructors},
  '/api/moments':{GET:all,POST:instructors,PUT:instructors,DELETE:instructors},
  '/api/assessments':{GET:all,PUT:graders,DELETE:instructors},
