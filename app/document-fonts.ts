@@ -1,5 +1,5 @@
 // Office/Windows font family names. Font files are supplied by the user's device,
-// not downloaded from Microsoft or bundled with the application.
+// not downloaded from Google or bundled with the application.
 // Keep family names intact: Word export writes the same name to w:rFonts.
 export const commonDocumentFonts=[
  'Aptos','Aptos Display','Aptos Narrow','Aptos Serif','Arial','Calibri',
@@ -30,9 +30,9 @@ export const otherDocumentFonts=[
  'Kunstler Script','Leelawadee UI','Lucida Bright','Lucida Calligraphy',
  'Lucida Console','Lucida Fax','Lucida Handwriting','Lucida Sans',
  'Lucida Sans Typewriter','Lucida Sans Unicode','Magneto','Maiandra GD',
- 'Malgun Gothic','Matura MT Script Capitals','Microsoft JhengHei',
- 'Microsoft New Tai Lue','Microsoft PhagsPa','Microsoft Sans Serif',
- 'Microsoft Tai Le','Microsoft YaHei','Microsoft Yi Baiti','Mistral','Modern No. 20',
+ 'Malgun Gothic','Matura MT Script Capitals','Google JhengHei',
+ 'Google New Tai Lue','Google PhagsPa','Google Sans Serif',
+ 'Google Tai Le','Google YaHei','Google Yi Baiti','Mistral','Modern No. 20',
  'Mongolian Baiti','Monotype Corsiva','MS Gothic','MS Mincho','MS PGothic',
  'MS PMincho','MS Reference Sans Serif','MT Extra','MV Boli','Myanmar Text',
  'Niagara Engraved','Niagara Solid','Nirmala UI','OCR A Extended','Old English Text MT',

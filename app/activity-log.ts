@@ -1,4 +1,5 @@
 import 'server-only';
+import {captureBackupProtocol} from './backup-history';
 import {captureAssessment,completeRecovery} from './assessment-recovery';
 import base from './items.json';
 import {db,databaseTransaction} from './database';
@@ -35,6 +36,7 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  const recovery=method==='DELETE'?await captureAssessment(area,input):null;
  const response=await handler(req);if(!response.ok)throw response;
  const output=await response.clone().json().catch(()=>({}));
+ if(typeof personId==='string'&&person?.name)await captureBackupProtocol(area,input,output,personId,person.name,actor.email,method);
  const undo=await completeRecovery(recovery,output);
  let action=method==='DELETE'?'Borttaget':method==='POST'?(input.id?'Ändrat':'Skapat'):'Ändrat';
  if(area==='Användare')action=method==='DELETE'?'Användare borttagen':method==='POST'?'Användare skapad':accountChange.startsWith('Roll:')?'Behörighet ändrad':'Användare ändrad';
@@ -64,5 +66,5 @@ export async function auditMutation(req:Request,handler:(req:Request)=>Promise<R
  }
  return response;
  });
- }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0028 är körda.',503)}
+ }catch(e){if(e instanceof Response)return e;return error('Ändringen kunde inte sparas tillsammans med aktivitetsloggen. Kontrollera att databasuppdateringarna till och med 0035 är körda.',503)}
 }
