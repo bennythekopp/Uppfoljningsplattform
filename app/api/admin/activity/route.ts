@@ -1,5 +1,6 @@
 import {secureApi} from '../../../api-security';
-import {db} from '../../../database';
+import {db,databaseTransaction} from '../../../database';
+import {panelLog} from '../../../panel-server';
 import {currentUser,error} from '../../../auth';
 export const dynamic='force-dynamic';
 async function GETEndpoint(req:Request){try{if((await currentUser())?.role!=='Administratör')return error('Behörighet saknas',403);const p=new URL(req.url).searchParams,q=(p.get('q')||'').slice(0,200),actor=p.get('actor')||'',action=p.get('action')||'',offset=Number(p.get('offset')||0);if(!Number.isSafeInteger(offset)||offset<0||offset>1000000)return error('Ogiltig sida',400);
@@ -12,3 +13,16 @@ async function GETEndpoint(req:Request){try{if((await currentUser())?.role!=='Ad
  }catch{return error('Kunde inte läsa aktivitetsloggen. Kontrollera databasuppdatering 0019.',503)}}
 
 export const GET=secureApi('/api/admin/activity',GETEndpoint);
+
+async function POSTEndpoint(req:Request){
+ try{
+  const actor=(await currentUser())!;const b=await req.json().catch(()=>null);
+  if(b?.action!=='clear'||b.confirm!==true)return error('Bekräfta att aktivitetsloggen ska rensas.',400);
+  return await databaseTransaction(async()=>{
+   const removed=await db.prepare('DELETE FROM activity_log').run();
+   await panelLog(actor,'Aktivitetslogg rensad',String(removed.meta.changes)+' loggposter borttagna');
+   return Response.json({ok:true,removed:removed.meta.changes});
+  });
+ }catch{return error('Aktivitetsloggen kunde inte rensas.',503)}
+}
+export const POST=secureApi('/api/admin/activity',POSTEndpoint);

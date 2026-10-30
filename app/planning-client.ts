@@ -1,5 +1,6 @@
 'use client';
 import {cellKey,type PlanningCell} from './planning-types';
+import {rememberPlanningColor} from './planning-recent-colors';
 import {panelRequest} from './panel-types';
 type Entry={key?:string,proposal?:boolean,sourceValue?:string,sourceRevision?:number,cell:PlanningCell,baseValue:string,value:string,error:string,conflict?:{value:string,revision:number},saving:Promise<void>|null};
 type Session={user:string,entries:Map<string,Entry>,listeners:Set<()=>void>,cellListeners:Map<string,Set<()=>void>>,versions:Map<string,number>};
@@ -15,7 +16,7 @@ export async function savePlanning(s:Session,e:Entry):Promise<void>{
  if(s.user!==active)throw Error('Logga in på kontot som gjorde ändringen.');
  if(e.saving){await e.saving;return savePlanning(s,e)}if(e.value===e.cell.value)return;if(e.conflict)throw Error('Välj vilken version av rutan som ska behållas.');
  const value=e.value,revision=e.cell.revision;
- e.saving=(async()=>{try{const r=await fetch('/api/planning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:e.proposal?'propose':'cell',previousValue:e.sourceValue,day:e.cell.day,columnId:e.cell.columnId,field:e.cell.field,value,revision:e.proposal?e.sourceRevision:revision,baseValue:e.baseValue})});const v=await r.json();if(!r.ok){if(v.conflict)e.conflict=v.conflict;throw Error(v.error||'Rutan kunde inte sparas.')}e.cell=e.proposal?{...e.cell,value}:v.cell;if(e.proposal)window.dispatchEvent(new Event('tc-planning-suggestions'));for(const cell of v.linkedCells||[]){const linked=planningEntry(s,cell.day,cell.columnId,cell.field,'');const dirty=linked.value!==linked.cell.value;linked.cell=cell;if(!dirty)linked.value=cell.value;signal(s,linked)}e.error=''}catch(error){e.error=(error as Error).message;throw error}finally{e.saving=null;signal(s,e)}})();signal(s,e);await e.saving;
+ e.saving=(async()=>{try{const r=await fetch('/api/planning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:e.proposal?'propose':'cell',previousValue:e.sourceValue,day:e.cell.day,columnId:e.cell.columnId,field:e.cell.field,value,revision:e.proposal?e.sourceRevision:revision,baseValue:e.baseValue})});const v=await r.json();if(!r.ok){if(v.conflict)e.conflict=v.conflict;throw Error(v.error||'Rutan kunde inte sparas.')}e.cell=e.proposal?{...e.cell,value}:v.cell;if(!e.proposal&&e.cell.field==='color')rememberPlanningColor(s.user,value);if(e.proposal)window.dispatchEvent(new Event('tc-planning-suggestions'));for(const cell of v.linkedCells||[]){const linked=planningEntry(s,cell.day,cell.columnId,cell.field,'');const dirty=linked.value!==linked.cell.value;linked.cell=cell;if(!dirty)linked.value=cell.value;signal(s,linked)}e.error=''}catch(error){e.error=(error as Error).message;throw error}finally{e.saving=null;signal(s,e)}})();signal(s,e);await e.saving;
 }
 export async function flushPlanning(){const s=sessions.get(active);if(s)for(const e of s.entries.values())while(e.saving||e.value!==e.cell.value)await savePlanning(s,e)}
 export function planningPending(){const s=sessions.get(active);return !!s&&[...s.entries.values()].some(e=>e.saving||e.value!==e.cell.value)}

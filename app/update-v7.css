@@ -1,0 +1,82 @@
+@media screen {
+ /* Explicit shared cancel styling also covers dialogs whose original button lacked a class. */
+ button.cancel-button,.modalactions>button.cancel-button,.tc-modal .modalactions>button.cancel-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px;min-height:44px!important;min-width:88px;padding:12px 18px!important;border:1px solid var(--ui-line,#ccc)!important;border-radius:9px!important;background:var(--ui-raised,#f4f4f4)!important;color:var(--ui-text,#292929)!important;font:inherit!important;font-weight:700!important;line-height:1.4!important;white-space:nowrap;text-decoration:none}
+ button.cancel-button:hover:not(:disabled){background:var(--ui-field,#e9e9e9)!important}
+ button.cancel-button:focus-visible{outline:2px solid var(--ui-accent-text,#ae0000);outline-offset:3px}
+ .modalactions{flex-wrap:wrap;gap:12px}
+ .moment-detail-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 32px;margin:18px 0}
+ .moment-detail-actions>.textaction{display:inline-flex;align-items:center;gap:8px;padding:8px 0;margin:0;min-height:40px}
+ .moment-detail-actions>.textaction svg{flex:none}
+ .admin-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start;margin:24px 0}
+ .admin-module{border:1px solid var(--ui-line,#ddd);border-radius:12px;padding:22px;background:var(--ui-surface,#fff);color:var(--ui-text,#292929);min-width:0}
+ .admin-module h2{font-size:20px;margin:0 0 18px}
+ .admin-module p,.admin-module small{line-height:1.6}
+ .admin-module .sectionhead{margin:0 0 16px;gap:12px;flex-wrap:wrap}
+ .admin-module .sectionhead h2{margin:0}
+ .admin-module .rolepreviewbar{margin:0;padding:0;border:0;background:transparent;flex-wrap:wrap;align-items:start}
+ .admin-module .rolepreviewbar>div{flex:1 1 100%}
+ .admin-general-grid>.adminiureset{margin:0;height:100%;display:flex;flex-direction:column;align-items:start;gap:18px}
+ .admin-general-grid>.adminiureset h2{margin:0 0 10px}
+ .admin-general-grid>.adminiureset p{margin:0}
+ .admin-general-grid>.adminiureset .adminresetbutton{margin-top:auto}
+ .admin-general-grid>.admin-notices,.admin-planning-planning-permissions{grid-column:1/-1}
+ .admin-module .admin-inline-form{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible;display:flex;flex-direction:column;gap:14px}
+ .admin-inline-form>header{display:flex;align-items:center;gap:10px}
+ .admin-inline-form>header h2{display:flex;gap:8px;align-items:center}
+ .admin-inline-form label{display:flex;flex-direction:column;gap:7px;margin:0}
+ .admin-inline-form .planning-user-option{flex-direction:row;align-items:center;gap:10px;line-height:1.5}
+ .admin-inline-form :is(input:not([type=checkbox]),select),.admin-notice-form :is(input:not([type=checkbox]),textarea){display:block;width:100%;min-width:0;padding:11px 12px;border:1px solid var(--ui-line,#ccc);border-radius:8px;background:var(--ui-field,#fafafa);color:var(--ui-text,#292929);font:inherit}
+ .admin-inline-form input[type=checkbox],.admin-check input{width:18px;height:18px;flex:none;accent-color:var(--red,#b60000)}
+ .admin-inline-form>small,.admin-module small{color:var(--ui-muted,#666)}
+ .admin-form-actions,.admin-heading-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+ .admin-form-actions{justify-content:flex-end;margin-top:8px}
+ .admin-inline-log{width:auto!important;max-height:none!important;overflow:visible}
+ .admin-inline-log article{padding:14px 0;border-bottom:1px solid var(--ui-line,#ddd);overflow-wrap:anywhere}
+ .admin-inline-log time{display:block;color:var(--ui-muted,#666);font-size:12px;margin-top:5px}
+ .admin-inline-log p{margin:6px 0;font-size:13px}
+ .admin-inline-log del{color:var(--ui-muted,#666)}
+ .admin-inline-log ins{text-decoration:none}
+ .admin-planning-module :is(.planning-permissions-scroll,table){--planning-border:var(--ui-line,#ddd)}
+ .admin-user-row.student{display:grid;grid-template-columns:44px minmax(100px,1fr) 150px 96px;gap:16px;align-items:center}
+ .admin-user-row>.rolebadge{margin:0;justify-self:start;white-space:normal}
+ .admin-user-row>span:nth-child(2){min-width:0;overflow-wrap:anywhere}
+ .admin-user-actions{display:grid;grid-template-columns:40px 40px;gap:12px;justify-self:end}
+ .admin-user-actions>.editicon{margin:0;width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid var(--ui-line,#ddd);border-radius:8px;background:var(--ui-raised,#f4f4f4);color:inherit}
+ .admin-user-actions>.editicon:disabled{cursor:default;opacity:.3}
+ .admin-notice-list article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:16px 0;border-top:1px solid var(--ui-line,#ddd)}
+ .admin-notice-list p{white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0}
+ .admin-notice-list small{display:block;margin-top:5px}
+ .admin-notice-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:start;justify-content:flex-end}
+ .admin-notice-actions button{min-height:40px;padding:9px 12px;font-size:13px}
+ .admin-notice-form{display:grid;gap:16px}
+ .admin-notice-form label{display:grid;gap:8px;margin:0}
+ .admin-notice-form fieldset{border:1px solid var(--ui-line,#ccc);border-radius:8px;display:flex;gap:12px;flex-wrap:wrap;padding:12px}
+ .admin-notice-form .admin-check{display:flex;align-items:center;gap:8px}
+ .admin-table-scroll{overflow-x:auto}
+ .admin-reader-table{width:100%;border-collapse:collapse;text-align:left}
+ .admin-reader-table :is(th,td){padding:12px 8px;border-bottom:1px solid var(--ui-line,#ddd)}
+ .notification-title{display:block;margin-bottom:5px}
+ .planning-recent-colors{border-top:1px solid currentColor;padding-top:9px;margin-bottom:12px}
+ .planning-recent-colors>strong{display:block;font-size:12px;margin-bottom:8px}
+ .planning-recent-colors small{display:block;margin-bottom:10px;opacity:.7}
+ .planning-color-popup{max-height:calc(100dvh - 16px);overflow:auto}
+}
+@media screen and (max-width:900px){
+ .admin-module-grid{grid-template-columns:1fr}
+ .admin-module{padding:18px}
+ .admin-user-row.student{grid-template-columns:40px minmax(90px,1fr) 130px 88px;gap:10px}
+ .admin-user-actions{grid-template-columns:38px 38px;gap:8px}
+ .admin-notice-list article{grid-template-columns:1fr}
+ .admin-notice-actions{justify-content:flex-start}
+}
+@media screen and (max-width:600px){
+ .admin-user-row.student{grid-template-columns:36px minmax(0,1fr) 84px;gap:8px 12px}
+ .admin-user-row>.studentavatar{grid-column:1;grid-row:1/3}
+ .admin-user-row>span:nth-child(2){grid-column:2;grid-row:1}
+ .admin-user-row>.rolebadge{grid-column:2;grid-row:2;font-size:12px;padding:3px 0;background:transparent}
+ .admin-user-actions{grid-column:3;grid-row:1/3;grid-template-columns:36px 36px}
+ .admin-user-actions>.editicon{width:36px}
+ .moment-detail-actions{gap:8px 24px}
+}
+
+@media screen{.admin-notice-form .admin-check input{width:18px;height:18px;padding:0;margin:0;flex:none}.admin-notice-form :is(input,textarea):disabled{opacity:.6}}
