@@ -13,9 +13,12 @@
     "test:planning": "node scripts/test-planning.cjs",
     "test:october29": "node scripts/test-october29.cjs",
     "test:planning-update": "node scripts/test-planning-update.cjs",
-    "test:backup": "node scripts/test-backup-options.cjs && node scripts/test-backup-integration.cjs"
+    "test:backup": "node scripts/test-backup-options.cjs && node scripts/test-backup-integration.cjs",
+    "test:mail": "node scripts/test-planning-test-mail.cjs",
+    "test:idle": "node scripts/test-idle-v9.cjs"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.7",
     "@netlify/database": "latest",
     "@tiptap/extension-collaboration": "^3.32.0",
     "@tiptap/extension-image": "^3.32.0",

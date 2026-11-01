@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {useCallback,useEffect,useState} from 'react';
 import {stockholmToday} from './grundschema-types';
 import {supervisorAt,supervisorPeriods,type SupervisorData} from './supervisor-types';
@@ -6,7 +7,7 @@ import Modal from './ui-modal';
 export function useSupervisors(identity:string){
  const [data,setData]=useState<SupervisorData>({events:[],revisions:{},supervisors:[]}),[error,setError]=useState(''),[today,setToday]=useState(stockholmToday);
  const reload=useCallback(async()=>{const r=await fetch('/api/student-supervisors',{cache:'no-store'});const value=await r.json();if(!r.ok)throw Error(value.error||'Kunde inte läsa handledare.');setData(value);setError('');return value as SupervisorData},[identity]);
- useEffect(()=>{setData({events:[],revisions:{},supervisors:[]});if(!identity)return;let live=true;const load=async()=>{try{const r=await fetch('/api/student-supervisors',{cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error);if(live){setData(v);setError('');setToday(stockholmToday())}}catch(e){if(live)setError((e as Error).message)}};void load();const timer=setInterval(load,60000);window.addEventListener('focus',load);return()=>{live=false;clearInterval(timer);window.removeEventListener('focus',load)}},[identity]);
+ useEffect(()=>{setData({events:[],revisions:{},supervisors:[]});if(!identity)return;let live=true;const load=async()=>{try{const r=await fetch('/api/student-supervisors',{cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error);if(live){setData(v);setError('');setToday(stockholmToday())}}catch(e){if(live)setError((e as Error).message)}};void load();const timer=activeInterval(load,60000);return()=>{live=false;timer();}},[identity]);
  return {data,error,reload,today};
 }
 export function SupervisorLabels({studentId,data,today}:{studentId:string,data:SupervisorData,today:string}){const {current,next}=supervisorAt(data.events,studentId,today);return <span className="student-supervisors"><span><small>Handledare</small><span>{current?.supervisorName||'Ingen handledare'}</span><small>{current?'Från '+current.from:'–'}</small></span><span><small>Kommande</small><span>{next?(next.supervisorName||'Ingen handledare'):'–'}</span><small>{next?'Från '+next.from:'–'}</small></span></span>}
