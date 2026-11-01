@@ -3,10 +3,12 @@ import { db,databaseTransaction } from '../../database';
 import { cookies } from 'next/headers';
 import { error,passwordHash,verifyPassword,needsPasswordUpgrade,randomToken,sha256 } from '../../auth';
 import { reserveLogin,clearLoginAccount,cleanAuthState } from '../../login-security';
-import { SESSION_LIFETIME_MS,IDLE_TIMEOUT_MS } from '../../session-policy';
+import { SESSION_LIFETIME_MS,PLANNING_SESSION_LIFETIME_MS } from '../../session-policy';
 export const dynamic='force-dynamic';
 async function POSTEndpoint(req:Request){try{
- const {username,password}=await req.json() as {username:unknown,password:unknown};
+ const {username,password,planningApp,rememberMe}=await req.json() as {username:unknown,password:unknown,planningApp?:unknown,rememberMe?:unknown};
+ const app=planningApp===true;
+ const lifetime=app&&rememberMe===true?PLANNING_SESSION_LIFETIME_MS:SESSION_LIFETIME_MS;
  if(typeof username!=='string'||typeof password!=='string'||username.length>80||password.length>200)return error('Fel användarnamn eller lösenord',401);
  const normalized=username.trim().toLowerCase();
  const limit=await reserveLogin(req,normalized);
@@ -24,19 +26,19 @@ async function POSTEndpoint(req:Request){try{
   verifiedHash=hash;
  }
  await clearLoginAccount(limit.accountKey);await cleanAuthState();
- const token=randomToken(),now=Date.now(),expiresAt=now+SESSION_LIFETIME_MS;
+ const token=randomToken(),now=Date.now(),expiresAt=now+lifetime;
  // Recheck user/password to prevent a session being created after account revocation.
  const created=await databaseTransaction(async()=>{
   // Share the user-row lock with role/password changes and account revocation.
   const latest=await db.prepare('SELECT email,name,role FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=? FOR UPDATE').bind(row.email,verifiedHash).first<{email:string,name:string,role:string}>();
   if(!latest)return null;
-  await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at) VALUES(?,?,?,?)').bind(await sha256(token),latest.email,expiresAt,now).run();
+  await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at,session_scope) VALUES(?,?,?,?,?)').bind(await sha256(token),latest.email,expiresAt,now,app?'planning':'website').run();
   await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),now,latest.email,latest.name,latest.role,'Inloggad','Inloggning',latest.name).run();
   return latest;
  });
  if(!created)return error('Logga in igen',401);
- (await cookies()).set('tc_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:SESSION_LIFETIME_MS/1000});
- return Response.json({name:created.name,role:created.role,idleExpiresAt:now+IDLE_TIMEOUT_MS,expiresAt});
+ (await cookies()).set(app?'tc_planning_session':'tc_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:lifetime/1000});
+ return Response.json({name:created.name,role:created.role,idleExpiresAt:expiresAt,expiresAt});
  }catch{return error('Inloggningen kunde inte slutföras',503)}}
 
 export const POST=secureApi('/api/login',POSTEndpoint);

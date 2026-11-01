@@ -12,3 +12,10 @@ html[data-theme=light] .tcpa{--bg:#f5f5f5;--panel:#fff;--line:#cbd0d5;--fg:#2525
 @media(prefers-reduced-motion:reduce){.tcpa-refresh-content{transition:none}.is-refreshing .tcpa-refresh-indicator svg{animation:none}}
 
 .tcpa-grid-scroll{container-type:size}
+
+.tcpa .tcpa-tour-value{border:0;cursor:pointer;font-family:inherit;min-height:32px}.tcpa .tcpa-task-text{min-height:32px}.tcpa-night{pointer-events:none}
+.tcpa-detail-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;flex-wrap:wrap}.tcpa-detail .primary{background:var(--red,#c00000);color:#fff}
+.tcpa-detail textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px;resize:vertical}
+.tcpa-detail fieldset{margin-top:16px;border:1px solid var(--line);padding:12px}.tcpa-color-swatches{display:flex;gap:8px;flex-wrap:wrap}.tcpa-color-swatches button{width:36px;height:36px;padding:0;border:2px solid transparent}.tcpa-color-swatches button[aria-pressed=true]{outline:2px solid var(--fg);outline-offset:2px}
+.tcpa-proposal-tour{border-radius:6px;padding:4px}.tcpa-proposal-tour input{background:transparent;color:inherit!important}.tcpa-proposal-tour small{display:block;padding:8px;font-size:12px}.tcpa-detail input[type=color]{width:65px}
+.tcpa-detail .planning-tour-options{position:fixed;z-index:10000}.tcpa-detail .planning-tour-options button{color:inherit}

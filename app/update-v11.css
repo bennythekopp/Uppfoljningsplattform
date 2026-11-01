@@ -1,0 +1,20 @@
+.mobile-module-back,.mobile-module-back-fallback{display:none}
+@media(max-width:900px){
+.instructor-hub h1:has(.mobile-module-back){display:flex;align-items:center;gap:8px}
+.mobile-module-back{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:8px;border:0!important;background:transparent!important;color:inherit!important;box-shadow:none!important;border-radius:0!important}
+.mobile-module-back-fallback{display:block}
+.mobile-module-back:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.tc-page-pull-region{position:relative;min-height:100%;overscroll-behavior-y:contain}
+.tc-page-pull-content{transition:transform .22s ease}
+.tc-page-pull-region.is-pulling>.tc-page-pull-content{transition:none}
+.tc-page-pull-indicator{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;overflow:hidden;pointer-events:none;color:var(--muted,#666);font-size:12px}
+.tc-refresh-symbol.is-loading{animation:tc-refresh-spin .8s linear infinite}
+@keyframes tc-refresh-spin{to{rotate:360deg}}
+}
+.loginform label.remember-login{display:flex;align-items:center;gap:10px;font-weight:400}.loginform label.remember-login input{width:20px;height:20px;margin:0;padding:0}
+@media(prefers-reduced-motion:reduce){.tc-page-pull-content{transition:none}.tc-refresh-symbol.is-loading{animation:none}}
+
+.mobile-module-title{display:none}
+@media(max-width:900px){.mobile-module-title{display:flex;font-size:29px;margin:0 0 20px}.document-topline>.back{display:none}}
+
+@media(max-width:900px){.mobile-module-back{order:-1}}

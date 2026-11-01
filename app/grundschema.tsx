@@ -1,5 +1,5 @@
 'use client';
-import {activeInterval} from './client-activity';
+
 import {TourText,TourNameInput} from './tour-text';
 import {useLiveSort} from './use-live-sort';
 import {SortAction} from './sort-action';
@@ -13,8 +13,9 @@ import {addDays,moveScheduleTours,membershipFor,findTour,tourValue,tourKey,tourL
 function clearDraft(email:string){try{sessionStorage.removeItem('tc-grundschema-draft:'+email)}catch{}}
 const empty:ScheduleData={groups:[],users:[],wishes:[],assignments:[]};
 export function GrundschemaPreview({user}:{user:{email:string}}){
+ useRefreshCurrent(async()=>{const next=await panelRequest('/api/grundschema');setData(next);setToday(stockholmToday())});
  const [data,setData]=useState<ScheduleData|null>(null),[error,setError]=useState(''),[today,setToday]=useState(stockholmToday()),[cellWidth,setCellWidth]=useState(60),[width,setWidth]=useState(0),[strips,setStrips]=useState(1);const box=useRef<HTMLDivElement>(null);
- useEffect(()=>{let active=true;const load=()=>panelRequest('/api/grundschema').then(r=>{if(active){setData(r);setError('');setToday(stockholmToday())}}).catch(e=>{if(active)setError(e.message)});void load();const timer=activeInterval(load,30000);return()=>{active=false;timer()}},[user.email]);
+ useEffect(()=>{let active=true;const load=()=>panelRequest('/api/grundschema').then(r=>{if(active){setData(r);setError('');setToday(stockholmToday())}}).catch(e=>{if(active)setError(e.message)});void load();return()=>{active=false;}},[user.email]);
  useEffect(()=>{const el=box.current;if(!el)return;const observer=new ResizeObserver(()=>{const grid=el.closest('.panel-grid');const full=grid?.getBoundingClientRect().width||el.getBoundingClientRect().width;setCellWidth(Math.max(38,(full-38)/14));setWidth(el.clientWidth);setStrips(Math.max(1,Math.floor(((el.parentElement?.clientHeight||140)-30)/84)))});observer.observe(el);if(el.parentElement)observer.observe(el.parentElement);if(el.closest('.panel-grid'))observer.observe(el.closest('.panel-grid')!);return()=>observer.disconnect()},[]);
  const ownMembership=data?.memberships?membershipFor(data.memberships,user.email,today):undefined,group=ownMembership?data?.groups.find(g=>g.id===ownMembership.groupId):data?.memberships?undefined:data?.groups.find(g=>g.active),own=ownMembership||data?.assignments.find(a=>a.groupId===group?.id&&a.userEmail===user.email);const count=Math.max(1,Math.floor((width+.5)/cellWidth));
  const first=addDays(today,-((new Date(today+'T12:00:00Z').getUTCDay()+6)%7));
@@ -33,12 +34,13 @@ function ScheduleEditor({user,initialGroupId}:{initialGroupId?:string,user:{emai
  useEffect(()=>{if(!loaded)return;try{const cached=JSON.parse(sessionStorage.getItem('tc-grundschema-draft:'+user.email)||'null');if(cached?.configDirty&&cached.draft){setGroupId(cached.groupId);setDraft({...cached.draft,config:normalizeScheduleConfig(cached.draft.config)});setConfigDirty(true)}}catch{}},[loaded,user.email]);
  useEffect(()=>{if(!loaded)return;try{if(configDirty)sessionStorage.setItem('tc-grundschema-draft:'+user.email,JSON.stringify({groupId,draft,configDirty}));else clearDraft(user.email)}catch{}},[loaded,groupId,draft,configDirty,user.email]);
  async function act(work:()=>Promise<unknown>){setBusy(true);setError('');setMessage('');try{await work();clearDraft(user.email);await reload();setMessage('Sparat.')}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ useEffect(()=>{const leave=(e:Event)=>{if(dirtyRef.current&&!confirm('Du har osparade ändringar i Grundschema. Vill du lämna utan att spara?'))e.preventDefault()};window.addEventListener('tc-before-module-leave',leave);return()=>window.removeEventListener('tc-before-module-leave',leave)},[]);
  useRefreshCurrent(async()=>{if(dirtyRef.current)throw Error('Spara ändringarna i Grundschema före uppdatering.');await reload()});
  function select(id:string){if(dirtyRef.current&&!confirm('Du har osparade ändringar. Vill du lämna dem och byta schema?'))return;finishTourSort();const g=data.groups.find(g=>g.id===id);setGroupId(id);setDraft(g?({...structuredClone(g),config:normalizeScheduleConfig(g.config)}):null);setConfigDirty(false);setMessage('');setError('')}
  function patch(config:Partial<ScheduleConfig>){setDraft(g=>g?{...g,config:{...g.config,...config}}:g);setConfigDirty(true)}
  function tourChange(index:number,value:ScheduleTour){patch({tours:draft!.config.tours.map((t,i)=>i===index?value:t)})}
  const mutate=(body:object)=>panelRequest('/api/grundschema','POST',{id:groupId,revision:group?.revision,...body});
- return <div className="grundschema gs-editor">{tourSort.overlay}
+ return <div className="grundschema gs-editor"><h1 className="mobile-module-title">Grundschema</h1>{tourSort.overlay}
  {error&&<div className="formerror" role="alert">{error}<button disabled={busy} onClick={()=>{if(!dirtyRef.current||confirm('Läs in det sparade schemat och kasta dina osparade ändringar?'))void act(()=>Promise.resolve())}}>Läs in igen</button></div>}{message&&<p className="gs-message" role="status"><Check size={16}/>{message}</p>}
  {!loaded?<p>Läser grundschema…</p>:<><div className="gs-groupbar"><label className="gs-sr" htmlFor="gs-group">Schemagrupp</label><select id="gs-group" value={groupId} onChange={e=>select(e.target.value)}>{data.groups.map(g=><option key={g.id} value={g.id}>{g.name}{g.active?' · Aktivt':''}</option>)}</select>{group?.wishesOpen&&!group.active&&<span className="gs-status"><i/>Önskemål öppna</span>}{admin&&group&&<><button disabled={readonly||busy} className="gs-delete" onClick={()=>{if(confirm('Ta bort gruppen ”'+group.name+'” med alla önskemål och tilldelningar?'))void act(()=>mutate({action:'delete'}))}}><Trash2 size={16}/> Ta bort grupp</button></>}</div>
 

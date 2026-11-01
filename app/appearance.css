@@ -175,3 +175,33 @@
  html[data-theme] :is(.search input,.personnelsearch input,.backup-search input,input[type=search],input[role=searchbox],input[aria-label^="Sök"])::placeholder{color:var(--ui-muted);opacity:1}
  html[data-theme] :is(.search,.personnelsearch,.backup-search) input:-webkit-autofill{-webkit-text-fill-color:var(--ui-text);box-shadow:0 0 0 1000px var(--ui-surface) inset}
 }
+
+/* Scope selectors are text links, including inside panel cards. Keep generic
+   active-button rules from painting a red pill or a rounded bottom border. */
+html body :is(.instructor-hub,.notes-heading) .note-links > button,
+html[data-theme] body :is(.instructor-hub,.notes-heading) .note-links > button{
+ background:transparent!important;
+ border:0!important;
+ border-radius:0!important;
+ box-shadow:none!important;
+ color:var(--ui-muted,#686d73)!important;
+ padding:5px 0!important;
+ min-width:0;
+ text-decoration:none;
+ -webkit-appearance:none;
+ appearance:none;
+}
+html body :is(.instructor-hub,.notes-heading) .note-links > button.active,
+html[data-theme] body :is(.instructor-hub,.notes-heading) .note-links > button.active{
+ background:transparent!important;
+ color:var(--ui-accent-text,#ad0000)!important;
+ font-weight:600;
+ text-decoration-line:underline;
+ text-decoration-color:currentColor;
+ text-decoration-thickness:2px;
+ text-underline-offset:6px;
+}
+html body :is(.instructor-hub,.notes-heading) .note-links > button:focus-visible{
+ outline:2px solid var(--ui-accent-text,#ad0000);
+ outline-offset:4px;
+}

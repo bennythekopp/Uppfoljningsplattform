@@ -6,7 +6,7 @@ import {requireModule} from './module-access';
 import {PanelError} from './panel-server';
 import {loginIP} from './login-security';
 
-type Actor={email:string,name:string,role:Role,previewRole?:Role|null,accountRole?:Role};
+type Actor={email:string,name:string,role:Role,previewRole?:Role|null,accountRole?:Role,sessionScope?:string};
 type Handler=(req:Request)=>Promise<Response>;
 const all:Role[]=['Administratör','Instruktör','Handledare','Chef'];
 const instructors:Role[]=['Administratör','Instruktör'];
@@ -100,6 +100,8 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
   try{
    const policy=policies[route]?.[req.method];
    const actor=policy==='public'?null:authenticate?await authenticate():route==='/api/admin/role-preview'?await currentAccount():await currentUser();
+   if(actor?.sessionScope==='planning'&&!['/api/me','/api/planning','/api/notifications'].includes(route))return privateResponse(error('Planeringsinloggningen gäller bara planeringsappen.',403));
+   if(actor?.sessionScope==='planning'&&route==='/api/planning'&&!['GET','POST'].includes(req.method))return privateResponse(error('Planeringsappen kan bara lämna ändringsförslag.',403));
    if(foreignMutation(req)){
     await securityEvent(req,route,actor,'Åtkomst nekad','Begäran från annan webbplats');
     return privateResponse(error('Begäran måste göras från den här webbplatsen.',403));

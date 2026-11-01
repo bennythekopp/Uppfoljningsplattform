@@ -1,3 +1,5 @@
+> **Senaste version: v11.** Följ LAS-MIG-V11.md. Ny migration: 0041 efter 0040. Äldre installationsanvisningar nedan är historiska.
+
 > **Aktuell säkerhetskopiering: Google Drive.** Följ GOOGLE-DRIVE-INSTALLATION.md och migration 0038. Äldre OneDrive-/SharePoint-anvisningar är historiska.
 
 # TC Boden – uppdatering 23 oktober 2026

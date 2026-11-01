@@ -17,10 +17,12 @@ import './update-v5.css';
 import './update-v6.css';
 import './update-v7.css';
 import './update-v8.css';
+import './update-v11.css';
 import AppearanceProvider from './appearance-provider';
 import {appearanceBootScript} from './appearance-settings';
 export const metadata:Metadata={
  title:'TC Boden',
+ robots:{index:false,follow:false},
  description:'Uppföljning av utbildning och bedömning per elev',
  manifest:'/manifest.webmanifest',
  icons:{icon:[{url:'/favicon-32.png',sizes:'32x32',type:'image/png'},{url:'/favicon-16.png',sizes:'16x16',type:'image/png'}],shortcut:'/favicon.ico',apple:[{url:'/apple-touch-icon.png',sizes:'180x180',type:'image/png'}]},

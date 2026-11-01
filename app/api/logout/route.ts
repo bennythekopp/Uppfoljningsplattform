@@ -2,9 +2,9 @@ import {secureApi} from '../../api-security';
 import {auditMutation} from '../../activity-log';
 import { db } from '../../database';
 import { cookies } from 'next/headers';
-import { sha256 } from '../../auth';
+import { sha256,sessionCookieName,readSessionToken } from '../../auth';
 export const dynamic='force-dynamic';
-async function POSTHandler(){const c=await cookies(),token=c.get('tc_session')?.value;if(token)try{await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run()}catch{}c.delete('tc_session');return Response.json({ok:true})}
+async function POSTHandler(){const c=await cookies(),token=await readSessionToken();if(token)await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run();c.delete(await sessionCookieName());return Response.json({ok:true})}
 
 const POSTEndpoint=(req:Request)=>auditMutation(req,POSTHandler,'Utloggning');
 

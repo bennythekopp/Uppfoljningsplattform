@@ -3,7 +3,7 @@ import {useEffect,useId,useLayoutEffect,useRef,useState,type InputHTMLAttributes
 import {useTourTextFit} from './tour-text';
 import {createPortal} from 'react-dom';
 import './planning.css';
-import {findTour,tourValue,type ScheduleTour} from './grundschema-types';
+import {tourStyle,findTour,tourValue,type ScheduleTour} from './grundschema-types';
 
 type Props={inputProps:InputHTMLAttributes<HTMLInputElement>,selectedValue?:string,allowEmpty?:boolean,tours:ScheduleTour[],onSelect:(value:string)=>void};
 /** One popup for the focused cell. Unlike a native datalist it never filters
@@ -29,6 +29,6 @@ export default function PlanningTourPicker({inputProps,selectedValue,allowEmpty=
  onChange={event=>{inputProps.onChange?.(event);setActive(-1);setOpen(true)}}
  onBlur={event=>{setOpen(false);inputProps.onBlur?.(event)}}
  onKeyDown={event=>{if(allowEmpty&&(event.key==='Delete'||event.key==='Backspace')){event.preventDefault();choose('');return}if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(!open){show();return}setActive(index=>tours.length?(index+(event.key==='ArrowDown'?1:-1)+tours.length)%tours.length:-1);return}if(event.key==='Escape'&&open){event.preventDefault();setOpen(false);return}if(event.key==='Enter'&&open&&active>=0){event.preventDefault();choose(tourValue(tours[active]));return}inputProps.onKeyDown?.(event)}}/>
- {open&&createPortal(<div id={id} ref={popup} className="planning-tour-options" role="listbox" aria-label="Samtliga turer" style={position}>{tours.map((tour,index)=><button type="button" role="option" id={id+'-'+index} key={tour.id||index} tabIndex={-1} aria-selected={index===selectedIndex} aria-description={'Färg '+tour.color} className={index===active?'is-active':''} onMouseDown={event=>event.preventDefault()} onClick={()=>choose(tourValue(tour))}><span className="planning-tour-swatch" style={{backgroundColor:tour.color}} aria-hidden="true"/><span>{tour.code}</span></button>)}{allowEmpty&&<button type="button" role="option" tabIndex={-1} aria-label="Töm rutan" aria-selected={!value} onMouseDown={event=>event.preventDefault()} onClick={()=>choose('')}>–</button>}{!tours.length&&<span className="planning-no-tours">Inga turer i turlistan</span>}</div>,document.body)}
+ {open&&createPortal(<div id={id} ref={popup} className="planning-tour-options" role="listbox" aria-label="Samtliga turer" style={position}>{tours.map((tour,index)=><button type="button" role="option" id={id+'-'+index} key={tour.id||index} tabIndex={-1} style={tourStyle({tours},tourValue(tour))} aria-selected={index===selectedIndex} aria-description={'Färg '+tour.color} className={index===active?'is-active':''} onMouseDown={event=>event.preventDefault()} onClick={()=>choose(tourValue(tour))}><span className="planning-tour-swatch" style={{backgroundColor:tour.color}} aria-hidden="true"/><span>{tour.code}</span></button>)}{allowEmpty&&<button type="button" role="option" tabIndex={-1} aria-label="Töm rutan" aria-selected={!value} onMouseDown={event=>event.preventDefault()} onClick={()=>choose('')}>–</button>}{!tours.length&&<span className="planning-no-tours">Inga turer i turlistan</span>}</div>,wrap.current?.closest('dialog')||document.body)}
  </div>;
 }

@@ -26,4 +26,4 @@ export async function reserveLogin(req:Request,username:string){
  return {retry:accountRetry,accountKey};
 }
 export async function clearLoginAccount(key:string){await db.prepare('DELETE FROM auth_rate_limits WHERE key=?').bind(key).run()}
-export async function cleanAuthState(){const now=Date.now();await db.prepare('DELETE FROM auth_rate_limits WHERE reset_at<=?').bind(now).run();await db.prepare('DELETE FROM sessions WHERE expires_at<=? OR last_activity_at<=?').bind(now,now-30*60*1000).run()}
+export async function cleanAuthState(){const now=Date.now();await db.prepare('DELETE FROM auth_rate_limits WHERE reset_at<=?').bind(now).run();await db.prepare('DELETE FROM sessions WHERE expires_at<=?').bind(now).run()}

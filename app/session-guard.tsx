@@ -15,7 +15,7 @@ export default function SessionGuard({onExpired}:{onExpired:()=>void}){
     if(stopped)return;
     if(response.status===401||response.status===403){stopped=true;callback.current();return}
     if(!response.ok)throw Error('Anslutningen kunde inte kontrolleras.');
-    const data=await response.json();deadline=Math.min(data.idleExpiresAt,data.expiresAt);lastCheck=Date.now();pending=false;setError('');tick();
+    const data=await response.json();deadline=data.expiresAt;lastCheck=Date.now();pending=false;setError('');tick();
    }catch{if(!stopped&&deadline&&Date.now()>=deadline){stopped=true;callback.current()}else if(!stopped)setError('Kontrollera anslutningen. Inloggningen kunde inte förlängas.')}finally{inflight=false}
   }
   function tick(){
