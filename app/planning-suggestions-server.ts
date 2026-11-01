@@ -14,6 +14,19 @@ export async function readSuggestions(start?:string,end?:string){
 export async function mailSettings(){const value=await db.prepare('SELECT enabled,recipient_email AS recipientEmail,recipient_user AS recipientUser,cadence,send_time AS sendTime,revision,last_sent_at AS lastSentAt,last_error AS lastError FROM planning_mail_settings WHERE id=1').first();return {...value,configured:!!process.env.RESEND_API_KEY&&!!process.env.PLANNING_MAIL_FROM,needsReview:!!await db.prepare('SELECT id FROM planning_mail_outbox WHERE sent_at IS NULL AND review_required=true').first()}}
 async function context(column:PlanningColumn,day:string){const periods=(await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all<PlanningPeriod>()).results,memberships=(await db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all<any>()).results;return {config:personPeriodFor(periods,column,day,memberships)?.config||{tours:[]},base:baseTour(periods,column,day,memberships)}}
 export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSuggest=false){
+ if(b.action==='withdraw'){
+  const id=short(b.id,300),initial=await db.prepare('SELECT day::text AS day,column_id AS columnId,author_email AS authorEmail FROM planning_suggestions WHERE id=?').bind(id).first<any>();
+  if(!initial)throw new PanelError('Förslaget finns inte.',404);
+  if(initial.authorEmail!==u.email)throw new PanelError('Du kan bara ta tillbaka dina egna förslag.',403);
+  await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind(JSON.stringify([initial.day,initial.columnId])).first();
+  const suggestion=await db.prepare(suggestionSelect+' WHERE s.id=? AND c.deleted_at IS NULL FOR UPDATE OF s').bind(id).first<any>();
+  if(!suggestion)throw new PanelError('Rutan finns inte längre.',404);
+  if(suggestion.status==='withdrawn')return Response.json({ok:true});
+  if(suggestion.status!=='pending')throw new PanelError('Förslaget har redan hanterats. Läs in igen.',409);
+  await db.prepare("UPDATE planning_suggestions SET status='withdrawn',resolved_at=?,resolved_by=? WHERE id=? AND status='pending'").bind(Date.now(),u.email,id).run();
+  await planningLog(u,'Ändringsförslag återtaget',{day:suggestion.day,columnId:suggestion.columnId,columnName:suggestion.columnName,field:suggestion.field,previous:suggestion.proposedLabel});
+  return Response.json({ok:true});
+ }
  if(b.action==='propose'){
   if(!canSuggest)throw new PanelError('Du saknar behörighet att föreslå ändringar.',403);
   const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM planning_columns WHERE id=? AND deleted_at IS NULL').bind(id).first<PlanningColumn>();

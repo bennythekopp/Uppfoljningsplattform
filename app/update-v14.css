@@ -28,3 +28,19 @@
  html body .workspace-sidebar>.brand,
  html body .workspace-sidebar>.sidebottom{flex:0 0 auto}
 }
+
+/* Keep the fixed account footer on one row on every page, including Planning. */
+@media screen{
+ html body .app .workspace-sidebar>.sidebottom{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:7px!important}
+ html body .app .workspace-sidebar>.sidebottom>.avatar{flex:0 0 34px}
+ html body .app .workspace-sidebar>.sidebottom>.who{flex:1 1 auto;min-width:0}
+ html body .app .workspace-sidebar>.sidebottom>.who :is(strong,small){white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis}
+ html body .app .workspace-sidebar>.sidebottom>button{flex:0 0 32px;min-width:32px;width:32px;margin:0!important;padding:4px;grid-column:auto!important;grid-row:auto!important}
+ /* Match the sidebar: thin, unobtrusive scrollbar without arrow boxes. */
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist){scrollbar-width:thin;scrollbar-color:#666 transparent}
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar{width:6px;height:6px}
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-track{background:transparent}
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-thumb{background:#666;border-radius:8px}
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-button{display:none;width:0;height:0}
+ html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-corner{background:transparent}
+}

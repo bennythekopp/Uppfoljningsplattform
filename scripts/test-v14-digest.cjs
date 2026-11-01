@@ -9,8 +9,8 @@ const {runDigest}=require('../lib/planning-mail.ts');
  const sent=[];let fail=false;const send=async(url,init)=>{assert.equal(url,'https://api.resend.com/emails');sent.push({body:JSON.parse(init.body),key:init.headers['Idempotency-Key']});if(fail)throw Error('Simulated uncertain transport');return Response.json({id:'mock-'+sent.length})};
  async function add(id,status='pending'){await e.query("INSERT INTO planning_suggestions(id,day,column_id,field,previous_value,proposed_value,previous_label,proposed_label,base_revision,author_email,author_name,created_at,status) VALUES($1,'2026-11-02','ht2025','shared','','Text '||$1,'','Text '||$1,0,$1,$1,0,$2)",[id,status])}
  const day=n=>new Date(`2026-11-${String(n).padStart(2,'0')}T08:00:00Z`);
- await add('pendingA');await add('approvedB','approved');await add('rejectedC','rejected');await add('supersededD','superseded');
- await runDigest(c,day(2),send);assert.equal(sent.length,1);assert.match(sent[0].body.text,/pendingA/);for(const id of ['approvedB','rejectedC','supersededD'])assert.ok(!sent[0].body.text.includes(id));assert.match(sent[0].body.html,/1 väntande förslag/);
+ await add('pendingA');await add('approvedB','approved');await add('rejectedC','rejected');await add('supersededD','superseded');await add('withdrawnH','withdrawn');
+ await runDigest(c,day(2),send);assert.equal(sent.length,1);assert.match(sent[0].body.text,/pendingA/);for(const id of ['approvedB','rejectedC','supersededD','withdrawnH'])assert.ok(!sent[0].body.text.includes(id));assert.match(sent[0].body.html,/1 väntande förslag/);
  await runDigest(c,day(2),send);assert.equal(sent.length,1,'same day not resent');
  await runDigest(c,day(3),send);assert.equal(sent.length,2);assert.match(sent[1].body.text,/pendingA/,'already mailed pending still included');assert.notEqual(sent[0].key,sent[1].key);
  await e.exec("UPDATE planning_suggestions SET status='approved' WHERE id='pendingA'");await runDigest(c,day(4),send);assert.equal(sent.length,2,'no pending no message');
