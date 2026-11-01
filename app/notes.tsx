@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {useRefreshCurrent} from './refresh-current';
 import {useEffect,useState} from 'react';
 import {yXmlFragmentToProsemirrorJSON} from '@tiptap/y-tiptap';
@@ -15,8 +16,8 @@ function useNote(scope:NoteScope,user:string,readonly:boolean){
  useEffect(()=>{let alive=true;setSession(null);setLoading(true);setError('');let current:NoteSession|null=null;
   void openNote(scope,user,readonly).then(s=>{if(!alive)return;current=s;setSession(s);setLoading(false);s.listeners.add(changed);void refreshNote(s);}).catch(e=>{if(alive){setLoading(false);setError((e as Error).message)}});
   function changed(){refresh(n=>n+1)}
-  const interval=setInterval(()=>{if(current)void refreshNote(current)},2500);
-  return()=>{alive=false;clearInterval(interval);if(current){current.listeners.delete(changed);void saveNote(current).catch(()=>{})}}
+  const interval=activeInterval(()=>{if(current)return refreshNote(current)},2500);
+  return()=>{alive=false;interval();if(current){current.listeners.delete(changed);void saveNote(current).catch(()=>{})}}
  },[scope,user,readonly]);useRefreshCurrent(async()=>{if(session)await refreshNote(session)});return {session,loading,error};
 }
 function FormattedNote({session}:{session:NoteSession}){

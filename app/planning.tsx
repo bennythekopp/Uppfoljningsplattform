@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {usePlanningWidths} from './planning-widths';
 import {planningRange,planningDays} from './planning-dates';
 import OperationalPasses from './planning-operational';
@@ -26,7 +27,7 @@ export default function Planning({user,compact=false}:{user:User,compact?:boolea
  const range=useMemo(()=>planningRange(year,compact,today),[year,compact,today]);
  const requestKey=year+'|'+range.start+'|'+range.end+'|'+user.email,latestKey=useRef(requestKey);latestKey.current=requestKey;
  async function reload(){const v=await panelRequest('/api/planning?year='+year+'&from='+range.start+'&to='+range.end);if(mounted.current&&latestKey.current===requestKey){setData(v);setLoaded(true);setError('')}}
- useEffect(()=>{mounted.current=true;let current=true;setLoaded(false);void reload().catch(e=>current&&setError(e.message));const t=setInterval(()=>void reload().catch(e=>setError(e.message)),30000);const refresh=()=>void reload().catch(e=>setError(e.message));window.addEventListener('tc-refresh',refresh);window.addEventListener('tc-planning-suggestions',refresh);return()=>{current=false;mounted.current=false;clearInterval(t);window.removeEventListener('tc-refresh',refresh);window.removeEventListener('tc-planning-suggestions',refresh)}},[requestKey]);
+ useEffect(()=>{mounted.current=true;let current=true;setLoaded(false);void reload().catch(e=>current&&setError(e.message));const t=activeInterval(()=>reload().catch(e=>setError(e.message)),30000);const refresh=()=>reload().catch(e=>setError(e.message));window.addEventListener('tc-refresh',refresh);window.addEventListener('tc-planning-suggestions',refresh);return()=>{current=false;mounted.current=false;t();window.removeEventListener('tc-refresh',refresh);window.removeEventListener('tc-planning-suggestions',refresh)}},[requestKey]);
  useEffect(()=>{const unload=(e:BeforeUnloadEvent)=>{if([...session.entries.values()].some(v=>v.saving||v.value!==v.cell.value)){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',unload);return()=>{window.removeEventListener('beforeunload',unload)}},[session]);
  useRefreshCurrent(reload);
  useEffect(()=>{if(compact&&year!==+today.slice(0,4))setYear(+today.slice(0,4))},[compact,today,year]);

@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval,clientActive} from './client-activity';
 import {useEffect,useMemo,useState} from 'react';
 import {X,ChevronLeft,ChevronRight} from 'lucide-react';
 import {months,stockholmToday} from './grundschema-types';
@@ -10,7 +11,7 @@ export default function OperationalPasses({year:initial,admin,onClose}:{year:num
  const [year,setYear]=useState(initial),[data,setData]=useState<OperationalSource|null>(null),[editing,setEditing]=useState(false),[config,setConfig]=useState<OperationalConfig|null>(null),[night,setNight]=useState(''),[ruleRevision,setRuleRevision]=useState(0),[error,setError]=useState(''),[busy,setBusy]=useState(false);const today=stockholmToday();
  async function load(){await flushPlanning();const result=await panelRequest('/api/planning?operational=1&year='+year);setData(result)}
  useEffect(()=>{let live=true;setData(null);void flushPlanning().then(()=>panelRequest('/api/planning?operational=1&year='+year)).then(v=>{if(live)setData(v)}).catch(e=>{if(live)setError(e.message)});return()=>{live=false}},[year]);
- useEffect(()=>{let live=true;const refresh=()=>void panelRequest('/api/planning?operational=1&year='+year).then(v=>{if(live)setData(v)}).catch(e=>{if(live)setError(e.message)});const timer=setInterval(refresh,30000);window.addEventListener('tc-refresh',refresh);return()=>{live=false;clearInterval(timer);window.removeEventListener('tc-refresh',refresh)}},[year]);
+ useEffect(()=>{let live=true;const refresh=()=>{if(!clientActive())return;return panelRequest('/api/planning?operational=1&year='+year).then(v=>{if(live)setData(v)}).catch(e=>{if(live)setError(e.message)})};const timer=activeInterval(refresh,30000);window.addEventListener('tc-refresh',refresh);return()=>{live=false;timer();window.removeEventListener('tc-refresh',refresh)}},[year]);
  const [correction,setCorrection]=useState<{columnId:string,name:string,month:string,count:string,calculated:number,revision:number}|null>(null);
  const rows=useMemo(()=>data?operationalRows(data,year,today):[],[data,year,today]);
  const tours=useMemo(()=>{const map=new Map<string,{name:string,color:string}>();if(!data)return map;for(const p of data.periods)for(const t of p.config.tours){const k=operationalKey(t.id?'@tour-id:'+t.id:t.code,p);map.set(k,{name:t.code,color:t.color})}for(const c of data.cells.filter(c=>c.field==='tour'&&c.value)){const col=data.columns.find(v=>v.id===c.columnId);if(!col)continue;const key=operationalKey(c.value,personPeriodFor(data.periods,col,c.day,data.memberships));if(!map.has(key))map.set(key,{name:c.value,color:''})}for(const k of data.operational.config?.tourKeys||[])if(!map.has(k))map.set(k,{name:k.startsWith('text:')?k.slice(5):'Tidigare tur: '+k,color:''});return map},[data]);

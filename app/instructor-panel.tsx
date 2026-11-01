@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {useRefreshCurrent} from './refresh-current';
 import {useEffect,useRef,useState} from 'react';
 import {useSmoothView} from './use-smooth-view';
@@ -26,8 +27,8 @@ export default function InstructorPanel({view,onView,user,onPeople,onAssessments
  const readOnly=!!user.previewRole,active=useRef(true),lastView=useRef(view),uploadInput=useRef<HTMLInputElement|null>(null),uploadTarget=useRef<'documents'|'templates'>('documents');
  const viewRef=useSmoothView(JSON.stringify([view,documentId]),{ready:loaded});
  async function reload(){const next=await panelRequest('/api/panel');if(active.current&&accountKey.current===cacheKey){cachePanel(cacheKey,next);setData(next);setLoaded(true)}return next as PanelData}
- useEffect(()=>{active.current=true;const cached=cachedPanel(cacheKey);setData(cached||blank);setLoaded(!!cached);void reload().catch(e=>{if(accountKey.current===cacheKey)setError(e.message)});const timer=setInterval(()=>{setNow(Date.now());void reload().catch(e=>setError(e.message))},15000);return()=>{active.current=false;clearInterval(timer)}},[cacheKey]);
- useEffect(()=>{const f=()=>void reload().catch(e=>setError(e.message));window.addEventListener('tc-refresh',f);window.addEventListener('module-access-changed',f);return()=>{window.removeEventListener('tc-refresh',f);window.removeEventListener('module-access-changed',f)}},[cacheKey]);
+ useEffect(()=>{active.current=true;const cached=cachedPanel(cacheKey);setData(cached||blank);setLoaded(!!cached);void reload().catch(e=>{if(accountKey.current===cacheKey)setError(e.message)});const timer=activeInterval(()=>{setNow(Date.now());return reload().catch(e=>setError(e.message))},15000);return()=>{active.current=false;timer()}},[cacheKey]);
+ useEffect(()=>{const f=()=>reload().catch(e=>setError(e.message));window.addEventListener('tc-refresh',f);window.addEventListener('module-access-changed',f);return()=>{window.removeEventListener('tc-refresh',f);window.removeEventListener('module-access-changed',f)}},[cacheKey]);
  useRefreshCurrent(reload);
  useEffect(()=>{activateNotes(user.email)},[user.email]);
  useEffect(()=>{if(lastView.current!==view){lastView.current=view;setQuery('');setChosen(null);cancelSort();if(view!=='documents')setDocumentId(null)}},[view]);

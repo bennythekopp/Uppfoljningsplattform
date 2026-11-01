@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {TourText,TourNameInput} from './tour-text';
 import {useLiveSort} from './use-live-sort';
 import {SortAction} from './sort-action';
@@ -13,7 +14,7 @@ function clearDraft(email:string){try{sessionStorage.removeItem('tc-grundschema-
 const empty:ScheduleData={groups:[],users:[],wishes:[],assignments:[]};
 export function GrundschemaPreview({user}:{user:{email:string}}){
  const [data,setData]=useState<ScheduleData|null>(null),[error,setError]=useState(''),[today,setToday]=useState(stockholmToday()),[cellWidth,setCellWidth]=useState(60),[width,setWidth]=useState(0),[strips,setStrips]=useState(1);const box=useRef<HTMLDivElement>(null);
- useEffect(()=>{let active=true;const load=()=>panelRequest('/api/grundschema').then(r=>{if(active){setData(r);setError('');setToday(stockholmToday())}}).catch(e=>{if(active)setError(e.message)});void load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer)}},[user.email]);
+ useEffect(()=>{let active=true;const load=()=>panelRequest('/api/grundschema').then(r=>{if(active){setData(r);setError('');setToday(stockholmToday())}}).catch(e=>{if(active)setError(e.message)});void load();const timer=activeInterval(load,30000);return()=>{active=false;timer()}},[user.email]);
  useEffect(()=>{const el=box.current;if(!el)return;const observer=new ResizeObserver(()=>{const grid=el.closest('.panel-grid');const full=grid?.getBoundingClientRect().width||el.getBoundingClientRect().width;setCellWidth(Math.max(38,(full-38)/14));setWidth(el.clientWidth);setStrips(Math.max(1,Math.floor(((el.parentElement?.clientHeight||140)-30)/84)))});observer.observe(el);if(el.parentElement)observer.observe(el.parentElement);if(el.closest('.panel-grid'))observer.observe(el.closest('.panel-grid')!);return()=>observer.disconnect()},[]);
  const ownMembership=data?.memberships?membershipFor(data.memberships,user.email,today):undefined,group=ownMembership?data?.groups.find(g=>g.id===ownMembership.groupId):data?.memberships?undefined:data?.groups.find(g=>g.active),own=ownMembership||data?.assignments.find(a=>a.groupId===group?.id&&a.userEmail===user.email);const count=Math.max(1,Math.floor((width+.5)/cellWidth));
  const first=addDays(today,-((new Date(today+'T12:00:00Z').getUTCDay()+6)%7));

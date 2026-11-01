@@ -1,4 +1,5 @@
 'use client';
+import {clientActive} from './client-activity';
 import { useEffect,useRef,useState } from 'react';
 import { SESSION_WARNING_MS } from './session-policy';
 export default function SessionGuard({onExpired}:{onExpired:()=>void}){
@@ -8,7 +9,7 @@ export default function SessionGuard({onExpired}:{onExpired:()=>void}){
  useEffect(()=>{
   let stopped=false,inflight=false,pending=false,lastCheck=0,deadline=0;
   async function check(touch:boolean){
-   if(inflight||stopped)return;inflight=true;
+   if(inflight||stopped||!clientActive())return;inflight=true;
    try{
     const response=await fetch('/api/session',{method:touch?'POST':'GET',cache:'no-store',...(touch?{headers:{'Content-Type':'application/json'},body:'{}'}:{})});
     if(stopped)return;
@@ -21,10 +22,10 @@ export default function SessionGuard({onExpired}:{onExpired:()=>void}){
    if(stopped)return;
    const remaining=deadline-Date.now();
    setSeconds(deadline&&remaining<=SESSION_WARNING_MS?Math.max(0,Math.ceil(remaining/1000)):null);
-   if(deadline&&remaining<=0){void check(false);return}
-   if(Date.now()-lastCheck>=30000)void check(pending&&document.visibilityState==='visible');
+   if(deadline&&remaining<=0){stopped=true;callback.current();return}
+   if(clientActive()&&Date.now()-lastCheck>=30000)void check(pending&&document.visibilityState==='visible');
   }
-  function activity(event:Event){if(!event.isTrusted||document.visibilityState!=='visible')return;pending=true;if(Date.now()-lastCheck>=30000)void check(true)}
+  function activity(event:Event){if(!event.isTrusted||document.visibilityState!=='visible')return;pending=true;if(clientActive()&&Date.now()-lastCheck>=30000)void check(true)}
   function visible(){if(document.visibilityState==='visible')void check(false)}
   const events=['pointerdown','keydown','scroll','touchstart'];
   for(const event of events)window.addEventListener(event,activity,{passive:true});

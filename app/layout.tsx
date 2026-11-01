@@ -16,6 +16,7 @@ import './appearance.css';
 import './update-v5.css';
 import './update-v6.css';
 import './update-v7.css';
+import './update-v8.css';
 import AppearanceProvider from './appearance-provider';
 import {appearanceBootScript} from './appearance-settings';
 export const metadata:Metadata={

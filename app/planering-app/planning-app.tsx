@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from '../client-activity';
 import {Fragment,useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {addDays,findTour,isoWeek,stockholmToday,tourStyle} from '../grundschema-types';
 import {baseTour,cellKey,personPeriodFor,type PlanningColumn,type PlanningData} from '../planning-types';
@@ -29,7 +30,7 @@ export default function PlanningApp(){
  useEffect(()=>{void refreshUser();if('serviceWorker' in navigator)void navigator.serviceWorker.register('/planering-app/sw.js',{scope:'/planering-app'}).catch(()=>{})},[refreshUser]);
  useEffect(()=>{const m=window.matchMedia('(orientation: landscape)');const update=()=>setWide(m.matches);update();m.addEventListener('change',update);return()=>m.removeEventListener('change',update)},[]);
  const load=useCallback(async()=>{if(!user)return;setLoading(true);try{const end=addDays(monday,7);const year=Number(monday.slice(0,4));const qs=new URLSearchParams({year:String(year),from:addDays(monday,-1),to:end});const r=await fetch('/api/planning?'+qs,{cache:'no-store'});if(r.status===403){for(const k of Object.keys(localStorage))if(k.startsWith('tcpa-'))localStorage.removeItem(k);setData(null);const me=await fetch('/api/me',{cache:'no-store'});if(!me.ok){setUser(null);throw Error('Sessionen har gått ut. Logga in igen.')}}const result=await parseResult(r);setData(result);setOffline(false);try{localStorage.setItem('tcpa-week:'+user.email+':'+monday,JSON.stringify({data:result,time:Date.now()}))}catch{}setError('');setLastSync(new Intl.DateTimeFormat('sv-SE',{hour:'2-digit',minute:'2-digit'}).format(new Date()))}catch(e){if(!navigator.onLine){try{const saved=JSON.parse(localStorage.getItem('tcpa-week:'+user.email+':'+monday)||'null');setData(saved?.data||null);setOffline(true);setError(saved?'':'Denna vecka finns inte sparad offline.')}catch{setError('Kunde inte läsa sparat schema.')}}else{setData(null);setError((e as Error).message)}}finally{setLoading(false)}},[user,monday]);
- useEffect(()=>{if(!user)return;void load();const id=setInterval(()=>void load(),60000);const focus=()=>void load();window.addEventListener('focus',focus);return()=>{clearInterval(id);window.removeEventListener('focus',focus)}},[load,user]);
+ useEffect(()=>{if(!user)return;void load();const stop=activeInterval(load,60000);return()=>stop()},[load,user]);
  const days=useMemo(()=>Array.from({length:7},(_,i)=>addDays(monday,i)),[monday]);
  const people=useMemo(()=>(data?.columns||[]).filter(c=>c.kind==='person'),[data]);
  const mine=people.find(c=>c.userEmail?.toLocaleLowerCase('sv-SE')===user?.email.toLocaleLowerCase('sv-SE'));

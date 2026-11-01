@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode,type CSSProperties} from 'react';
 import {Check,ChevronLeft,ChevronRight,LockKeyhole,UnlockKeyhole,Plus} from 'lucide-react';
 import {TourText} from './tour-text';
@@ -27,7 +28,7 @@ export default function ScheduleOverview({user,renderEditor}:{user:User,renderEd
  const [data,setData]=useState<ScheduleData>(empty),[loaded,setLoaded]=useState(false),[view,setView]=useState<'current'|'proposals'|'tours'>('current'),[editorId,setEditorId]=useState<string>(),[error,setError]=useState(''),[newGroup,setNewGroup]=useState(false),[name,setName]=useState(''),[year,setYear]=useState(new Date().getFullYear()+1),[busy,setBusy]=useState(false);const mounted=useRef(true),admin=user.role==='Administratör';
  const reload=useCallback(async()=>{const r=await panelRequest('/api/grundschema');if(mounted.current){setData(r);setLoaded(true);setError('')}},[]);
  useEffect(()=>{mounted.current=true;void reload().catch(e=>setError(e.message));return()=>{mounted.current=false}},[reload,view,user.email]);
- useEffect(()=>{if(view==='tours')return;const timer=setInterval(()=>void reload().catch(()=>{}),15000);return()=>clearInterval(timer)},[reload,view]);
+ useEffect(()=>{if(view==='tours')return;const timer=activeInterval(()=>reload().catch(()=>{}),15000);return()=>timer()},[reload,view]);
  useRefreshCurrent(async()=>{await reload()});
  async function create(){setBusy(true);setError('');try{const config=defaultScheduleConfig(year);let first=year+'-01-01';while(new Date(first+'T12:00:00Z').getUTCDay()!==1)first=addDays(first,1);config.startDate=first;const r=await panelRequest('/api/grundschema','POST',{action:'create',name,config});await reload();try{sessionStorage.removeItem('tc-grundschema-draft:'+user.email)}catch{}setEditorId(r.id);setNewGroup(false);setView('tours')}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  const groups=view==='tours'?[]:scheduleGroupsForView(data.groups,view);
