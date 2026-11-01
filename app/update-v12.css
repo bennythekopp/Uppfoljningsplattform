@@ -1,0 +1,19 @@
+/* Shared screen space for the instructor overview and every module.
+   Keep saved dashboard sizes, responsive columns and document paper geometry. */
+@media screen{
+ .app:has(.instructor-hub) .main{min-width:0}
+ .app:has(.instructor-hub) .content{width:100%;max-width:none;margin-inline:0;padding:22px 24px;min-height:calc(100dvh - 72px)}
+ .content>.instructor-hub{width:100%;max-width:none;min-width:0}
+ .instructor-hub :is(.panel-grid,.panel-full-list,.panel-template-layout,.document-workspace,.grundschema,.notes-workspace){width:100%;max-width:none;min-width:0;box-sizing:border-box}
+ /* The refresh wrappers must pass available height through to the note editor. */
+ .main:has(.notes-workspace)>.tc-page-pull-region,
+ .main:has(.notes-workspace)>.tc-page-pull-region>.tc-page-pull-content{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;max-width:none}
+ .main:has(.notes-workspace)>.tc-page-pull-region{height:0;min-height:0}
+ .app:has(.instructor-hub) .content:has(.notes-workspace){flex:1;min-height:0;margin:0;overflow:hidden}
+ .instructor-hub .planning-page:not(.planning-compact){width:100%;max-width:none}
+}
+@media screen and (max-width:900px){
+ .app:has(.instructor-hub) .content{padding:24px 18px calc(108px + env(safe-area-inset-bottom));min-height:calc(100dvh - 66px)}
+ .app:has(.instructor-hub) .content:has(.notes-workspace){padding:12px 12px calc(80px + env(safe-area-inset-bottom));min-height:0}
+ .app:has(.instructor-hub) .content:has(.planning-page:not(.planning-compact)){padding:22px 24px}
+}
