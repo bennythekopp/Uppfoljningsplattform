@@ -5,12 +5,26 @@
  .help-popup>header>button{flex:none;min-width:44px;min-height:44px}
  .help-popup .help-image-scroll{max-width:100%;max-height:calc(100dvh - 200px)}
 }
-/* Use the planning module's 220px menu throughout the desktop workspace. */
+/* Shared menu width leaves room for complete navigation labels. */
 @media screen and (min-width:901px){
- html body .app .workspace-sidebar{width:220px;min-width:220px;flex:0 0 220px}
+ html body .app .workspace-sidebar{width:280px;min-width:280px;flex:0 0 280px}
  .workspace-sidebar .sidebottom{display:grid;grid-template-columns:34px minmax(0,1fr);gap:7px 9px}
  .workspace-sidebar .who strong,.workspace-sidebar .who small{white-space:normal;overflow:visible;overflow-wrap:anywhere}
  .workspace-sidebar .sidebottom .user-settings-trigger{grid-column:2;grid-row:2;justify-self:end;margin-right:36px}
  .workspace-sidebar .sidebottom>button:last-child{grid-column:2;grid-row:2;justify-self:end}
 }
-@media screen and (min-width:901px){.workspace-sidebar :is(.navitem,.panelsublink){white-space:normal;overflow-wrap:anywhere}.workspace-sidebar .navitem>span{min-width:0;white-space:normal}.workspace-sidebar .navitem>svg{flex:none}}
+@media screen and (min-width:901px){.workspace-sidebar :is(.navitem,.panelsublink){white-space:nowrap;overflow-wrap:normal;word-break:normal}.workspace-sidebar .navitem>span{min-width:0;white-space:nowrap}.workspace-sidebar .navitem>svg{flex:none}}
+
+@media screen{.workspace-sidebar :is(.navitem,.panelsublink,.navitem>span){word-break:normal;overflow-wrap:normal}.workspace-sidebar :is(.navitem,.panelsublink){line-height:1.4}.workspace-sidebar .navlabel{overflow-wrap:normal;word-break:normal}}
+
+/* Only the context list between the separators scrolls. Main navigation and
+   account controls remain outside the scrolling region, in both drawer modes. */
+@media screen{
+ html body .workspace-sidebar .navigation-scroll{display:flex;flex-direction:column;flex:1 1 0;min-height:0;overflow:hidden;padding-bottom:0}
+ html body .workspace-sidebar .navigation-scroll>nav,
+ html body .workspace-sidebar .navigation-scroll>.context-divider,
+ html body .workspace-sidebar .navigation-scroll>.navlabel{flex:0 0 auto}
+ html body .workspace-sidebar .navigation-scroll>.sidelist{flex:1 1 0;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:#666 transparent;padding-bottom:12px;margin-bottom:0}
+ html body .workspace-sidebar>.brand,
+ html body .workspace-sidebar>.sidebottom{flex:0 0 auto}
+}

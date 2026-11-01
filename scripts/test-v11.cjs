@@ -55,6 +55,14 @@ data=await call(planning,'GET',undefined,'?year=2026&from=2026-11-02&to=2026-11-
 assert.equal((await call(planning,'GET',undefined,'?year=2026&from=2026-12-01&to=2026-12-08',true)).suggestions.length,0);
 await call(login,'POST',{username:'editor@test',password,planningApp:true},'',true);data=await call(planning,'GET',undefined,'?year=2026',true);assert.equal(data.canEdit,true);assert.equal(data.canSuggest,false);assert.equal((await call(planning,'POST',another,'',true)).status,403);
 extraCookies.set('tc_planning_session',planningToken);
+// v14-3: everyone with planning access can read all pending suggestions.
+assert.equal((await call(planning,'POST',{...another,day:'2027-11-05',value:'Nästa års förslag'})).status,200);
+await engine.query("INSERT INTO users(email,username,name,role,password_hash,password_salt,created_at) VALUES('viewer@test','viewer@test','Read only','Chef',$1,$2,0)",[passwordHash,salt]);
+await call(login,'POST',{username:'viewer@test',password,planningApp:true},'',true);
+let all=await call(planning,'GET',undefined,'?suggestions=all',true);assert.equal(all.status,200,JSON.stringify(all));assert.ok(all.suggestions.some(s=>s.authorEmail==='admin@test'));assert.ok(all.suggestions.every(s=>s.status==='pending'));assert.ok(all.suggestions.some(s=>s.day==='2027-11-05'));assert.ok((await call(planning,'GET',undefined,'?year=2026',true)).suggestions.some(s=>s.authorEmail==='admin@test'));assert.equal((await call(planning,'POST',{action:'review',id:row.id,decision:'reject'},'',true)).status,403);
+assert.equal((await call(planning,'POST',another,'',true)).status,403);
+await engine.query("UPDATE panel_module_access SET restricted=true,user_emails='[]'::jsonb WHERE kind='planning'");assert.equal((await call(planning,'GET',undefined,'?suggestions=all',true)).status,403);
+await engine.query("UPDATE panel_module_access SET restricted=false WHERE kind='planning'");extraCookies.set('tc_planning_session',planningToken);
 // Logout revokes the remembered token server-side, preserves website session.
 result=await call(logout,'POST',{},'',true);assert.equal(result.status,200,JSON.stringify(result));assert.equal(extraCookies.has('tc_planning_session'),false);assert.equal((await engine.query('SELECT * FROM sessions WHERE token_hash=$1',[hash(planningToken)])).rows.length,0);requestHeaders=new Headers();assert.equal((await auth.currentAccount()).email,'admin@test');
 console.log('PASS v11: removed idle expiry; absolute expiry/disabled account; separate 8h/30d scoped cookies; no website privilege from app token; app write restriction; simultaneous rights/admin app proposals/read other authors; task+color atomic review; duplicate retry; stale color rejection; input validation; server-side logout revocation.');await engine.close();
