@@ -1,3 +1,4 @@
+import {readPlanningLog} from '../../planning-log-server';
 import {planningPermissions} from '../../planning-permissions';
 import {planningYearRange} from '../../planning-dates';
 import {operationalSettings,saveOperational,saveOperationalCount} from '../../planning-operational-server';
@@ -15,7 +16,7 @@ import type {PlanningColumn} from '../../planning-types';
 export const dynamic='force-dynamic';
 async function settings(u:{role:string,email:string},lock:'share'|'update'|false=false){const s=(await db.prepare('SELECT editor_emails AS editorEmails,suggester_emails AS suggesterEmails,task_width AS taskWidth,task_width_revision AS taskWidthRevision,revision FROM planning_settings WHERE id=1'+(lock==='update'?' FOR UPDATE':lock?' FOR SHARE':'')).first<{editorEmails:string[],suggesterEmails:string[],taskWidth:number,taskWidthRevision:number,revision:number}>())!;return {...s,...planningPermissions(u,s)}}
 async function get(req:Request){const u=(await currentUser())!,url=new URL(req.url),s=await settings(u);
- if(url.searchParams.has('log')){if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan se planeringsloggen.',403);const before=Number(url.searchParams.get('before')||Date.now()+1);return Response.json({log:(await db.prepare('SELECT id,occurred_at AS occurredAt,actor_name AS actorName,action,day::text AS day,column_name AS columnName,field,previous_value AS previousValue,new_value AS newValue FROM planning_log WHERE occurred_at<? ORDER BY occurred_at DESC,id LIMIT 200').bind(before).all()).results})}
+ if(url.searchParams.has('log')){if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan se planeringsloggen.',403);return Response.json(await readPlanningLog(url.searchParams))}
  const year=Number(url.searchParams.get('year'));if(!Number.isInteger(year)||year<2020||year>2099)throw new PanelError('Välj ett år mellan 2020 och 2099.');
  const op=url.searchParams.has('operational');
  let range=planningYearRange(year);

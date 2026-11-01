@@ -1,3 +1,4 @@
+import {wakeScheduledJobs} from '../lib/scheduler-gate';
 import 'server-only';
 import {currentUser,currentAccount,error,sha256,type Role} from './auth';
 import {db} from './database';
@@ -28,6 +29,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/order':{POST:instructors},
  '/api/moment-visibility':{POST:instructors},
  '/api/module-access':{GET:studentReaders,POST:['Administratör']},
+ '/api/planning/test-mail':{POST:['Administratör']},
  '/api/planning':{GET:studentReaders,POST:studentReaders,PUT:instructors,DELETE:instructors},
  '/api/moment-transfer':{POST:instructors},
  '/api/grundschema':{GET:instructors,POST:instructors},
@@ -112,7 +114,12 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
    }
    const gated={'/api/documents':'documents','/api/notes':'notes','/api/grundschema':'grundschema','/api/planning':'planning'} as const;
    if(actor&&route in gated){try{await requireModule(actor,gated[route as keyof typeof gated])}catch(e){if(e instanceof PanelError){await securityEvent(req,route,actor,'Åtkomst nekad','Modulen är dold för användaren');return privateResponse(error(e.message,e.status));}throw e}}
-   const response=await handler(req);
+   const affectsSchedule=!['GET','HEAD','OPTIONS'].includes(req.method)&&['/api/planning','/api/grundschema','/api/admin/backups','/api/admin/backups/googledrive','/api/users','/api/module-access'].includes(route)||route==='/api/admin/backups/googledrive/callback';
+   // Failure to update wake metadata must be visible and must never silently skip jobs.
+   if(affectsSchedule)await wakeScheduledJobs();
+   let response:Response;
+   try{response=await handler(req)}finally{if(affectsSchedule)await wakeScheduledJobs()}
+
    if(route==='/api/login'&&(response.status===401||response.status===429)){
     await securityEvent(req,route,null,response.status===429?'Inloggning spärrad':'Misslyckad inloggning',response.status===429?'För många inloggningsförsök':'Felaktiga inloggningsuppgifter');
    }else if(response.status===403){

@@ -1,4 +1,5 @@
 'use client';
+import {activeInterval} from './client-activity';
 import {useEffect,useMemo,useState} from 'react';
 import {ChevronDown,ChevronRight,CloudUpload,Search} from 'lucide-react';
 import {panelRequest,panelDate} from './panel-types';
@@ -7,7 +8,7 @@ export default function AdminBackups(){
  const [data,setData]=useState<any>(null),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[enabled,setEnabled]=useState(false),[confirmed,setConfirmed]=useState(false),[dirty,setDirty]=useState(false),[revision,setRevision]=useState(0),[options,setOptions]=useState<BackupOptions>(optionsFromRow({})),[catalog,setCatalog]=useState<{path:string,kind:string}[]|null>(null),[catalogError,setCatalogError]=useState(''),[search,setSearch]=useState(''),[expanded,setExpanded]=useState<string[]>(['Instruktörspanel','Personal','Elever']);
  async function load(initial=false){const d=await panelRequest('/api/admin/backups');setData(d);if(initial){setEnabled(d.settings.enabled);setConfirmed(d.settings.restricted_confirmed);setRevision(d.settings.revision);setOptions(optionsFromRow(d.settings))}}
  async function loadCatalog(){setCatalogError('');try{const d=await panelRequest('/api/admin/backups?catalog=1');setCatalog(d.files)}catch(e){setCatalogError((e as Error).message)}}
- useEffect(()=>{let live=true;void load(true).catch(e=>live&&setMessage(e.message));const t=setInterval(()=>void load().catch(e=>live&&setMessage(e.message)),15000);return()=>{live=false;clearInterval(t)}},[]);
+ useEffect(()=>{let live=true;void load(true).catch(e=>live&&setMessage(e.message));const t=activeInterval(()=>load().catch(e=>live&&setMessage(e.message)),15000);return()=>{live=false;t()}},[]);
  useEffect(()=>{if(options.copyMode==='selected'&&catalog===null&&!catalogError)void loadCatalog()},[options.copyMode,catalog,catalogError]);
  const tree=useMemo(()=>catalogTree(catalog||[]),[catalog]);
  const update=(next:Partial<BackupOptions>)=>{setOptions(o=>({...o,...next}));setDirty(true)};
