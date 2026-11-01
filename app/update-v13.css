@@ -1,0 +1,50 @@
+/* Admin navigation sizes itself to labels rather than equal narrow cells. */
+@media screen{
+ .categorytabs.admin-tool-tabs{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+ .categorytabs.admin-tool-tabs>button{flex:0 1 auto;width:auto;max-width:100%;min-width:0;height:auto;min-height:44px;padding:12px 16px;white-space:normal;overflow-wrap:anywhere;line-height:1.4;text-align:left}
+ .adminactivity .sectionhead{gap:20px;align-items:flex-start}
+ .adminactivity .sectionhead>div{min-width:0}
+ .adminactivity .sectionhead>div:first-child{flex:1 1 260px}
+ .adminactivity .sectionhead p{line-height:1.6;margin-bottom:0;overflow-wrap:anywhere}
+ .adminactivity .admin-heading-actions{gap:10px;flex:0 1 auto}
+ .adminactivity .admin-heading-actions button{min-height:44px;height:auto;white-space:normal;line-height:1.4}
+ .adminactivity .admin-heading-actions svg{flex:none}
+ .adminactivity .activityfilters{gap:12px;min-width:0;align-items:stretch;margin:22px 0 16px}
+ .adminactivity .activityfilters :is(label,select,input){min-width:0;box-sizing:border-box}
+ .adminactivity .activityfilters select{padding:12px;border:1px solid var(--ui-line,#ccc);border-radius:8px;background:var(--ui-field,#fff);color:var(--ui-text,#292929);font:inherit;min-height:46px}
+ .adminactivity .personnelannual{line-height:1.6;text-align:left;overflow-wrap:anywhere}
+ .adminactivity .activitytable td{overflow-wrap:anywhere}
+}
+@media screen and (max-width:900px){
+ .adminactivity>.sectionhead{display:flex;flex-direction:column;align-items:stretch;gap:16px}
+ .adminactivity .sectionhead>div:first-child{flex:none;width:100%}
+ .adminactivity .admin-heading-actions{width:100%;display:flex;flex-wrap:wrap;gap:10px}
+ .adminactivity .admin-heading-actions button{flex:1 1 160px;max-width:100%;justify-content:center}
+ .adminactivity .activityfilters{flex-direction:column;align-items:stretch}
+ .adminactivity .activityfilters select,.adminactivity .activityfilters .personnelsearch{width:100%;max-width:none;margin:0}
+ .adminactivity .activityfilters .personnelsearch{min-height:46px;padding:10px 12px}
+ .adminactivity .activityfilters input{width:100%}
+ .adminactivity .activitytablewrap{overflow:visible}
+ .adminactivity .activitytable{display:block;width:100%;min-width:0}
+ .adminactivity .activitytable thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .adminactivity .activitytable tbody{display:grid;gap:14px}
+ .adminactivity .activitytable tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:14px;border:1px solid var(--ui-line,#ddd);border-radius:10px;background:var(--ui-surface,#fff)}
+ .adminactivity .activitytable td{display:block;min-width:0;width:auto;border:0;padding:0;line-height:1.5;white-space:normal}
+ .adminactivity .activitytable td:nth-child(n+3){grid-column:1/-1}
+ .adminactivity .activitytable td[data-label]::before{content:attr(data-label);display:block;margin-bottom:4px;color:var(--ui-muted,#666);font-size:12px;font-weight:600}
+ .adminactivity .activitytable td small{color:var(--ui-muted,#666)}
+ .adminactivity .activitypagination{flex-wrap:wrap;gap:12px}
+ .adminactivity .activitypagination span{flex:1 1 100%;order:-1}
+ .backup-settings .backup-config-fields{align-items:stretch;gap:16px}
+ .backup-settings .backup-config-fields label{min-width:0;max-width:100%}
+ .backup-settings :is(h2,p,label,button,a){overflow-wrap:anywhere}
+}
+@media screen and (max-width:600px){
+ .adminactivity{padding:16px}
+ .adminactivity .admin-heading-actions{display:grid;grid-template-columns:minmax(0,1fr)}
+ .adminactivity .admin-heading-actions button{width:100%}
+ .backup-settings .backup-config-fields>label{width:100%;flex:1 1 100%}
+ .backup-settings .backup-config-fields :is(select,input[type=time]){width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+ .backup-settings .backup-connect :is(button,a){margin-left:0;width:100%;max-width:100%;white-space:normal;line-height:1.5;text-align:center;justify-content:center}
+}
+@media screen and (max-width:380px){.adminactivity .activitytable tr{grid-template-columns:minmax(0,1fr)}.adminactivity .activitytable td{grid-column:1}}

@@ -19,3 +19,19 @@ html[data-theme=light] .tcpa{--bg:#f5f5f5;--panel:#fff;--line:#cbd0d5;--fg:#2525
 .tcpa-detail fieldset{margin-top:16px;border:1px solid var(--line);padding:12px}.tcpa-color-swatches{display:flex;gap:8px;flex-wrap:wrap}.tcpa-color-swatches button{width:36px;height:36px;padding:0;border:2px solid transparent}.tcpa-color-swatches button[aria-pressed=true]{outline:2px solid var(--fg);outline-offset:2px}
 .tcpa-proposal-tour{border-radius:6px;padding:4px}.tcpa-proposal-tour input{background:transparent;color:inherit!important}.tcpa-proposal-tour small{display:block;padding:8px;font-size:12px}.tcpa-detail input[type=color]{width:65px}
 .tcpa-detail .planning-tour-options{position:fixed;z-index:10000}.tcpa-detail .planning-tour-options button{color:inherit}
+
+/* Shared proposal symbol, including empty tour, task and shared cells. */
+.tcpa-grid tbody td{position:relative}
+.tcpa .planning-suggestion-badge{position:absolute!important;right:2px;top:2px;z-index:7;border:1px solid #fff6!important;border-radius:50%!important;background:#d21524!important;color:white!important;width:18px;height:18px;min-width:18px;min-height:18px;padding:0!important;font:bold 12px/16px Arial!important;cursor:pointer;box-shadow:0 1px 2px #0004}
+.tcpa .planning-suggestion-badge:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.tcpa .tcpa-tour-value{box-sizing:border-box;padding:7px 2px;min-width:44px;width:44px;font-size:12px;line-height:1.25;word-break:normal;overflow-wrap:normal}
+.tcpa-header>img{object-fit:contain;background:transparent!important}
+.planning-app-signin>.logo{background:transparent!important;border:0!important;box-shadow:none!important;padding:0}
+.planning-app-signin>.logo img{object-fit:contain;width:66px;height:66px;background:transparent!important}
+.tcpa .tcpa-pending-proposals{margin:18px 0;border-top:1px solid var(--line);padding-top:12px}
+.tcpa .tcpa-pending-proposals h3{font-size:16px;margin:0 0 12px}
+.tcpa .tcpa-pending-proposals article{border-top:1px solid var(--line);padding:10px 0}
+.tcpa .tcpa-pending-proposals article>strong,.tcpa .tcpa-pending-proposals article>small,.tcpa .tcpa-pending-proposals article>span{display:block}
+.tcpa .tcpa-pending-proposals article>small{font-size:12px;color:var(--muted);margin:3px 0 10px}
+.tcpa .tcpa-pending-proposals article>span{font-size:12px;color:var(--muted)}
+.tcpa .tcpa-pending-proposals article>p{font-size:14px;margin:5px 0 10px;padding:8px;border-radius:5px}

@@ -57,7 +57,6 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
    // Existing assignments may remain for temporarily hidden modules; granting a new one requires visibility.
    if(!(editable?s.editorEmails:s.suggesterEmails).includes(email)&&!(await allowedModules(p)).includes('planning'))throw new PanelError('Ge användaren synlighet till Planering innan du tilldelar behörighet.');
   }}
-  if(b.emails.some((email:string)=>b.suggesterEmails.includes(email)))throw new PanelError('Välj antingen Redigera eller Ändringsförslag för samma person.');
   const result=await db.prepare('UPDATE planning_settings SET editor_emails=?::jsonb,suggester_emails=?::jsonb,revision=revision+1 WHERE id=1 AND revision=? RETURNING revision').bind(JSON.stringify(b.emails),JSON.stringify(b.suggesterEmails),b.revision).first();if(!result)throw new PanelError('Behörigheterna har ändrats. Läs in dem igen.',409);
   await planningLog(u,'Planeringsbehörigheter ändrade',{previous:JSON.stringify({redigera:s.editorEmails,föreslå:s.suggesterEmails}),next:JSON.stringify({redigera:b.emails,föreslå:b.suggesterEmails})});return Response.json({ok:true});
  }

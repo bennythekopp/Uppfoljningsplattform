@@ -33,8 +33,8 @@ result=await call(planning,'POST',proposal,'',true);assert.equal(result.status,2
 let row=(await engine.query("SELECT * FROM planning_suggestions WHERE status='pending'")).rows[0];assert.equal(row.proposed_color,'#70519e');assert.equal(row.proposed_value,'Testuppgift');assert.equal((await engine.query('SELECT * FROM planning_cells')).rows.length,0,'proposal must not directly change schedule');
 // Duplicate retry does not create another proposal.
 assert.equal((await call(planning,'POST',proposal,'',true)).status,200);assert.equal((await engine.query("SELECT * FROM planning_suggestions WHERE status='pending'")).rows.length,1);
-// Edit permission trumps suggestion permission even in app.
-await engine.query("UPDATE planning_settings SET editor_emails='[\"editor@test\",\"proposer@test\"]'::jsonb");assert.equal((await call(planning,'POST',proposal,'',true)).status,403);await engine.query("UPDATE planning_settings SET editor_emails='[\"editor@test\"]'::jsonb");
+// Both permissions coexist; app remains proposals only.
+await engine.query("UPDATE planning_settings SET editor_emails='[\"editor@test\",\"proposer@test\"]'::jsonb");assert.equal((await call(planning,'POST',proposal,'',true)).status,200);assert.equal((await call(planning,'POST',{action:'review',id:row.id,decision:'approve'},'',true)).status,403);await engine.query("UPDATE planning_settings SET editor_emails='[\"editor@test\"]'::jsonb");
 // Website approval atomically applies text+color and preserves other cells.
 result=await call(planning,'POST',{action:'review',id:row.id,decision:'approve'});assert.equal(result.status,200,JSON.stringify(result));let cells=(await engine.query('SELECT field,value FROM planning_cells ORDER BY field')).rows;assert.deepEqual(cells,[{field:'color',value:'#70519e'},{field:'task',value:'Testuppgift'}]);
 // Color-only proposal is accepted but detects concurrent color edits before approval.
@@ -43,7 +43,19 @@ const colorOnly={...proposal,previousValue:'Testuppgift',revision:task.revision,
 // Invalid color and stale values are rejected.
 assert.equal((await call(planning,'POST',{...proposal,field:'tour'},'',true)).status,400);assert.equal((await call(planning,'POST',{...colorOnly,color:'javascript:bad'},'',true)).status,400);
 await engine.query("UPDATE panel_module_access SET restricted=true,user_emails='[]'::jsonb WHERE kind='planning'");assert.equal((await call(planning,'GET',undefined,'?year=2026',true)).status,403);await engine.query("UPDATE panel_module_access SET restricted=false WHERE kind='planning'");
+// v14: administrator can persist simultaneous rights, and app sees other authors.
+let perms=await call(planning,'GET',undefined,'?year=2026');
+result=await call(planning,'POST',{action:'editors',emails:['proposer@test','editor@test'],suggesterEmails:['proposer@test'],revision:perms.settingsRevision});assert.equal(result.status,200,JSON.stringify(result));
+perms=await call(planning,'GET',undefined,'?year=2026');assert.ok(perms.editorEmails.includes('proposer@test'));assert.ok(perms.suggesterEmails.includes('proposer@test'));
+result=await call(login,'POST',{username:'admin@test',password,planningApp:true,rememberMe:false},'',true);assert.equal(result.status,200);
+const another={action:'propose',day:'2026-11-05',columnId:column.id,field:'tour',previousValue:'',value:'Adminens tur',revision:0};result=await call(planning,'POST',another,'',true);assert.equal(result.status,200,JSON.stringify(result));
+assert.equal((await call(planning,'POST',{action:'review',id:row.id,decision:'reject'},'',true)).status,403);
+extraCookies.set('tc_planning_session',planningToken);
+data=await call(planning,'GET',undefined,'?year=2026&from=2026-11-02&to=2026-11-09',true);assert.equal(data.canEdit,true);assert.equal(data.canSuggest,true);assert.ok(data.suggestions.some(s=>s.authorEmail==='admin@test'&&s.proposedValue==='Adminens tur'));assert.ok(data.suggestions.some(s=>s.authorEmail==='proposer@test'));
+assert.equal((await call(planning,'GET',undefined,'?year=2026&from=2026-12-01&to=2026-12-08',true)).suggestions.length,0);
+await call(login,'POST',{username:'editor@test',password,planningApp:true},'',true);data=await call(planning,'GET',undefined,'?year=2026',true);assert.equal(data.canEdit,true);assert.equal(data.canSuggest,false);assert.equal((await call(planning,'POST',another,'',true)).status,403);
+extraCookies.set('tc_planning_session',planningToken);
 // Logout revokes the remembered token server-side, preserves website session.
 result=await call(logout,'POST',{},'',true);assert.equal(result.status,200,JSON.stringify(result));assert.equal(extraCookies.has('tc_planning_session'),false);assert.equal((await engine.query('SELECT * FROM sessions WHERE token_hash=$1',[hash(planningToken)])).rows.length,0);requestHeaders=new Headers();assert.equal((await auth.currentAccount()).email,'admin@test');
-console.log('PASS v11: removed idle expiry; absolute expiry/disabled account; separate 8h/30d scoped cookies; no website privilege from app token; app write restriction; shared proposal permission/editor precedence; task+color atomic review; duplicate retry; stale color rejection; input validation; server-side logout revocation.');await engine.close();
+console.log('PASS v11: removed idle expiry; absolute expiry/disabled account; separate 8h/30d scoped cookies; no website privilege from app token; app write restriction; simultaneous rights/admin app proposals/read other authors; task+color atomic review; duplicate retry; stale color rejection; input validation; server-side logout revocation.');await engine.close();
 })().catch(e=>{console.error(e);process.exitCode=1});

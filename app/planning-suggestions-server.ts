@@ -12,7 +12,7 @@ export async function mailSettings(){const value=await db.prepare('SELECT enable
 async function context(column:PlanningColumn,day:string){const periods=(await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all<PlanningPeriod>()).results,memberships=(await db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all<any>()).results;return {config:personPeriodFor(periods,column,day,memberships)?.config||{tours:[]},base:baseTour(periods,column,day,memberships)}}
 export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSuggest=false){
  if(b.action==='propose'){
-  if(!canSuggest||canEdit)throw new PanelError('Du saknar behörighet att föreslå ändringar.',403);
+  if(!canSuggest)throw new PanelError('Du saknar behörighet att föreslå ändringar.',403);
   const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM planning_columns WHERE id=? AND deleted_at IS NULL').bind(id).first<PlanningColumn>();
   if(!column)throw new PanelError('Kolumnen finns inte längre.',404);
   if(!(column.kind==='shared'?b.field==='shared':['tour','task'].includes(b.field))||typeof b.value!=='string'||b.value.length>4000||!Number.isInteger(b.revision)||b.revision<0)throw new PanelError('Kontrollera förslaget.');

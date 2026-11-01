@@ -1,9 +1,12 @@
-.mobile-module-back,.mobile-module-back-fallback{display:none}
-@media(max-width:900px){
-.instructor-hub h1:has(.mobile-module-back){display:flex;align-items:center;gap:8px}
-.mobile-module-back{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:8px;border:0!important;background:transparent!important;color:inherit!important;box-shadow:none!important;border-radius:0!important}
-.mobile-module-back-fallback{display:block}
-.mobile-module-back:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+/* Explicit scope outranks generic panel buttons, including dark mode. */
+html body .instructor-hub button.mobile-module-back,
+html body .instructor-hub .mobile-module-back-fallback{display:none!important}
+html body .instructor-hub button.mobile-module-back{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important;color:inherit!important}
+@media screen and (max-width:900px){
+html body .instructor-hub h1:has(>button.mobile-module-back){display:flex!important;align-items:center;gap:8px}
+html body .instructor-hub button.mobile-module-back{display:inline-flex!important;order:-1!important;align-items:center;justify-content:center;flex:none;width:44px;height:44px;min-width:44px;min-height:44px;margin:0;padding:8px}
+html body .instructor-hub .mobile-module-back-fallback{display:block!important}
+html body .instructor-hub button.mobile-module-back:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 .tc-page-pull-region{position:relative;min-height:100%;overscroll-behavior-y:contain}
 .tc-page-pull-content{transition:transform .22s ease}
 .tc-page-pull-region.is-pulling>.tc-page-pull-content{transition:none}
@@ -17,4 +20,4 @@
 .mobile-module-title{display:none}
 @media(max-width:900px){.mobile-module-title{display:flex;font-size:29px;margin:0 0 20px}.document-topline>.back{display:none}}
 
-@media(max-width:900px){.mobile-module-back{order:-1}}
+

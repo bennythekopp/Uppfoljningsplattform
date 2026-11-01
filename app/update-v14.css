@@ -1,0 +1,16 @@
+/* Native top-layer help dialog: center within viewport, not refresh ancestors. */
+@media screen{
+ html body dialog.tc-modal.help-popup{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(1200px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain}
+ .help-popup>header{position:sticky;top:-1px;z-index:2;background:var(--ui-surface,#fff);padding-block:6px}
+ .help-popup>header>button{flex:none;min-width:44px;min-height:44px}
+ .help-popup .help-image-scroll{max-width:100%;max-height:calc(100dvh - 200px)}
+}
+/* Use the planning module's 220px menu throughout the desktop workspace. */
+@media screen and (min-width:901px){
+ html body .app .workspace-sidebar{width:220px;min-width:220px;flex:0 0 220px}
+ .workspace-sidebar .sidebottom{display:grid;grid-template-columns:34px minmax(0,1fr);gap:7px 9px}
+ .workspace-sidebar .who strong,.workspace-sidebar .who small{white-space:normal;overflow:visible;overflow-wrap:anywhere}
+ .workspace-sidebar .sidebottom .user-settings-trigger{grid-column:2;grid-row:2;justify-self:end;margin-right:36px}
+ .workspace-sidebar .sidebottom>button:last-child{grid-column:2;grid-row:2;justify-self:end}
+}
+@media screen and (min-width:901px){.workspace-sidebar :is(.navitem,.panelsublink){white-space:normal;overflow-wrap:anywhere}.workspace-sidebar .navitem>span{min-width:0;white-space:normal}.workspace-sidebar .navitem>svg{flex:none}}

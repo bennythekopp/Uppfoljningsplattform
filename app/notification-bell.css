@@ -3,7 +3,7 @@
 .notification-trigger:is(:hover,:active,[aria-expanded=true]){background:transparent;border:0;box-shadow:none}
 .notification-trigger:focus-visible{outline:2px solid #c33;outline-offset:3px;border-radius:7px}
 .notification-count{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 4px;border-radius:12px;background:#b00000;color:#fff;font-size:11px;font-weight:700;line-height:19px;text-align:center;pointer-events:none}
-.notification-popover{position:absolute;right:0;top:52px;width:min(370px,calc(100vw - 24px));max-height:min(600px,calc(100dvh - 100px));overflow:auto;border:1px solid var(--ui-line,#ddd);border-radius:14px;background:var(--ui-surface,#fff);box-shadow:0 16px 48px #0003;color:var(--ui-text,#292929)}
+.notification-popover{position:fixed;z-index:100;right:auto;width:min(370px,calc(100vw - 24px));max-height:min(600px,calc(100dvh - 100px));overflow:auto;border:1px solid var(--ui-line,#ddd);border-radius:14px;background:var(--ui-surface,#fff);box-shadow:0 16px 48px #0003;color:var(--ui-text,#292929)}
 .notification-popover header{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ui-line,#eee)}
 .notification-popover header button{border:0;background:transparent;color:inherit}
 .notification-list{max-height:360px;overflow:auto}
@@ -35,3 +35,7 @@
 .role-workspace:has(>.rolepreviewbar) .site-notifications{top:77px}
 @media(max-width:900px){.role-workspace:has(>.rolepreviewbar) .site-notifications{top:105px}}
 @media print{.site-notifications{display:none!important}}
+
+.notification-popover{box-sizing:border-box;overscroll-behavior:contain;overflow-wrap:anywhere}.notification-popover>header{position:sticky;top:0;background:var(--ui-surface,#fff);z-index:1}.notification-popover>header>button{flex:none;min-width:44px;min-height:44px}.notification-list{max-height:none}
+
+.notification-popover{max-width:calc(100vw - 24px);padding-bottom:env(safe-area-inset-bottom)}
