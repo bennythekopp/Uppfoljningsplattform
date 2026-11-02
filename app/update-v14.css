@@ -7,7 +7,7 @@
 }
 /* Shared menu width leaves room for complete navigation labels. */
 @media screen and (min-width:901px){
- html body .app .workspace-sidebar{width:280px;min-width:280px;flex:0 0 280px}
+ html body .app .workspace-sidebar{width:var(--workspace-sidebar-width,280px)!important;min-width:var(--workspace-sidebar-width,280px)!important;max-width:var(--workspace-sidebar-width,280px)!important;flex:0 0 var(--workspace-sidebar-width,280px)!important}
  .workspace-sidebar .sidebottom{display:grid;grid-template-columns:34px minmax(0,1fr);gap:7px 9px}
  .workspace-sidebar .who strong,.workspace-sidebar .who small{white-space:normal;overflow:visible;overflow-wrap:anywhere}
  .workspace-sidebar .sidebottom .user-settings-trigger{grid-column:2;grid-row:2;justify-self:end;margin-right:36px}
@@ -44,3 +44,5 @@
  html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-button{display:none;width:0;height:0}
  html body :is(.planning-scroll,.workspace-sidebar .sidelist)::-webkit-scrollbar-corner{background:transparent}
 }
+
+@media screen{:root{--workspace-sidebar-width:280px}}

@@ -1,0 +1,9 @@
+/* Read-only previews share the real planning cell classes and colour helpers. */
+.planning-table.planning-proposal-cell-table{width:100%;min-width:0!important;table-layout:fixed;border:1px solid var(--planning-border,var(--ui-line,#44494f));border-radius:4px;overflow:hidden;margin:6px 0 10px;background:var(--planning-bg,var(--ui-field,#fff));color:var(--planning-text,var(--ui-text,#292929));font-size:12px}
+.planning-proposal-cell-table td{height:auto;min-width:0;border:0;vertical-align:top;position:relative}
+.planning-proposal-cell-table .planning-read{display:block;padding:8px 5px;line-height:1.4;min-height:34px;white-space:pre-wrap;overflow-wrap:anywhere;color:inherit!important;font:inherit}
+.planning-proposal-cell-table .planning-tour{font-weight:600;text-align:center}
+.planning-proposal-cell-table .planning-tour .planning-read{padding-inline:5px}
+.tcpa .planning-proposal-cell-table{--planning-bg:var(--panel);--planning-text:var(--fg);--planning-border:var(--line)}
+[data-theme=dark] .planning-proposal-cell-table .planning-tour[data-neutral]{background:#373d41!important;color:#edf0f2!important}
+[data-theme=dark] .planning-proposal-cell-table .planning-tour[data-neutral=free]{background:#292e31!important;color:#ffaaa3!important}
