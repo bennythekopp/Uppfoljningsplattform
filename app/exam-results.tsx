@@ -1,0 +1,6 @@
+'use client';
+import {examResultFields,normalizeExamResults,type ExamResults} from './exam-results-values';
+export default function ExamResultsCard({results,onChange,readOnly=false,disabled=false}:{results?:ExamResults,onChange:(results:ExamResults)=>void,readOnly?:boolean,disabled?:boolean}){
+ const values=normalizeExamResults(results);
+ return <section className="personnelcard examresults" aria-labelledby="exam-results-heading"><h2 id="exam-results-heading">Provresultat</h2><div className="personnelfields examresults-fields">{examResultFields.map(({key,label})=>readOnly?<div key={key}><strong>{label}</strong><p>{values[key]===null?'Ej angivet':values[key]!.toLocaleString('sv-SE')+' %'}</p></div>:<label key={key}>{label}<span className="examresult-input"><input type="number" inputMode="decimal" min="0" max="100" step="any" placeholder="Ange resultat" disabled={disabled} value={values[key]??''} aria-label={label+' provresultat i procent'} onChange={e=>{if(e.target.validity.badInput)return;const value=e.target.value===''?null:Number(e.target.value);if(value!==null&&(!Number.isFinite(value)||value<0||value>100))return;onChange({...values,[key]:value})}}/><span aria-hidden="true">%</span></span></label>)}</div></section>;
+}

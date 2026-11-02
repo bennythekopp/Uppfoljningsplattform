@@ -1,4 +1,5 @@
 import 'server-only';
+import {validExamResults} from './exam-results-values';
 import {ordered} from './ordering';
 import {withMomentVisibility} from './moment-visibility';
 import {db} from './database';
@@ -7,6 +8,7 @@ import {validKPData} from './kp-data';
 import type {KPMoment} from './kp-types';
 export async function loadExamTemplate(connection=db){const rows=(await connection.prepare('SELECT id,part,title,moments,categories FROM exam_templates WHERE deleted_at IS NULL ORDER BY position,id').all<ExamGroup>()).results;for(const group of rows){if(group.part==='op')group.categories=await ordered('exam-categories',group.categories||[],connection);group.moments=await withMomentVisibility('exam',await ordered('exam-moments:'+group.id,group.moments,connection),connection)}const scenarios=await ordered('exam-scenarios',rows.filter(g=>g.part==='simulator'),connection);return [...rows.filter(g=>g.part==='op'),...scenarios]}
 export function validExamData(d:ExamData,t:ExamGroup[]):boolean{
+ if(d&&!validExamResults(d.examResults))return false;
  if(!d||!['','approved','requires_completion'].includes(d.outcome)||!d.session||typeof d.session!=='object'||Array.isArray(d.session)||!Array.isArray(d.logs)||d.logs.length>500)return false;
  if(!validKPData({outcome:d.outcome,date:d.session.date,assessor:d.session.assessor,examPercent:null,answers:d.answers},t.flatMap(g=>g.moments) as KPMoment[]))return false;
  const text=(s:unknown,max:number):s is string=>typeof s==='string'&&s.length<=max;
