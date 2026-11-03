@@ -46,3 +46,18 @@ html[data-theme=light] .tcpa{--bg:#f5f5f5;--panel:#fff;--line:#cbd0d5;--fg:#2525
  .tcpa-grid th,.tcpa-grid td{padding-top:4px;padding-bottom:4px}
  .tcpa .tcpa-task-text{max-height:none;-webkit-line-clamp:2}
 }
+
+/* Custom task colour: keep the native picker compact, including on iOS. */
+.tcpa-detail fieldset{min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.tcpa-detail .tcpa-color-swatches{flex:0 0 100%;min-width:0;gap:8px;padding:2px 0 4px}
+.tcpa-detail fieldset>label{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;margin:0;line-height:1.4}
+.tcpa-detail input[type=color]{display:block;flex:0 0 64px;width:64px;min-width:64px;max-width:64px;height:44px;min-height:44px;padding:4px;margin:0;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer}
+.tcpa-detail input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.tcpa-detail input[type=color]::-webkit-color-swatch{border:0;border-radius:4px}
+.tcpa-detail input[type=color]::-moz-color-swatch{border:0;border-radius:4px}
+.tcpa-detail fieldset>button{flex:0 0 auto;min-height:44px;max-width:100%;margin:0;white-space:normal}
+
+/* Standalone planning always uses the available viewport, including landscape. */
+html body:has(.tcpa){margin:0;padding:0;max-width:none;width:100%;overflow:hidden}
+html body .tcpa{width:100%;max-width:none;margin:0;min-width:0}
+@media(orientation:landscape){html body .tcpa{height:100dvh;max-height:100dvh;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.tcpa-header{margin-inline:0;width:100%}}

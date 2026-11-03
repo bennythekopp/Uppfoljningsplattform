@@ -39,6 +39,8 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/documents':{GET:instructors,POST:instructors,PUT:instructors,PATCH:instructors},
  '/api/notes':{GET:instructors,PUT:instructors},
  '/api/admin/role-preview':{POST:['Administratör']},
+ '/api/users/block':{POST:['Administratör']},
+ '/api/planning/export':{GET:studentReaders},
  '/api/users':{GET:['Administratör'],POST:['Administratör'],PUT:['Administratör'],DELETE:['Administratör']},
  '/api/people/move':{POST:instructors},
  '/api/kp/assessments':{GET:studentReaders,PUT:instructors,POST:instructors,DELETE:instructors},
@@ -100,7 +102,7 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
   try{
    const policy=policies[route]?.[req.method];
    const actor=policy==='public'?null:authenticate?await authenticate():route==='/api/admin/role-preview'?await currentAccount():await currentUser();
-   if(actor?.sessionScope==='planning'&&!['/api/me','/api/planning','/api/notifications'].includes(route))return privateResponse(error('Planeringsinloggningen gäller bara planeringsappen.',403));
+   if(actor?.sessionScope==='planning'&&!['/api/me','/api/planning','/api/planning/export','/api/notifications'].includes(route))return privateResponse(error('Planeringsinloggningen gäller bara planeringsappen.',403));
    if(actor?.sessionScope==='planning'&&route==='/api/planning'&&!['GET','POST'].includes(req.method))return privateResponse(error('Planeringsappen kan bara lämna ändringsförslag.',403));
    if(foreignMutation(req)){
     await securityEvent(req,route,actor,'Åtkomst nekad','Begäran från annan webbplats');

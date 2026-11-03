@@ -13,10 +13,11 @@ async function POSTEndpoint(req:Request){try{
  const normalized=username.trim().toLowerCase();
  const limit=await reserveLogin(req,normalized);
  if(limit.retry)return Response.json({error:'För många försök. Försök igen om en stund.'},{status:429,headers:{'Retry-After':String(limit.retry)}});
- const row=await db.prepare('SELECT email,name,role,password_hash AS hash,password_salt AS salt FROM users WHERE username=? AND disabled_at IS NULL').bind(normalized).first<{email:string,name:string,role:string,hash:string|null,salt:string|null}>();
+ const row=await db.prepare('SELECT email,name,role,password_hash AS hash,password_salt AS salt,login_blocked_at AS blockedAt FROM users WHERE username=? AND disabled_at IS NULL').bind(normalized).first<{email:string,name:string,role:string,hash:string|null,salt:string|null,blockedAt:number|null}>();
  const valid=row?.hash&&row.salt?await verifyPassword(password,row.salt,row.hash):false;
  if(!row?.hash||!row.salt){await passwordHash(password,'00000000000000000000000000000000')}
  if(!valid||!row)return error('Fel användarnamn eller lösenord',401);
+ if(row.blockedAt)return error('Kontot spärrat',403);
  let verifiedHash=row.hash!;
  if(needsPasswordUpgrade(verifiedHash)){
   const salt=randomToken(),hash=await passwordHash(password,salt);
@@ -30,7 +31,8 @@ async function POSTEndpoint(req:Request){try{
  // Recheck user/password to prevent a session being created after account revocation.
  const created=await databaseTransaction(async()=>{
   // Share the user-row lock with role/password changes and account revocation.
-  const latest=await db.prepare('SELECT email,name,role FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=? FOR UPDATE').bind(row.email,verifiedHash).first<{email:string,name:string,role:string}>();
+  const latest=await db.prepare('SELECT email,name,role,login_blocked_at AS blockedAt FROM users WHERE email=? AND disabled_at IS NULL AND password_hash=? FOR UPDATE').bind(row.email,verifiedHash).first<{email:string,name:string,role:string,blockedAt:number|null}>();
+  if(latest?.blockedAt)throw new Error('ACCOUNT_BLOCKED');
   if(!latest)return null;
   await db.prepare('INSERT INTO sessions(token_hash,user_email,expires_at,last_activity_at,session_scope) VALUES(?,?,?,?,?)').bind(await sha256(token),latest.email,expiresAt,now,app?'planning':'website').run();
   await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),now,latest.email,latest.name,latest.role,'Inloggad','Inloggning',latest.name).run();
@@ -39,6 +41,6 @@ async function POSTEndpoint(req:Request){try{
  if(!created)return error('Logga in igen',401);
  (await cookies()).set(app?'tc_planning_session':'tc_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:lifetime/1000});
  return Response.json({name:created.name,role:created.role,idleExpiresAt:expiresAt,expiresAt});
- }catch{return error('Inloggningen kunde inte slutföras',503)}}
+ }catch(e){return error(e instanceof Error&&e.message==='ACCOUNT_BLOCKED'?'Kontot spärrat':'Inloggningen kunde inte slutföras',e instanceof Error&&e.message==='ACCOUNT_BLOCKED'?403:503)}}
 
 export const POST=secureApi('/api/login',POSTEndpoint);

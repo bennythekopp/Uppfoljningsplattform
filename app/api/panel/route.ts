@@ -1,3 +1,4 @@
+import {deadlineTime} from '../../panel-deadline';
 import {allowedModules,requireModule,panelItemModule} from '../../module-access';
 import * as Y from 'yjs';
 import {secureApi} from '../../api-security';
@@ -59,7 +60,7 @@ async function mutate(req:Request){const u=(await currentUser())!,b=await panelB
  const owner=old?old.owner_email:['task','reminder'].includes(kind)&&(b.scope==='private'||b.scope===undefined&&kind==='reminder')?u.email:null;
  const raw=b.data||{};if(raw.documentId||raw.sourceDocumentId)await requireModule(u,'documents');const title=short(raw.title);if(!title)throw new PanelError('Ange en rubrik');
  const data:any={title,body:short(raw.body,30000)};
- if(['task','reminder'].includes(kind)){data.due=short(raw.due,30);if(data.due&&!/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(data.due))throw new PanelError('Ogiltigt datum');data.done=raw.done===true;data.assignee=short(raw.assignee);if(data.assignee&&!(await staffList()).some((s:any)=>s.email===data.assignee))throw new PanelError('Ansvarig måste vara instruktör eller administratör');data.priority=['normal','high'].includes(raw.priority)?raw.priority:'normal'}
+ if(['task','reminder'].includes(kind)){data.due=short(raw.due,30);if(data.due&&!/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(data.due))throw new PanelError('Ogiltigt datum');if(data.due&&!Number.isFinite(deadlineTime(data.due)))throw new PanelError('Ogiltigt datum eller klockslag i svensk tid');data.done=raw.done===true;data.completedAt=data.done?(old?.data.done?(old.data.completedAt??old.updated_at):Date.now()):null;data.assignee=short(raw.assignee);if(data.assignee&&!(await staffList()).some((s:any)=>s.email===data.assignee))throw new PanelError('Ansvarig måste vara instruktör eller administratör');data.priority=['normal','high'].includes(raw.priority)?raw.priority:'normal'}
  if(kind==='notice')data.important=raw.important===true;
  if(typeof raw.documentId==='string'&&raw.documentId){const doc=await db.prepare('SELECT id FROM panel_documents WHERE id=? AND deleted_at IS NULL').bind(raw.documentId).first();if(!doc)throw new PanelError('Dokumentet finns inte');data.documentId=raw.documentId}
  if(kind==='email-template'){data.outlookKind=raw.outlookKind==='meeting'?'meeting':'mail';data.subject=short(raw.subject,1000).replace(/[\r\n]/g,'')}

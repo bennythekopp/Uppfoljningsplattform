@@ -11,7 +11,7 @@ export function randomToken(){return hex(crypto.getRandomValues(new Uint8Array(3
 export async function currentAccount(sessionToken?:string){
  const token=sessionToken===undefined?await readSessionToken():sessionToken;
  if(token&&/^[a-f0-9]{64}$/.test(token)){
-  const row=await db.prepare('SELECT u.email,u.name,u.role,s.preview_role AS previewRole,s.session_scope AS sessionScope FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>? AND u.disabled_at IS NULL').bind(await sha256(token),Date.now()).first<{email:string,name:string,role:Role,previewRole:Role|null,sessionScope:string}>();
+  const row=await db.prepare('SELECT u.email,u.name,u.role,s.preview_role AS previewRole,s.session_scope AS sessionScope FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>? AND u.disabled_at IS NULL AND u.login_blocked_at IS NULL').bind(await sha256(token),Date.now()).first<{email:string,name:string,role:Role,previewRole:Role|null,sessionScope:string}>();
   if(row?.sessionScope==='planning'&&(await headers()).get('x-tc-app')!=='planning')return null;
   if(row&&['Administratör','Instruktör','Handledare','Chef'].includes(row.role))return row;
  }

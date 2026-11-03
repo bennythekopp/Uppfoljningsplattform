@@ -8,7 +8,7 @@ async function session(touch:boolean){
  const token=await readSessionToken();
  if(!token||!/^[a-f0-9]{64}$/.test(token))return error('Inloggningen har gått ut',401);
  const now=Date.now(),hash=await sha256(token);
- const row=await db.prepare(`SELECT s.expires_at FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>? AND u.disabled_at IS NULL`).bind(hash,now).first<{expires_at:number}>();
+ const row=await db.prepare(`SELECT s.expires_at FROM sessions s JOIN users u ON u.email=s.user_email WHERE s.token_hash=? AND s.expires_at>? AND u.disabled_at IS NULL AND u.login_blocked_at IS NULL`).bind(hash,now).first<{expires_at:number}>();
  if(!row)return error('Inloggningen har gått ut',401);
  return Response.json({expiresAt:row.expires_at,idleExpiresAt:row.expires_at},{headers:{'Cache-Control':'no-store'}});
 }

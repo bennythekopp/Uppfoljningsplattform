@@ -1,0 +1,20 @@
+'use client';
+import {useState} from 'react';
+import {Download} from 'lucide-react';
+import Modal from './ui-modal';
+import {addDays,stockholmToday} from './grundschema-types';
+import {flushPlanning} from './planning-client';
+import './planning-export.css';
+function monday(day:string){return addDays(day,-((new Date(day+'T12:00:00Z').getUTCDay()+6)%7))}
+export default function PlanningExport({day=stockholmToday(),app=false}:{day?:string,app?:boolean}){
+ const [open,setOpen]=useState(false),[period,setPeriod]=useState('week'),[from,setFrom]=useState(monday(day)),[to,setTo]=useState(addDays(monday(day),6)),[scope,setScope]=useState('mine'),[format,setFormat]=useState('pdf'),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ function begin(){setFrom(monday(day));setTo(addDays(monday(day),6));setPeriod('week');setError('');setOpen(true)}
+ function changePeriod(value:string){setPeriod(value);if(value==='week'){setFrom(monday(day));setTo(addDays(monday(day),6))}if(value==='month'){setFrom(day.slice(0,7)+'-01');const d=new Date(day.slice(0,7)+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+1);setTo(addDays(d.toISOString().slice(0,10),-1))}}
+ async function download(){setBusy(true);setError('');try{
+ if(!from||!to||from>to||(Date.parse(to)-Date.parse(from))/86400000>366)throw Error('Välj ett datumintervall på högst 367 dagar.');
+ await flushPlanning();const p=new URLSearchParams({from,to,scope,format});const r=await fetch('/api/planning/export?'+p,{headers:app?{'x-tc-app':'planning'}:{},cache:'no-store'});
+ if(!r.ok){const e=await r.json();throw Error(e.error||'Exporten misslyckades.')}
+ const blob=await r.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TC-Boden-Planering-'+from+'-'+to+'.'+(format==='apple'||format==='android'?'ics':format);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setOpen(false);
+ }catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ return <><button type="button" className="secondary planning-export-trigger" onClick={begin}><Download size={18}/><span>Exportera</span></button>{open&&<Modal title="Exportera planering" className={'planning-export-dialog '+(app?'planning-export-app':'')} onClose={()=>{if(!busy)setOpen(false)}}><form onSubmit={e=>{e.preventDefault();void download()}}><fieldset disabled={busy}><label>Period<select value={period} onChange={e=>changePeriod(e.target.value)}><option value="week">Denna vecka</option><option value="month">Denna månad</option><option value="custom">Egen period</option></select></label><div className="planning-export-dates"><label>Från<input type="date" required value={from} onChange={e=>{setPeriod('custom');setFrom(e.target.value)}}/></label><label>Till<input type="date" required min={from} value={to} onChange={e=>{setPeriod('custom');setTo(e.target.value)}}/></label></div><label>Innehåll<select value={scope} onChange={e=>setScope(e.target.value)}><option value="mine">Min planering</option><option value="all">Samtliga personer och gemensamma kolumner</option></select></label><div className="planning-export-formats" role="radiogroup" aria-label="Exportformat">{[['pdf','PDF'],['xlsx','Excel (.xlsx)'],['apple','Apple Kalender (.ics)'],['android','Android / Google Kalender (.ics)']].map(([value,label])=><label key={value} className={format===value?'selected':''}><input type="radio" name="export-format" value={value} checked={format===value} onChange={()=>setFormat(value)}/>{label}</label>)}</div><p>Kalenderexport skapar en fil att importera.</p>{['apple','android'].includes(format)&&<p className="planning-export-hint">Turer med sparade arbetstider blir kalenderhändelser. Övriga visas som heldag. Kalenderns egna färger kan skilja sig från planeringen.</p>}</fieldset>{error&&<p role="alert" className="formerror">{error}</p>}<div className="modalactions"><button type="button" className="secondary" disabled={busy} onClick={()=>setOpen(false)}>Avbryt</button><button className="primary" disabled={busy}>{busy?'Exporterar…':'Exportera'}</button></div></form></Modal>}</>;
+}

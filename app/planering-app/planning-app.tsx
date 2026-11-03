@@ -1,4 +1,5 @@
 'use client';
+import PlanningExport from '../planning-export';
 import {activeInterval} from '../client-activity';
 import {Fragment,useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {addDays,findTour,isoWeek,stockholmToday,tourStyle} from '../grundschema-types';
@@ -63,7 +64,7 @@ export default function PlanningApp(){
  if(authLoading)return <div className="signin" role="status">Kontrollerar inloggning…</div>;
  if(!user)return <main className="signin planning-app-signin"><div className="logo"><img src="/planning-app/logo.png" alt="TC Boden" width={56} height={56}/></div><h1>TC Boden</h1><p>Planering</p><form className="loginform" onSubmit={login}><label>Användarnamn<input autoComplete="username" value={loginUser} onChange={e=>setLoginUser(e.target.value)} required/></label><label>Lösenord<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><label className="remember-login"><input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>Håll mig inloggad</label>{error&&<div className="formerror" role="alert">{error}</div>}<button className="primary" disabled={loggingIn}>{loggingIn?'Loggar in…':'Logga in'}</button></form></main>;
  return <main className="tcpa">
- <header className="tcpa-header"><img alt="TC Boden" src="/planning-app/logo.png"/><div><strong>TC Boden</strong><small>Planering</small></div><PlanningSettings onLogout={user?logout:undefined}/></header>
+ <header className="tcpa-header"><img alt="TC Boden" src="/planning-app/logo.png"/><div><strong>TC Boden</strong><small>Planering</small></div><PlanningExport day={monday} app/><PlanningSettings onLogout={user?logout:undefined}/></header>
 
  <nav className="tcpa-bar" aria-label="Veckoväljare"><button type="button" aria-label="Föregående vecka" onClick={()=>setMonday(d=>addDays(d,-7))}><ChevronLeft size={22}/></button><div className="tcpa-week" aria-live="polite"><strong>Vecka {isoWeek(monday)}</strong><span>{dayLabel(monday)} – {dayLabel(addDays(monday,6))} {monday.slice(0,4)===addDays(monday,6).slice(0,4)?monday.slice(0,4):monday.slice(0,4)+' / '+addDays(monday,6).slice(0,4)}</span></div><button ref={calendarTrigger} className="tcpa-cal" type="button" aria-label="Välj datum" aria-haspopup="dialog" aria-expanded={picker} onClick={()=>setPicker(v=>!v)}><CalendarDays size={22}/></button><button type="button" aria-label="Nästa vecka" onClick={()=>setMonday(d=>addDays(d,7))}><ChevronRight size={22}/></button>{picker&&<DatePicker value={monday} onClose={closeCalendar} onSelect={day=>{setMonday(startOfWeek(day));closeCalendar()}}/>}</nav>
  <PlanningPullRefresh onRefresh={load} disabled={picker||!!taskDetail}>

@@ -1,0 +1,20 @@
+.planning-export-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.planning-export-dialog{width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;color:var(--ui-text,#252525);background:var(--ui-card,#fff)}
+.planning-export-dialog fieldset{border:0;padding:0;margin:12px 0;min-width:0;display:grid;gap:16px}
+.planning-export-dialog label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:14px}
+.planning-export-dialog :is(input,select){font:inherit;max-width:100%;min-width:0;padding:10px;border:1px solid var(--ui-line,#bbb);border-radius:7px;color:inherit;background:var(--ui-field,#fff)}
+.planning-export-dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.planning-export-formats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.planning-export-formats label{flex-direction:row;align-items:center;border:1px solid var(--ui-line,#bbb);border-radius:8px;padding:12px;min-height:52px;cursor:pointer}
+.planning-export-formats label.selected{border-color:#c00000;box-shadow:inset 0 0 0 1px #c00000}
+.planning-export-dialog input[type=radio]{width:18px;min-height:18px;height:18px;flex:none;accent-color:#c00000;margin:0}
+.planning-export-dialog p{font-size:13px;line-height:1.5;margin:0}
+.planning-export-dialog .planning-export-hint{color:var(--ui-muted,#666)}
+[data-theme=dark] .planning-export-dialog{background:#292929;color:#f5f5f5}
+[data-theme=dark] .planning-export-dialog :is(input,select){background:#17191b;border-color:#41474b;color:#f5f5f5}
+[data-theme=dark] .planning-export-dialog .planning-export-hint{color:#b8c0c4}
+.tcpa-header .planning-export-trigger{margin-left:auto;flex:none;min-height:40px}
+.tcpa-header .planning-export-trigger+.tcpa-settings{margin-left:0}
+@media(max-width:500px){.planning-export-formats{grid-template-columns:minmax(0,1fr)}.tcpa-header .planning-export-trigger{width:40px;padding:8px}.tcpa-header .planning-export-trigger span{display:none}.planning-export-dialog{padding:16px}}
+.tcpa .planning-export-dialog .primary{background:#c00000;color:#fff;border-color:#c00000}
+.tcpa .planning-export-dialog .secondary{background:var(--button);color:var(--fg);border-color:var(--line)}

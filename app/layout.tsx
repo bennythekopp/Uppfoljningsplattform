@@ -21,6 +21,7 @@ import './update-v11.css';
 import './update-v12.css';
 import './update-v13.css';
 import './update-v14.css';
+import './update-v15.css';
 import AppearanceProvider from './appearance-provider';
 import {appearanceBootScript} from './appearance-settings';
 export const metadata:Metadata={
