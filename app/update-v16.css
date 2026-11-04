@@ -67,3 +67,12 @@ html body .tcpa-header-actions>.app-notifications{
 html body .tcpa-header>.tcpa-header-actions{align-self:center;flex-wrap:nowrap}
 html body .tcpa-header-actions>.tcpa-settings{align-self:center;margin:0}
 html body .tcpa-header-actions .notification-trigger{align-self:center;vertical-align:middle;transform:none}
+
+/* V18: full TD focus ring independent of the editor's intrinsic text height. */
+html body .planning-table .planning-full-cell{position:static!important;min-height:33px;min-width:0}
+html body .planning-table .planning-cell-measure{display:block;visibility:hidden;pointer-events:none;box-sizing:border-box;min-height:33px;padding:8px 25px 8px 5px;font:inherit;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+html body .planning-table .planning-full-cell>textarea{position:absolute!important;top:0!important;left:0!important;bottom:auto!important;right:auto!important;box-sizing:border-box!important;max-height:none!important;min-height:0!important;margin:0!important;padding:8px 25px 8px 5px!important;outline:none!important;resize:none;overflow:hidden;z-index:1}
+html body .planning-table td:has(>.planning-full-cell>textarea:focus)::after,
+html body .planning-table td:has(>.planning-full-cell>textarea.cell-error)::after{content:"";position:absolute;inset:0;pointer-events:none;border:2px solid #d64646;z-index:6}
+html body .planning-table td:has(>.planning-full-cell>textarea:focus){z-index:4}
+html body .planning-table .planning-cell-error{max-width:290px;overflow-wrap:anywhere}

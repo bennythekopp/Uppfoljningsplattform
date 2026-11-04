@@ -1,4 +1,5 @@
 'use client';
+import {fetchJson} from './request-json';
 import {useRefreshCurrent} from './refresh-current';
 import {useCallback,useEffect,useState} from 'react';
 import {stockholmToday} from './grundschema-types';
@@ -6,8 +7,8 @@ import {supervisorAt,supervisorPeriods,type SupervisorData} from './supervisor-t
 import Modal from './ui-modal';
 export function useSupervisors(identity:string){
  const [data,setData]=useState<SupervisorData>({events:[],revisions:{},supervisors:[]}),[error,setError]=useState(''),[today,setToday]=useState(stockholmToday);
- const reload=useCallback(async()=>{const r=await fetch('/api/student-supervisors',{cache:'no-store'});const value=await r.json();if(!r.ok)throw Error(value.error||'Kunde inte läsa handledare.');setData(value);setError('');setToday(stockholmToday());return value as SupervisorData},[identity]);
- useEffect(()=>{setData({events:[],revisions:{},supervisors:[]});if(!identity)return;let live=true;const load=async()=>{try{const r=await fetch('/api/student-supervisors',{cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error);if(live){setData(v);setError('');setToday(stockholmToday())}}catch(e){if(live)setError((e as Error).message)}};void load();return()=>{live=false;}},[identity]);
+ const reload=useCallback(async()=>{const value=await fetchJson('/api/student-supervisors');setData(value);setError('');setToday(stockholmToday());return value as SupervisorData},[identity]);
+ useEffect(()=>{setData({events:[],revisions:{},supervisors:[]});if(!identity)return;let live=true;const load=async()=>{try{const v=await fetchJson('/api/student-supervisors');if(live){setData(v);setError('');setToday(stockholmToday())}}catch(e){if(live)setError((e as Error).message)}};void load();return()=>{live=false;}},[identity]);
  useRefreshCurrent(async()=>{if(identity){await reload();setToday(stockholmToday())}});
  return {data,error,reload,today};
 }

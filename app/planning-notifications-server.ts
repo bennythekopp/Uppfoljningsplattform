@@ -63,5 +63,5 @@ export async function canReadPlanningNotice(actor:PanelActor,row:{kind:string}){
 }
 /** Keeps mutation and generated notices atomic. Push is delivered only after commit. */
 export async function withPlanningNotifications(work:()=>Promise<Response>,target?:{day:string,columnId:string}){
- return databaseTransaction(async()=>{await db.prepare("SELECT pg_advisory_xact_lock(hashtextextended('planning-notification-mutations',0))").first();const before=await scheduleSnapshot(target),response=await work();if(response.ok)await notifyScheduleChanges(before,target);return response});
+ return databaseTransaction(async()=>{if(target){await db.prepare("SELECT pg_advisory_xact_lock_shared(hashtextextended('planning-notification-mutations',0))").first();await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind('planning-column:'+target.columnId).first()}else await db.prepare("SELECT pg_advisory_xact_lock(hashtextextended('planning-notification-mutations',0))").first();const before=await scheduleSnapshot(target),response=await work();if(response.ok)await notifyScheduleChanges(before,target);return response});
 }

@@ -1,3 +1,4 @@
+import {after} from 'next/server';
 import {withPlanningNotifications} from '../../planning-notifications-server';
 import {drainPlanningPush} from '../../planning-push-server';
 import {wakePushNotifications} from '../../../lib/scheduler-gate';
@@ -74,4 +75,4 @@ function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try
 export const GET=secureApi('/api/grundschema',handle(get));
 export const POST=secureApi('/api/grundschema',handle(post));
 
-async function post(req:Request){const b=await req.clone().json().catch(()=>null);const affects=['activate','assign','save'].includes(b?.action);const result=affects?await withPlanningNotifications(()=>postOriginal(req)):await postOriginal(req);if(result.ok&&affects){try{await wakePushNotifications()}catch{result.headers.set('X-TC-Notification-Queue','retry-needed')}await drainPlanningPush().catch(()=>null)}return result}
+async function post(req:Request){const b=await req.clone().json().catch(()=>null);const affects=['activate','assign','save'].includes(b?.action);const result=affects?await withPlanningNotifications(()=>postOriginal(req)):await postOriginal(req);if(result.ok&&affects){try{await wakePushNotifications()}catch{result.headers.set('X-TC-Notification-Queue','retry-needed')}after(async()=>{await drainPlanningPush().catch(()=>null)})}return result}

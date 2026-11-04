@@ -1,4 +1,5 @@
 import 'server-only';
+import {requestMemo} from './auth';
 import {db} from './database';
 import {moduleNames,type ModuleKind} from './panel-types';
 import {PanelError,type PanelActor} from './panel-server';
@@ -7,7 +8,8 @@ export async function moduleAccessRules():Promise<ModuleAccessRule[]>{
  const rows=(await db.prepare('SELECT kind,restricted,user_emails AS userEmails,revision FROM panel_module_access').all<ModuleAccessRule>()).results;
  return (Object.keys(moduleNames) as ModuleKind[]).map(kind=>rows.find(r=>r.kind===kind)||{kind,restricted:kind==='planning',userEmails:[],revision:0});
 }
-export async function allowedModules(user:PanelActor):Promise<ModuleKind[]>{
+export function allowedModules(user:PanelActor):Promise<ModuleKind[]>{return requestMemo('modules:'+user.email+':'+user.role,()=>loadAllowedModules(user))}
+async function loadAllowedModules(user:PanelActor):Promise<ModuleKind[]>{
  if(user.role==='Administratör')return Object.keys(moduleNames) as ModuleKind[];
  if(!['Instruktör','Chef'].includes(user.role))return [];
  return (await moduleAccessRules()).filter(r=>(user.role!=='Chef'||r.kind==='planning')&&(!r.restricted||r.userEmails.includes(user.email))).map(r=>r.kind);

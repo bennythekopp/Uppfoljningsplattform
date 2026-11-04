@@ -9,10 +9,10 @@ import {importedDocumentState} from '../../document-import';
 export const dynamic='force-dynamic';
 const shortcutModules:Record<string,any>={'new-document':'documents','new-task':'tasks','new-notice':'notices','new-reminder':'reminders'};
 async function get(){const u=(await currentUser())!,allowed=await allowedModules(u);const [items,documents,prefs,reads,users]=await Promise.all([
- db.prepare('SELECT id,kind,owner_email AS ownerEmail,data,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_items WHERE owner_email IS NULL OR owner_email=? ORDER BY updated_at DESC').bind(u.email).all(),
- db.prepare('SELECT id,title,state,epoch,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_documents WHERE deleted_at IS NULL ORDER BY updated_at DESC').all(),
+ db.prepare('SELECT id,kind,owner_email AS ownerEmail,data,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_items WHERE (owner_email IS NULL OR owner_email=?) AND kind=ANY(?::text[]) ORDER BY updated_at DESC').bind(u.email,['task','notice','introduction','reminder','document-template','email-template'].filter(kind=>allowed.includes(panelItemModule(kind)!))).all(),
+ allowed.includes('documents')?db.prepare('SELECT id,title,state,epoch,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM panel_documents WHERE deleted_at IS NULL ORDER BY updated_at DESC').all():Promise.resolve({results:[]}),
  db.prepare('SELECT data,revision FROM panel_preferences WHERE user_email=?').bind(u.email).first<{data:unknown,revision:number}>(),
- db.prepare('SELECT notice_id AS noticeId,user_email AS userEmail FROM panel_notice_reads').all(),staffList()]);
+ allowed.includes('notices')?db.prepare('SELECT notice_id AS noticeId,user_email AS userEmail FROM panel_notice_reads').all():Promise.resolve({results:[]}),allowed.some(m=>m==='tasks'||m==='reminders')?staffList():Promise.resolve([])]);
  const preferences={...(prefs?.data||{})} as any;
  const favoriteVisible=(f:any)=>f.documentId?allowed.includes('documents'):!f.view||f.view==='overview'||allowed.includes(f.view);
  if(!allowed.includes('favorites'))delete preferences.favorites;else if(preferences.favorites)preferences.favorites=preferences.favorites.filter(favoriteVisible);

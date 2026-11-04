@@ -1,4 +1,5 @@
 'use client';
+import FullCellTextEditor from './planning-full-cell';
 import {memo,useCallback,useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {Palette,X} from 'lucide-react';
@@ -19,31 +20,18 @@ function useCellVersion(session:Session,key:string){
 }
 function entry(p:CellProps,field:PlanningCell['field'],day=p.day){return planningEntry(p.session,day,p.column.id,field,field==='tour'?baseTour(p.data.periods,p.column,day,p.data.memberships):'',p.cells.get(cellKey(day,p.column.id,field)))}
 
-// A table row has no definite CSS height. Track its rendered cell height instead
-// of relying on percentage sizing, including when another column grows the row.
-function useFullCellEditor(enabled:boolean){
- const ref=useRef<HTMLDivElement>(null);
- useLayoutEffect(()=>{const editor=ref.current,cell=editor?.closest('td');if(!enabled||!editor||!cell)return;
-  let frame:number|null=null,last=-1;
-  const measure=()=>{frame=null;if(!cell.isConnected)return;const height=cell.clientHeight;if(height>0&&height!==last){last=height;editor.style.setProperty('--planning-editor-height',height+'px')}};
-  const update=()=>{if(frame===null)frame=requestAnimationFrame(measure)};
-  measure();const observer=new ResizeObserver(update);observer.observe(cell);const row=cell.closest('tr');if(row)observer.observe(row);window.addEventListener('resize',update);
-  return()=>{observer.disconnect();window.removeEventListener('resize',update);if(frame!==null)cancelAnimationFrame(frame)};
- },[enabled]);return ref;
-}
-
 export const PlanningInput=memo(function PlanningInput(p:CellProps&{field:PlanningCell['field']}){
  const key=cellKey(p.day,p.column.id,p.field);useCellVersion(p.session,key);
- const e=entry(p,p.field),editorRef=useFullCellEditor(p.canEdit&&!p.canSuggest);
+ const e=entry(p,p.field);
 
- if(p.canSuggest)return <SuggestionInput session={p.session} source={e} day={p.day} column={p.column} field={p.field} data={p.data} suggestions={p.suggestions||[]}/>;
+ if(p.canSuggest&&!p.canEdit)return <SuggestionInput session={p.session} source={e} day={p.day} column={p.column} field={p.field} data={p.data} suggestions={p.suggestions||[]}/>;
  if(!p.canEdit)return p.field==='tour'?<TourText className="planning-read">{tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value)}</TourText>:<span className="planning-read">{e.value}</span>;
  const attrs={className:e.error?'cell-error':'',value:p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value,maxLength:4000,'aria-label':p.column.title+' '+(p.field==='tour'?'tur':p.field==='task'?'uppgift':'')+' '+p.day,title:e.error||(p.field==='tour'?tourLabel(personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config||{tours:[]},e.value):e.value),
   onChange:(event:React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>)=>editPlanning(p.session,e,event.target.value),
   onBlur:()=>{void savePlanning(p.session,e).catch(()=>{})},
   onKeyDown:(event:React.KeyboardEvent<HTMLInputElement|HTMLTextAreaElement>)=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();event.currentTarget.blur()}if(event.key==='Escape'){editPlanning(p.session,e,e.cell.value);event.currentTarget.blur()}}
  };
- return <>{p.field==='tour'?<PlanningTourPicker inputProps={attrs} selectedValue={e.value} tours={personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config.tours||[]} onSelect={value=>{editPlanning(p.session,e,value);void(async()=>{await savePlanning(p.session,e);const period=personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships);if(findTour(period?.config||{tours:[]},value)?.code.trim().toLocaleLowerCase('sv-SE')==='semester'){const color=entry(p,'color');if(color.value){editPlanning(p.session,color,'');await savePlanning(p.session,color)}}})().catch(()=>{})}}/>:<div ref={editorRef} className="planning-text-editor"><span className="planning-text-measure" aria-hidden="true">{e.value+'\n'}</span><textarea {...attrs} rows={1}/></div>}{e.saving&&<i className="cell-saving"/>}{e.error&&<div className="planning-cell-error" role="alert"><span>{e.error}</span>{e.conflict?<><button onMouseDown={event=>event.preventDefault()} onClick={()=>void resolvePlanning(p.session,e,true).catch(()=>{})}>Behåll min text</button><button onClick={()=>void resolvePlanning(p.session,e,false)}>Använd sparad text</button></>:<button onClick={()=>void savePlanning(p.session,e).catch(()=>{})}>Försök igen</button>}</div>}</>;
+ return <>{p.field==='tour'?<PlanningTourPicker inputProps={attrs} selectedValue={e.value} tours={personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships)?.config.tours||[]} onSelect={value=>{editPlanning(p.session,e,value);void(async()=>{await savePlanning(p.session,e);const period=personPeriodFor(p.data.periods,p.column,p.day,p.data.memberships);if(findTour(period?.config||{tours:[]},value)?.code.trim().toLocaleLowerCase('sv-SE')==='semester'){const color=entry(p,'color');if(color.value){editPlanning(p.session,color,'');await savePlanning(p.session,color)}}})().catch(()=>{})}}/>:<FullCellTextEditor {...attrs}/>}{e.saving&&<i className="cell-saving"/>}{e.error&&<div className="planning-cell-error" role="alert"><span>{e.error}</span>{e.conflict?<><button onMouseDown={event=>event.preventDefault()} onClick={()=>void resolvePlanning(p.session,e,true).catch(()=>{})}>Behåll min text</button><button onClick={()=>void resolvePlanning(p.session,e,false)}>Använd sparad text</button></>:<button onClick={()=>void savePlanning(p.session,e).catch(()=>{})}>Försök igen</button>}</div>}</>;
 });
 
 export const PlanningTourCell=memo(function PlanningTourCell(p:CellProps){

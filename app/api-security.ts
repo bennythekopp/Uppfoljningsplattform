@@ -1,6 +1,6 @@
 import {wakeScheduledJobs} from '../lib/scheduler-gate';
 import 'server-only';
-import {currentUser,currentAccount,error,sha256,type Role} from './auth';
+import {withRequestAuth,currentUser,currentAccount,error,sha256,type Role} from './auth';
 import {db} from './database';
 import {peopleVisibility} from './people-visibility';
 import {requireModule} from './module-access';
@@ -102,7 +102,7 @@ async function securityEvent(req:Request,route:string,actor:Actor|null,action:st
   .bind(id,now,actor?.accountEmail||actor?.email||'',actor?.accountName||actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+' · '+req.method+' '+route).run();
 }
 export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise<Actor|null>):Handler{
- return async(req:Request)=>{
+ return async(req:Request)=>withRequestAuth(async()=>{
   try{
    const policy=policies[route]?.[req.method];
    const actor=policy==='public'?null:authenticate?await authenticate():route==='/api/admin/role-preview'?await currentAccount():await currentUser();
@@ -143,5 +143,5 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
    // Never grant access or expose database errors when checks/logging fail.
    return privateResponse(error('Säkerhetskontrollen kunde inte slutföras. Försök igen.',503));
   }
- };
+ });
 }

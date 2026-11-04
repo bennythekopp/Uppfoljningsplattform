@@ -1,3 +1,4 @@
+import {fetchJson} from './request-json';
 export type PanelView='overview'|'documents'|'tasks'|'templates'|'notices'|'introduction'|'reminders'|'notes'|'grundschema'|'planning';
 export const panelViews:{id:PanelView,label:string}[]=( [{id:'overview',label:'Översikt'},{id:'grundschema',label:'Grundschema'},{id:'planning',label:'Planering'},{id:'notices',label:'Anslagstavla'},{id:'documents',label:'Dokument'},{id:'notes',label:'Anteckningar'},{id:'tasks',label:'Att göra'},{id:'templates',label:'Mallar'},{id:'introduction',label:'Introduktion'},{id:'reminders',label:'Påminnelser'}] satisfies {id:PanelView,label:string}[]).sort((a,b)=>(a.id==='overview'?-2:a.id==='planning'?-1:0)-(b.id==='overview'?-2:b.id==='planning'?-1:0)||a.label.localeCompare(b.label,'sv'));
 export type ModuleKind='notices'|'documents'|'tasks'|'templates'|'introduction'|'reminders'|'favorites'|'shortcuts'|'notes'|'grundschema'|'planning';
@@ -9,5 +10,5 @@ export type Favorite={id:string,title:string,documentId?:string,view?:PanelView}
 export type Preferences={layout?:PanelModule[],favorites?:Favorite[],shortcuts?:string[],introduction?:Record<string,boolean>,orders?:Partial<Record<ModuleKind,string[]>>};
 export type DocumentRow={id:string,title:string,epoch:number,revision:number,updatedAt:number,updatedBy:string,icon?:string,iconColor?:string};
 export type PanelData={allowedModules?:ModuleKind[],items:PanelItem[],documents:DocumentRow[],preferences:Preferences,preferenceRevision:number,reads:{noticeId:string,userEmail:string}[],users:{email:string,name:string}[]};
-export async function panelRequest(url:string,method='GET',body?:unknown){const r=await fetch(url,{method,cache:'no-store',...(body===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});const result=await r.json();if(!r.ok)throw Object.assign(Error(result.error||'Begäran kunde inte slutföras'),{status:r.status});return result}
+export async function panelRequest(url:string,method='GET',body?:unknown){return fetchJson(url,{method,cache:'no-store',...(body===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})})}
 export const panelDate=(value:number|string)=>new Date(value).toLocaleString('sv-SE',{timeZone:'Europe/Stockholm',dateStyle:'short',timeStyle:'short'});
