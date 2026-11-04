@@ -51,3 +51,19 @@ html body .planning-table :is(td.planning-task,td.planning-shared):has(>.plannin
 html body .planning-table td.planning-tour:not(.night-half)>.planning-tour-editor{position:static!important;min-height:33px}
 html body .planning-table td.planning-tour:not(.night-half)>.planning-tour-editor>input{position:absolute!important;inset:0!important;box-sizing:border-box!important;width:100%!important;height:100%!important;margin:0!important}
 html body .planning-table td.planning-tour.night-half.is-focused>.planning-tour-editor{inset:0!important;height:100%!important}
+
+/* V17.5: table-cell heights are measured after layout and on row resizing. */
+html body .planning-table .planning-text-editor>textarea{height:var(--planning-editor-height,100%)!important;max-height:none!important}
+html body .planning-table :is(td.planning-task,td.planning-shared):has(>.planning-text-editor>textarea:focus){outline:none!important}
+html body .planning-table .planning-text-editor:focus-within::after{content:"";position:absolute;left:0;top:0;width:100%;height:var(--planning-editor-height,100%);box-sizing:border-box;border:2px solid #d64646;pointer-events:none;z-index:6}
+html body .planning-table .planning-text-editor:has(>textarea.cell-error)::after{content:"";position:absolute;left:0;top:0;width:100%;height:var(--planning-editor-height,100%);box-sizing:border-box;border:2px solid #c02222;pointer-events:none;z-index:6}
+
+/* V17.6: reset the fixed website bell's offsets inside the app header. */
+html body .tcpa-header-actions>.app-notifications{
+ position:relative;inset:auto;top:auto;right:auto;bottom:auto;left:auto;
+ display:flex;align-items:center;justify-content:center;align-self:center;
+ flex:0 0 auto;height:44px;margin:0;padding:0;transform:none;line-height:1;
+}
+html body .tcpa-header>.tcpa-header-actions{align-self:center;flex-wrap:nowrap}
+html body .tcpa-header-actions>.tcpa-settings{align-self:center;margin:0}
+html body .tcpa-header-actions .notification-trigger{align-self:center;vertical-align:middle;transform:none}
