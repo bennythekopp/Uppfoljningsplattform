@@ -1,3 +1,6 @@
+import {withPlanningNotifications} from '../../planning-notifications-server';
+import {drainPlanningPush} from '../../planning-push-server';
+import {wakePushNotifications} from '../../../lib/scheduler-gate';
 import {readPlanningLog} from '../../planning-log-server';
 import {planningPermissions} from '../../planning-permissions';
 import {planningYearRange} from '../../planning-dates';
@@ -36,7 +39,7 @@ async function get(req:Request){const u=(await currentUser())!,url=new URL(req.u
  db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all(),
  db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all()]);
  return Response.json({operationalOverrides:op?(await db.prepare('SELECT column_id AS columnId,month,count,revision FROM planning_operational_overrides WHERE month>=? AND month<?').bind((year-1)+'-08',(year+1)+'-01').all()).results:undefined,operational:op?await operationalSettings():undefined,suggestions:await readSuggestions(range.start,range.end),suggestionCount:Number((await db.prepare("SELECT COUNT(*) AS count FROM planning_suggestions s JOIN planning_columns c ON c.id=s.column_id WHERE s.status='pending' AND c.deleted_at IS NULL").first<{count:number}>())?.count||0),canSuggest:s.canSuggest,mailSettings:u.role==='Administratör'?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:u.role==='Administratör'?s.editorEmails:[],suggesterEmails:u.role==='Administratör'?s.suggesterEmails:[],taskWidth:s.taskWidth,taskWidthRevision:s.taskWidthRevision,permissionUsers:u.role==='Administratör'?(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Instruktör','Chef') AND disabled_at IS NULL ORDER BY lower(name)").all()).results:[],users:u.role==='Administratör'?users:[]});}
-async function post(req:Request){const u=(await currentUser())!,b=await panelBody(req,40000);return databaseTransaction(async()=>{
+async function postOriginal(req:Request){const u=(await currentUser())!,b=await panelBody(req,40000);return databaseTransaction(async()=>{
  if((u.sessionScope==='planning'||req.headers.get('x-tc-app')==='planning')&&!['propose','withdraw'].includes(b.action))throw new PanelError('Planeringsappen kan bara lämna eller ta tillbaka egna ändringsförslag.',403);
  const s=await settings(u,['editors','width'].includes(b.action)?'update':'share');if(b.action==='operational-count')return saveOperationalCount(u,b);if(b.action==='operational-settings')return saveOperational(u,b);if(['propose','withdraw','review','mail-settings','mail-resolve'].includes(b.action))return suggestionAction(u,b,s.canEdit,s.canSuggest);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
  if(b.action==='cell')return savePlanningCell(u,b);
@@ -71,5 +74,6 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
  }
  throw new PanelError('Okänd åtgärd.');
 });}
+async function post(req:Request){const b=await req.clone().json().catch(()=>null);let target: {day:string,columnId:string}|undefined;if(b?.action==='cell'&&typeof b.day==='string'&&/^\d{4}-\d\d-\d\d$/.test(b.day)&&typeof b.columnId==='string')target={day:b.day,columnId:b.columnId};if(b?.action==='review'&&b.decision==='approve'&&typeof b.id==='string')target=await db.prepare('SELECT day::text AS day,column_id AS columnId FROM planning_suggestions WHERE id=?').bind(b.id).first<{day:string,columnId:string}>()||undefined;const result=target?await withPlanningNotifications(()=>postOriginal(req),target):await postOriginal(req);if(result.ok&&['cell','review','propose'].includes(b?.action)){try{await wakePushNotifications()}catch{result.headers.set('X-TC-Notification-Queue','retry-needed')}await drainPlanningPush().catch(()=>null)}return result}
 const handle=(fn:(r:Request)=>Promise<Response>)=>async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Planeringen kunde inte läsas eller sparas. Kontrollera databasuppdatering 0035.',e instanceof PanelError?e.status:503)}};
 export const GET=secureApi('/api/planning',handle(get));export const POST=secureApi('/api/planning',handle(post));

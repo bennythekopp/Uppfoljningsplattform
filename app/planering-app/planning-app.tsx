@@ -1,4 +1,5 @@
 'use client';
+import {disablePushForLogout} from '../notification-toggle';
 import PlanningExport from '../planning-export';
 import {activeInterval} from '../client-activity';
 import {Fragment,useCallback,useEffect,useMemo,useRef,useState} from 'react';
@@ -25,7 +26,7 @@ function dayLabel(day:string){return `${Number(day.slice(8))} ${monthNames[Numbe
 function parseResult(r:Response){return r.json().then(x=>{if(!r.ok)throw Error(x.error||'Kunde inte läsa uppgifter.');return x})}
 export default function PlanningApp(){
  const [user,setUser]=useState<User|null>(null),[authLoading,setAuthLoading]=useState(true),[loginUser,setLoginUser]=useState(''),[password,setPassword]=useState(''),[loggingIn,setLoggingIn]=useState(false),[rememberMe,setRememberMe]=useState(false);
- const [monday,setMonday]=useState(()=>startOfWeek(stockholmToday())),[picker,setPicker]=useState(false),[data,setData]=useState<PlanningData|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState('');
+ const [monday,setMonday]=useState(()=>{const day=typeof window==='undefined'?null:new URLSearchParams(location.search).get('day');return startOfWeek(day&&/^\d{4}-\d\d-\d\d$/.test(day)?day:stockholmToday())}),[picker,setPicker]=useState(false),[data,setData]=useState<PlanningData|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState('');
  useAppearanceUser(user?.email||null);
  const calendarTrigger=useRef<HTMLButtonElement>(null),detail=useRef<HTMLDialogElement>(null),[taskDetail,setTaskDetail]=useState<{title:string,text:string,day:string,column:PlanningColumn,field:'tour'|'task'|'shared',revision:number,color:string,colorRevision:number}|null>(null),[proposing,setProposing]=useState(false),[proposalText,setProposalText]=useState(''),[proposalColor,setProposalColor]=useState(''),[sending,setSending]=useState(false),[proposalError,setProposalError]=useState(''),[proposalStatus,setProposalStatus]=useState('');
  useEffect(()=>{if(taskDetail)detail.current?.showModal()},[taskDetail]);
@@ -60,7 +61,7 @@ export default function PlanningApp(){
  function task(c:PlanningColumn,day:string){return cells.get(cellKey(day,c.id,'task'))||''}
  function tourInfo(c:PlanningColumn,day:string){const code=tour(c,day);const period=personPeriodFor(data?.periods||[],c,day,data?.memberships);const found=period?findTour(period.config,code):undefined;const color=cells.get(cellKey(day,c.id,'color'));return {label:found?.code||code,style:color&&/^#[\da-f]{6}$/i.test(color)?colorStyle(color):found?tourStyle(period!.config,code):undefined}}
  async function login(e:React.FormEvent){e.preventDefault();setLoggingIn(true);setError('');try{await parseResult(await appFetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:loginUser,password,planningApp:true,rememberMe})}));setPassword('');await refreshUser()}catch(e){setError((e as Error).message)}finally{setLoggingIn(false)}}
- async function logout(){setError('');try{await parseResult(await appFetch('/api/logout',{method:'POST'}));for(const k of Object.keys(localStorage))if(k.startsWith('tcpa-'))localStorage.removeItem(k);setData(null);setUser(null);setOffline(false)}catch{setError('Utloggningen kunde inte slutföras. Anslut till internet och försök igen.')}}
+ async function logout(){setError('');try{const pushEndpoint=await disablePushForLogout();await parseResult(await appFetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pushEndpoint})}));for(const k of Object.keys(localStorage))if(k.startsWith('tcpa-'))localStorage.removeItem(k);setData(null);setUser(null);setOffline(false)}catch{setError('Utloggningen kunde inte slutföras. Anslut till internet och försök igen.')}}
  if(authLoading)return <div className="signin" role="status">Kontrollerar inloggning…</div>;
  if(!user)return <main className="signin planning-app-signin"><div className="logo"><img src="/planning-app/logo.png" alt="TC Boden" width={56} height={56}/></div><h1>TC Boden</h1><p>Planering</p><form className="loginform" onSubmit={login}><label>Användarnamn<input autoComplete="username" value={loginUser} onChange={e=>setLoginUser(e.target.value)} required/></label><label>Lösenord<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><label className="remember-login"><input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>Håll mig inloggad</label>{error&&<div className="formerror" role="alert">{error}</div>}<button className="primary" disabled={loggingIn}>{loggingIn?'Loggar in…':'Logga in'}</button></form></main>;
  return <main className="tcpa">

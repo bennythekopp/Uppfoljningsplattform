@@ -25,3 +25,5 @@ export async function runScheduled(job:string,work:()=>Promise<number|null>,now=
  let next:number|null=now+15*60000;
  try{next=await work()}finally{await s.setJSON(k,{at:next,version:randomUUID()},{onlyIfMatch:claimed.etag})}
 }
+
+export async function wakePushNotifications(){if(hosted())await store().setJSON(key('push'),{at:0,version:randomUUID()})}

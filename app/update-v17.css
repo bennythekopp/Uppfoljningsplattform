@@ -1,0 +1,12 @@
+/* Dialog top-layer alignment must not inherit application or form offsets. */
+html body dialog.tc-modal{position:fixed;inset:0;margin:auto;box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain}
+html body .panel-notes-module{display:flex;flex-direction:column;min-width:0}
+html body .panel-notes-module>.panel-module-content{display:flex;flex:1;flex-direction:column;min-height:0;padding:0}
+html body .panel-notes-module .notes-preview{display:block;flex:1;width:100%;min-height:160px;box-sizing:border-box;padding:16px;cursor:text;overflow-wrap:anywhere}
+.notes-preview:focus-visible{outline:2px solid var(--ui-accent-text,#b00000);outline-offset:-4px}
+html body .user-preview-launcher{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;min-width:0;padding:18px;margin:0;height:auto}
+.user-preview-launcher>div,.user-preview-launcher>label:first-of-type,.user-preview-hint{grid-column:1/-1}
+.user-preview-launcher label{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:14px}
+.user-preview-launcher :is(input,select){width:100%;min-width:0;box-sizing:border-box;font:inherit;padding:10px;border:1px solid var(--ui-line,#ccc);border-radius:8px;background:var(--ui-field,#fff);color:var(--ui-text,#292929)}
+.user-preview-launcher button{align-self:end;min-height:42px}
+@media(max-width:600px){html body .user-preview-launcher{grid-template-columns:minmax(0,1fr)}.user-preview-launcher>*{grid-column:1!important}.user-preview-launcher button{width:100%}}

@@ -2,11 +2,12 @@ import {wakeScheduledJobs} from '../lib/scheduler-gate';
 import 'server-only';
 import {currentUser,currentAccount,error,sha256,type Role} from './auth';
 import {db} from './database';
+import {peopleVisibility} from './people-visibility';
 import {requireModule} from './module-access';
 import {PanelError} from './panel-server';
 import {loginIP} from './login-security';
 
-type Actor={email:string,name:string,role:Role,previewRole?:Role|null,accountRole?:Role,sessionScope?:string};
+type Actor={email:string,name:string,role:Role,previewRole?:Role|null,accountRole?:Role,accountEmail?:string,accountName?:string,sessionScope?:string};
 type Handler=(req:Request)=>Promise<Response>;
 const all:Role[]=['Administratör','Instruktör','Handledare','Chef'];
 const instructors:Role[]=['Administratör','Instruktör'];
@@ -35,6 +36,9 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/grundschema':{GET:instructors,POST:instructors},
  '/api/panel':{GET:instructors,POST:instructors},
  '/api/notifications':{GET:all,POST:all},
+ '/api/notification-preferences':{GET:all,POST:all},
+ '/api/admin/people-visibility':{GET:['Administratör'],POST:['Administratör']},
+ '/api/admin/planning-notifications':{GET:['Administratör'],POST:['Administratör']},
  '/api/admin/notifications':{GET:['Administratör'],POST:['Administratör']},
  '/api/documents':{GET:instructors,POST:instructors,PUT:instructors,PATCH:instructors},
  '/api/notes':{GET:instructors,PUT:instructors},
@@ -93,16 +97,16 @@ async function securityEvent(req:Request,route:string,actor:Actor|null,action:st
  // No request body, query, password, cookie, token, or raw IP is stored.
  // Identical events from one account/connection are grouped per minute to
  // bound unauthenticated log flooding. ON CONFLICT is atomic across functions.
- const id='security-'+await sha256(JSON.stringify([Math.floor(now/60000),actor?.email||'',actor?.previewRole||'',loginIP(req),req.method,route,action,reason]));
+ const id='security-'+await sha256(JSON.stringify([Math.floor(now/60000),actor?.accountEmail||actor?.email||'',actor?.previewRole||'',loginIP(req),req.method,route,action,reason]));
  await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
-  .bind(id,now,actor?.email||'',actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+' · '+req.method+' '+route).run();
+  .bind(id,now,actor?.accountEmail||actor?.email||'',actor?.accountName||actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+' · '+req.method+' '+route).run();
 }
 export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise<Actor|null>):Handler{
  return async(req:Request)=>{
   try{
    const policy=policies[route]?.[req.method];
    const actor=policy==='public'?null:authenticate?await authenticate():route==='/api/admin/role-preview'?await currentAccount():await currentUser();
-   if(actor?.sessionScope==='planning'&&!['/api/me','/api/planning','/api/planning/export','/api/notifications'].includes(route))return privateResponse(error('Planeringsinloggningen gäller bara planeringsappen.',403));
+   if(actor?.sessionScope==='planning'&&!['/api/me','/api/planning','/api/planning/export','/api/notifications','/api/notification-preferences'].includes(route))return privateResponse(error('Planeringsinloggningen gäller bara planeringsappen.',403));
    if(actor?.sessionScope==='planning'&&route==='/api/planning'&&!['GET','POST'].includes(req.method))return privateResponse(error('Planeringsappen kan bara lämna ändringsförslag.',403));
    if(foreignMutation(req)){
     await securityEvent(req,route,actor,'Åtkomst nekad','Begäran från annan webbplats');
@@ -118,6 +122,9 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
    }
    const gated={'/api/documents':'documents','/api/notes':'notes','/api/grundschema':'grundschema','/api/planning':'planning'} as const;
    if(actor&&route in gated){try{await requireModule(actor,gated[route as keyof typeof gated])}catch(e){if(e instanceof PanelError){await securityEvent(req,route,actor,'Åtkomst nekad','Modulen är dold för användaren');return privateResponse(error(e.message,e.status));}throw e}}
+   const studentsRoutes=['/api/students','/api/student-supervisors','/api/assessments','/api/comments','/api/overview','/api/kp/assessments','/api/exam/assessments'];
+   if(actor&&(studentsRoutes.includes(route)||route.startsWith('/api/personnel'))){const visible=await peopleVisibility(actor);if(studentsRoutes.includes(route)?!visible.students:!visible.personnel)return privateResponse(error('Den här delen är dold för ditt konto.',403))}
+   if(actor&&route==='/api/people/move'){const visible=await peopleVisibility(actor);if(!visible.students||!visible.personnel)return privateResponse(error('Båda delarna måste vara synliga för att flytta en person.',403))}
    const affectsSchedule=!['GET','HEAD','OPTIONS'].includes(req.method)&&['/api/planning','/api/grundschema','/api/admin/backups','/api/admin/backups/googledrive','/api/users','/api/module-access'].includes(route)||route==='/api/admin/backups/googledrive/callback';
    // Failure to update wake metadata must be visible and must never silently skip jobs.
    if(affectsSchedule)await wakeScheduledJobs();

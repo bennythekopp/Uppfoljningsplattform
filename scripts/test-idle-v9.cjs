@@ -32,12 +32,13 @@ async function scheduleTests(){
  const records=new Map();let version=0;
  const store={getWithMetadata:async key=>records.get(key)||null,setJSON:async(key,data,options={})=>{const old=records.get(key);if(options.onlyIfNew&&old||options.onlyIfMatch&&old?.etag!==options.onlyIfMatch)return {modified:false};const entry={data,etag:String(++version)};records.set(key,entry);return {modified:true,etag:entry.etag}}};
  const original=Module._load;Module._load=function(name,...args){if(name==='@netlify/blobs')return {getStore:()=>store};return original.call(this,name,...args)};
- const {runScheduled,wakeScheduledJobs}=require('../lib/scheduler-gate.ts');Module._load=original;process.env.NETLIFY='true';let sql=0;
+ const {runScheduled,wakeScheduledJobs,wakePushNotifications}=require('../lib/scheduler-gate.ts');Module._load=original;process.env.NETLIFY='true';let sql=0;
  await runScheduled('mail',async()=>{sql++;return 500000},1000);await runScheduled('mail',async()=>{sql++;return 500000},2000);assert.equal(sql,1,'sleep gate skips database');
  await wakeScheduledJobs();await runScheduled('mail',async()=>{sql++;return null},3000);await runScheduled('mail',async()=>{sql++;return null},4000);assert.equal(sql,2,'disabled job never queries again');
  await wakeScheduledJobs();await runScheduled('mail',async()=>{sql++;await wakeScheduledJobs();return 999999},5000);await runScheduled('mail',async()=>{sql++;return null},6000);assert.equal(sql,4,'concurrent invalidation must survive');
  await wakeScheduledJobs();await Promise.all([runScheduled('mail',async()=>{sql++;return 999999},7000),runScheduled('mail',async()=>{sql++;return 999999},7000)]);assert.equal(sql,5,'atomic lease allows only one worker');
  await wakeScheduledJobs();await assert.rejects(runScheduled('mail',async()=>{throw Error('provider unavailable')},8000));let retry=0;await runScheduled('mail',async()=>{retry++;return null},9000);assert.equal(retry,0);await runScheduled('mail',async()=>{retry++;return null},8000+15*60000);assert.equal(retry,1,'failed jobs retry after backoff');
+ let pushes=0;await runScheduled('push',async()=>{pushes++;return null},1000);for(let i=0;i<60;i++)await runScheduled('push',async()=>{pushes++;return null},2000+i*60000);assert.equal(pushes,1,'empty push job must not wake SQL every minute');await wakePushNotifications();await runScheduled('push',async()=>{pushes++;return null},4000000);assert.equal(pushes,2,'a change wakes the push job');
  delete process.env.NETLIFY;
  console.log('PASS: SQL-free idle ticks, disabled schedules, concurrent writes/leases and retry');
 }

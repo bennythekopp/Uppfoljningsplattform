@@ -1,3 +1,5 @@
+import './update-v16.css';
+import './update-v17.css';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './people.css';

@@ -1,3 +1,6 @@
+import {withPlanningNotifications} from '../../planning-notifications-server';
+import {drainPlanningPush} from '../../planning-push-server';
+import {wakePushNotifications} from '../../../lib/scheduler-gate';
 import {secureApi} from '../../api-security';
 import {currentUser,error} from '../../auth';
 import {db,databaseTransaction} from '../../database';
@@ -19,7 +22,7 @@ function configInput(raw:any):ScheduleConfig{
 }
 async function get(){const u=(await currentUser())!;const groups=(await db.prepare(`SELECT id,name,active,visible,wishes_open AS wishesOpen,revision,config FROM schedule_groups ${u.role==='Administratör'?'':'WHERE visible=TRUE'} ORDER BY active DESC,lower(name)`).all()).results;
  const ids=groups.map(g=>g.id);const [users,wishes,assignments,memberships]=await Promise.all([staffList(),db.prepare('SELECT group_id AS groupId,user_email AS userEmail,rows,revision FROM schedule_wishes WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT group_id AS groupId,row_number AS row,user_email AS userEmail,locked FROM schedule_assignments WHERE group_id=ANY(?::text[])').bind(ids).all(),db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships WHERE group_id=ANY(?::text[]) ORDER BY start_date').bind(ids).all()]);return Response.json({groups,users,wishes:wishes.results,assignments:assignments.results,memberships:memberships.results});}
-async function post(req:Request){const u=(await currentUser())!,b=await panelBody(req,500000);return databaseTransaction(async()=>{
+async function postOriginal(req:Request){const u=(await currentUser())!,b=await panelBody(req,500000);return databaseTransaction(async()=>{
  // One short serialized transaction coordinates activation, assignment and wishes.
  await db.prepare('LOCK TABLE schedule_groups IN SHARE ROW EXCLUSIVE MODE').run();
  const admin=u.role==='Administratör',now=Date.now();
@@ -70,3 +73,5 @@ async function post(req:Request){const u=(await currentUser())!,b=await panelBod
 function handle(fn:(r:Request)=>Promise<Response>){return async(r:Request)=>{try{return await fn(r)}catch(e){return error(e instanceof PanelError?e.message:'Grundschemat kunde inte läsas eller sparas. Kontrollera att databasuppdatering 0031 är tillämpad.',e instanceof PanelError?e.status:503)}}}
 export const GET=secureApi('/api/grundschema',handle(get));
 export const POST=secureApi('/api/grundschema',handle(post));
+
+async function post(req:Request){const b=await req.clone().json().catch(()=>null);const affects=['activate','assign','save'].includes(b?.action);const result=affects?await withPlanningNotifications(()=>postOriginal(req)):await postOriginal(req);if(result.ok&&affects){try{await wakePushNotifications()}catch{result.headers.set('X-TC-Notification-Queue','retry-needed')}await drainPlanningPush().catch(()=>null)}return result}

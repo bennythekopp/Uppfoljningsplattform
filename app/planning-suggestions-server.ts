@@ -1,4 +1,5 @@
 import 'server-only';
+import {notifyNewProposal} from './planning-notifications-server';
 import {db} from './database';
 import {PanelError,short,staffList,type PanelActor} from './panel-server';
 import {planningDate,planningLog} from './planning-server';
@@ -43,7 +44,9 @@ export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSug
   if(own&&own.value===b.value&&(own.color??null)===(hasColor?b.color:null))return Response.json({ok:true});
   await db.prepare("UPDATE planning_suggestions SET status='superseded',resolved_at=?,resolved_by=? WHERE day=?::date AND column_id=? AND field=? AND author_email=? AND status='pending'").bind(Date.now(),u.email,day,id,b.field,u.email).run();
   if(b.value===previous&&(!hasColor||b.color===(color?.value||'')))return Response.json({ok:true});
-  await db.prepare('INSERT INTO planning_suggestions(id,day,column_id,field,previous_value,proposed_value,previous_label,proposed_label,base_revision,author_email,author_name,created_at,previous_color,proposed_color,color_revision) VALUES(?,?::date,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),day,id,b.field,previous,b.value,b.field==='tour'?tourLogValue(ctx.config,previous):previous,b.field==='tour'?tourLogValue(ctx.config,b.value):b.value,b.revision,u.email,u.name,Date.now(),color?.value||'',hasColor?b.color:null,hasColor?b.colorRevision:null).run();
+  const newSuggestionId=crypto.randomUUID();
+  await db.prepare('INSERT INTO planning_suggestions(id,day,column_id,field,previous_value,proposed_value,previous_label,proposed_label,base_revision,author_email,author_name,created_at,previous_color,proposed_color,color_revision) VALUES(?,?::date,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(newSuggestionId,day,id,b.field,previous,b.value,b.field==='tour'?tourLogValue(ctx.config,previous):previous,b.field==='tour'?tourLogValue(ctx.config,b.value):b.value,b.revision,u.email,u.name,Date.now(),color?.value||'',hasColor?b.color:null,hasColor?b.colorRevision:null).run();
+  await notifyNewProposal(newSuggestionId);
   await planningLog(u,'Ändringsförslag lämnat',{day,columnId:id,columnName:column.title,field:b.field,previous:b.field==='tour'?tourLogValue(ctx.config,previous):previous,next:b.field==='tour'?tourLogValue(ctx.config,b.value):b.value});return Response.json({ok:true});
  }
  if(b.action==='review'){

@@ -42,7 +42,8 @@
     "pg": "^8.16.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "yjs": "^13.6.33"
+    "yjs": "^13.6.33",
+    "web-push": "3.6.7"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.17",
@@ -53,6 +54,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "tailwindcss": "4.2.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@types/web-push": "3.6.4"
   }
 }

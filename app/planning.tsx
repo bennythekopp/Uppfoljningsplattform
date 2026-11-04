@@ -20,7 +20,7 @@ const empty:PlanningData={columns:[],cells:[],periods:[],canEdit:false,settingsR
 const weekdayFormat=new Intl.DateTimeFormat('sv-SE',{weekday:'short',timeZone:'UTC'});
 function dateLabel(day:string){return Number(day.slice(8))+'/'+Number(day.slice(5,7))+' '+weekdayFormat.format(new Date(day+'T12:00:00Z')).replace('.','')}
 export default function Planning({user,compact=false}:{user:User,compact?:boolean}){
- const today=stockholmToday(),[year,setYear]=useState(+today.slice(0,4)),[data,setData]=useState<PlanningData>(empty),[loaded,setLoaded]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[menu,setMenu]=useState<string|null>(null),[rename,setRename]=useState<{column?:PlanningColumn,title:string}|null>(null);
+ const today=stockholmToday(),[year,setYear]=useState(()=>{const d=typeof window==='undefined'?'':new URLSearchParams(location.search).get('day')||'';return /^\d{4}-\d\d-\d\d$/.test(d)?Number(d.slice(0,4)):+today.slice(0,4)}),[data,setData]=useState<PlanningData>(empty),[loaded,setLoaded]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[menu,setMenu]=useState<string|null>(null),[rename,setRename]=useState<{column?:PlanningColumn,title:string}|null>(null);
  const [operationalOpen,setOperationalOpen]=useState(false);
  const [review,setReview]=useState<PlanningSuggestion[]|null>(null);
  const scroll=useRef<HTMLDivElement>(null),mounted=useRef(true),session=useMemo(()=>planningSession(user.email),[user.email]),admin=user.role==='Administratör',canEdit=data.canEdit&&!user.previewRole&&!compact;
@@ -33,6 +33,9 @@ export default function Planning({user,compact=false}:{user:User,compact?:boolea
  useRefreshCurrent(reload);
  useEffect(()=>{if(compact&&year!==+today.slice(0,4))setYear(+today.slice(0,4))},[compact,today,year]);
  useEffect(()=>{if(loaded&&!compact&&year===+today.slice(0,4)){const id=requestAnimationFrame(()=>jumpTo(today,'instant'));return()=>cancelAnimationFrame(id)}},[loaded,year]);
+ const [noticeNavigation,setNoticeNavigation]=useState(0);
+ useEffect(()=>{if(compact)return;const on=()=>{void reload().then(()=>setNoticeNavigation(n=>n+1)).catch(e=>setError(e.message))};window.addEventListener('planning-notice-navigation',on);return()=>window.removeEventListener('planning-notice-navigation',on)},[requestKey,compact]);
+ useEffect(()=>{if(!loaded||compact)return;const qs=new URLSearchParams(location.search),day=qs.get('day');if(!day||!/^\d{4}-\d\d-\d\d$/.test(day))return;if(+day.slice(0,4)!==year){setYear(+day.slice(0,4));return}const id=requestAnimationFrame(()=>jumpTo(day,'instant'));const suggestion=qs.get('suggestion');if(suggestion){const items=data.suggestions?.filter(s=>s.id===suggestion)||[];if(items.length)setReview(items);else setError('Ändringsförslaget har redan hanterats eller finns inte längre.')}const url=new URL(location.href);for(const key of ['day','column','suggestion'])url.searchParams.delete(key);history.replaceState(null,'',url);return()=>cancelAnimationFrame(id)},[loaded,year,noticeNavigation,data.suggestions,compact]);
  const canSuggest=!!data.canSuggest&&!compact&&!user.previewRole;
  const proposals=useMemo(()=>{const map=new Map<string,PlanningSuggestion[]>();for(const s of data.suggestions||[]){const k=cellKey(s.day,s.columnId,s.field);map.set(k,[...map.get(k)||[],s])}return map},[data.suggestions]);
  const proposalProps=(day:string,c:PlanningColumn,field:string)=>({canSuggest,suggestions:compact?[]:proposals.get(cellKey(day,c.id,field))||[],onReview:setReview});
