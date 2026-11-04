@@ -2,3 +2,52 @@
 /* Use the same tint and colour stripe as the actual planning cells. */
 .notification-list .notice-cell[style*="--planning-color"]{background-color:color-mix(in srgb,var(--planning-color) 13%,var(--ui-surface,#fff))!important;color:var(--ui-text,#252525)!important;background-image:linear-gradient(to right,var(--planning-color) 0 3px,transparent 3px)!important;border-left:0}
 html[data-theme=dark] .notification-list .notice-cell[style*="--planning-color"]{background-color:color-mix(in srgb,var(--planning-color) 18%,#25292d)!important;color:#f1f3f5!important}
+
+/* V17.2: keep notification switches pill-shaped despite general settings-button styles. */
+html body .notification-preference button.notice-switch[role="switch"]{
+ -webkit-appearance:none!important;appearance:none!important;position:relative!important;
+ display:inline-block!important;box-sizing:border-box!important;flex:0 0 56px!important;
+ width:56px!important;min-width:56px!important;max-width:56px!important;
+ height:32px!important;min-height:32px!important;max-height:32px!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:999px!important;
+ background:#65717a!important;background-image:none!important;box-shadow:none!important;
+ overflow:hidden!important;vertical-align:middle;cursor:pointer;
+ transition:background-color .18s ease;
+}
+html body .notification-preference button.notice-switch[role="switch"].on{background:#b00000!important}
+html body .notification-preference button.notice-switch[role="switch"]>span{
+ position:absolute!important;display:block!important;box-sizing:border-box!important;
+ left:4px!important;top:4px!important;right:auto!important;bottom:auto!important;
+ width:24px!important;min-width:24px!important;max-width:24px!important;
+ height:24px!important;min-height:24px!important;max-height:24px!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:50%!important;
+ background:#fff!important;box-shadow:0 1px 3px #0003!important;
+ transform:translateX(0)!important;transition:transform .18s ease;
+}
+html body .notification-preference button.notice-switch[role="switch"].on>span{transform:translateX(24px)!important}
+html body .notification-preference button.notice-switch[role="switch"]:focus-visible{outline:2px solid var(--ui-text,#292929)!important;outline-offset:3px!important}
+html body .notification-preference button.notice-switch[role="switch"]:disabled{cursor:wait;opacity:.6}
+@media(prefers-reduced-motion:reduce){html body .notification-preference button.notice-switch[role="switch"],html body .notification-preference button.notice-switch[role="switch"]>span{transition:none!important}}
+
+/* V17.3: shared bell between export and settings, without expanding the brand/header. */
+html body .tcpa-header>.tcpa-header-actions{display:flex;flex:0 0 auto;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto;min-width:0}
+html body .tcpa-header-actions>.app-notifications{position:relative;display:block;flex:0 0 auto;margin:0;padding:0}
+html body .tcpa-header-actions .notification-trigger{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;width:40px;min-width:40px;height:40px;min-height:40px;margin:0;padding:8px;border:0;background:transparent;color:var(--ui-text,#f3f3f3);border-radius:8px;box-shadow:none}
+html body .tcpa-header-actions .notification-trigger>.notification-count{position:absolute;top:0;right:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:16px;height:16px;padding:0 4px;background:#b00000;color:#fff;border-radius:999px;font-size:10px;line-height:16px}
+@media(max-width:600px){html body .tcpa-header{gap:8px;padding-left:12px;padding-right:12px}html body .tcpa-header>img{width:34px;height:34px;flex:none}html body .tcpa-header>div:not(.tcpa-header-actions){min-width:0;flex:1}html body .tcpa-header>div:not(.tcpa-header-actions)>strong{font-size:18px;white-space:nowrap}html body .tcpa-header>div:not(.tcpa-header-actions)>small{font-size:10px}html body .tcpa-header>.tcpa-header-actions{gap:4px}html body .tcpa-header-actions .notification-trigger{width:36px;min-width:36px;height:40px}}
+
+/* V17.4: intrinsic text measurement sizes the row; editing fills the entire cell. */
+html body .planning-table :is(td.planning-task,td.planning-shared){position:relative;vertical-align:top}
+html body .planning-table .planning-text-editor{position:static;display:block;min-height:33px;min-width:0}
+html body .planning-table .planning-text-measure{display:block;box-sizing:border-box;min-height:33px;width:100%;padding:8px 25px 8px 5px;font:inherit;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;visibility:hidden;pointer-events:none}
+html body .planning-table .planning-text-editor>textarea{position:absolute!important;inset:0!important;box-sizing:border-box!important;display:block!important;width:100%!important;height:100%!important;min-height:33px!important;margin:0!important;padding:8px 25px 8px 5px!important;resize:none;overflow:hidden;outline:none!important;z-index:1}
+html body .planning-table :is(td.planning-task,td.planning-shared):has(>.planning-text-editor>textarea:focus){outline:2px solid #d64646;outline-offset:-2px;z-index:4}
+/* Preserve the separate half-night tour drawing and its dedicated input. */
+html body .planning-table td.planning-tour:has(input:focus){outline:2px solid #d64646;outline-offset:-2px;z-index:4}
+html body .planning-table td.planning-tour input:focus{outline:none!important}
+
+html body .planning-table :is(td.planning-task,td.planning-shared):has(>.planning-text-editor>textarea.cell-error){outline:2px solid #c02222;outline-offset:-2px}
+/* Normal tour editors also fill a tall row; split-night display remains intact. */
+html body .planning-table td.planning-tour:not(.night-half)>.planning-tour-editor{position:static!important;min-height:33px}
+html body .planning-table td.planning-tour:not(.night-half)>.planning-tour-editor>input{position:absolute!important;inset:0!important;box-sizing:border-box!important;width:100%!important;height:100%!important;margin:0!important}
+html body .planning-table td.planning-tour.night-half.is-focused>.planning-tour-editor{inset:0!important;height:100%!important}

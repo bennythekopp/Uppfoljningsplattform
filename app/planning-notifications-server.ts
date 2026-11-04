@@ -1,4 +1,5 @@
 import 'server-only';
+import {currentUser} from './auth';
 import {db,databaseTransaction} from './database';
 import {notificationRange,type NotificationHorizon,type PlanningNoticePayload,type NotificationValue} from './planning-notification-types';
 import {baseTour,personPeriodFor,type PlanningColumn,type PlanningPeriod} from './planning-types';
@@ -43,8 +44,10 @@ export async function scheduleSnapshot(target?:{day:string,columnId:string}):Pro
 }
 export async function notifyScheduleChanges(before:Snapshot[],target?:{day:string,columnId:string}){
  if(!before.length)return;
+ const actor=await currentUser();
  const after=await scheduleSnapshot(target),oldMap=new Map(before.map(v=>[JSON.stringify([v.day,v.columnId]),v]));
- for(const next of after){const old=oldMap.get(JSON.stringify([next.day,next.columnId]));if(!old)continue;
+ // Suppress both web notices and push queue entries for the person making the change.
+ for(const next of after){if(next.email===actor?.email)continue;const old=oldMap.get(JSON.stringify([next.day,next.columnId]));if(!old)continue;
   const changes=(['tour','task'] as const).filter(f=>JSON.stringify(old[f])!==JSON.stringify(next[f])).map(field=>({field,before:old[field],after:next[field]}));if(!changes.length)continue;
   const eventKey='schedule:'+crypto.randomUUID(),payload:PlanningNoticePayload={title:'Ditt schema har ändrats',body:changes.map(v=>(v.field==='tour'?'Tur':'Uppgift')+': '+(v.before.text===v.after.text?'Färgen har ändrats':(v.before.text||'Tomt')+' → '+(v.after.text||'Tomt'))).join('\n'),columnName:next.columnName,changes};
   const pref=await db.prepare('SELECT web_enabled AS webEnabled FROM planning_notification_preferences WHERE user_email=?').bind(next.email).first<{webEnabled:boolean}>();

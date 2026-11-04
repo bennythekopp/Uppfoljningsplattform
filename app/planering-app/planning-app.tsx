@@ -10,6 +10,7 @@ import DatePicker from './date-picker';
 import {CalendarDays,ChevronLeft,ChevronRight} from 'lucide-react';
 import {pairedPlanningStyle,nightFlags,colorStyle} from '../planning-types';
 import PlanningSettings from './settings';
+import NotificationBell from '../notification-bell';
 import {useAppearanceUser} from '../appearance-provider';
 import PlanningProposalCell from '../planning-proposal-cell';
 import PlanningTourPicker from '../planning-tour-picker';
@@ -51,6 +52,9 @@ export default function PlanningApp(){
   const text=cell?.value??(field==='tour'?tour(c,day):'');
   setTaskDetail({title:c.title+' · '+dayLabel(day),text,day,column:c,field,revision:cell?.revision||0,color:color?.value||'',colorRevision:color?.revision||0});setProposing(false);setProposalText(text);setProposalColor(color?.value||'');setProposalError('');setProposalStatus('');
  }
+ useEffect(()=>{if(!data||loading||!user)return;const params=new URLSearchParams(window.location.search);if(params.get('notice')!=='1')return;const day=params.get('day')||'',column=data.columns.find(c=>c.id===params.get('column')),field=params.get('field');if(!/^\d{4}-\d\d-\d\d$/.test(day)||day<monday||day>=addDays(monday,7)||!column)return;
+  const selected=column.kind==='shared'?'shared':field==='tour'?'tour':'task';openCell(column,day,selected);const url=new URL(window.location.href);url.searchParams.delete('notice');url.searchParams.delete('field');window.history.replaceState(null,'',url);
+ },[data,loading,user,monday]);
  async function sendProposal(){if(!taskDetail||!data?.canSuggest||offline)return;setSending(true);setProposalError('');try{
   await parseResult(await appFetch('/api/planning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'propose',day:taskDetail.day,columnId:taskDetail.column.id,field:taskDetail.field,previousValue:taskDetail.text,value:proposalText,revision:taskDetail.revision,...(taskDetail.field==='task'?{color:proposalColor,previousColor:taskDetail.color,colorRevision:taskDetail.colorRevision}:{})})}));
   setProposing(false);setProposalStatus('Ändringsförslaget har skickats.');await load();
@@ -65,7 +69,7 @@ export default function PlanningApp(){
  if(authLoading)return <div className="signin" role="status">Kontrollerar inloggning…</div>;
  if(!user)return <main className="signin planning-app-signin"><div className="logo"><img src="/planning-app/logo.png" alt="TC Boden" width={56} height={56}/></div><h1>TC Boden</h1><p>Planering</p><form className="loginform" onSubmit={login}><label>Användarnamn<input autoComplete="username" value={loginUser} onChange={e=>setLoginUser(e.target.value)} required/></label><label>Lösenord<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><label className="remember-login"><input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>Håll mig inloggad</label>{error&&<div className="formerror" role="alert">{error}</div>}<button className="primary" disabled={loggingIn}>{loggingIn?'Loggar in…':'Logga in'}</button></form></main>;
  return <main className="tcpa">
- <header className="tcpa-header"><img alt="TC Boden" src="/planning-app/logo.png"/><div><strong>TC Boden</strong><small>Planering</small></div><PlanningExport day={monday} app/><PlanningSettings onLogout={user?logout:undefined}/></header>
+ <header className="tcpa-header"><img alt="TC Boden" src="/planning-app/logo.png"/><div><strong>TC Boden</strong><small>Planering</small></div><div className="tcpa-header-actions"><PlanningExport day={monday} app/><NotificationBell key={user.email} email={user.email} role={user.role} app/><PlanningSettings onLogout={user?logout:undefined}/></div></header>
 
  <nav className="tcpa-bar" aria-label="Veckoväljare"><button type="button" aria-label="Föregående vecka" onClick={()=>setMonday(d=>addDays(d,-7))}><ChevronLeft size={22}/></button><div className="tcpa-week" aria-live="polite"><strong>Vecka {isoWeek(monday)}</strong><span>{dayLabel(monday)} – {dayLabel(addDays(monday,6))} {monday.slice(0,4)===addDays(monday,6).slice(0,4)?monday.slice(0,4):monday.slice(0,4)+' / '+addDays(monday,6).slice(0,4)}</span></div><button ref={calendarTrigger} className="tcpa-cal" type="button" aria-label="Välj datum" aria-haspopup="dialog" aria-expanded={picker} onClick={()=>setPicker(v=>!v)}><CalendarDays size={22}/></button><button type="button" aria-label="Nästa vecka" onClick={()=>setMonday(d=>addDays(d,7))}><ChevronRight size={22}/></button>{picker&&<DatePicker value={monday} onClose={closeCalendar} onSelect={day=>{setMonday(startOfWeek(day));closeCalendar()}}/>}</nav>
  <PlanningPullRefresh onRefresh={load} disabled={picker||!!taskDetail}>
