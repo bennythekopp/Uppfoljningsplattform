@@ -1,3 +1,4 @@
+import {allowedModules} from '../../../module-access';
 import {cookies} from 'next/headers';
 import {clearRequestAuth,currentAccount,currentUser,error,sha256} from '../../../auth';
 import {db,databaseTransaction} from '../../../database';
@@ -19,6 +20,6 @@ async function preview(req:Request){try{
  });
  if(result==='missing')return error('Användaren saknas eller är spärrad.',404);
  if(result!=='ok')return error('Inloggningen har gått ut.',401);
- clearRequestAuth();const user=await currentUser();return user?Response.json({...user,peopleVisibility:await peopleVisibility(user)}):error('Förhandsvisningen kunde inte öppnas.',409);
+ clearRequestAuth();const user=await currentUser();return user?Response.json({...user,peopleVisibility:await peopleVisibility(user),allowedModules:user.sessionScope==='planning'?[]:await allowedModules(user)}):error('Förhandsvisningen kunde inte öppnas.',409);
 }catch{return error('Förhandsvisningen kunde inte ändras. Kontrollera databasuppdatering 0046.',503)}}
 export const POST=secureApi('/api/admin/role-preview',preview);

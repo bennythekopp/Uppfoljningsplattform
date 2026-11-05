@@ -76,3 +76,18 @@ html body .planning-table td:has(>.planning-full-cell>textarea:focus)::after,
 html body .planning-table td:has(>.planning-full-cell>textarea.cell-error)::after{content:"";position:absolute;inset:0;pointer-events:none;border:2px solid #d64646;z-index:6}
 html body .planning-table td:has(>.planning-full-cell>textarea:focus){z-index:4}
 html body .planning-table .planning-cell-error{max-width:290px;overflow-wrap:anywhere}
+
+/* The planning app header stays dark in both themes. */
+html body .tcpa-header .tcpa-header-actions button:is(.planning-export-trigger,.notification-trigger) {
+  color: #fff !important;
+}
+html body .tcpa-header .tcpa-header-actions button.planning-export-trigger {
+  background: #34383c !important;
+  border-color: #646a70 !important;
+}
+html body .tcpa-header .tcpa-header-actions button.planning-export-trigger:is(:hover,:active) {
+  background: #454a50 !important;
+}
+html body .tcpa-header .tcpa-header-actions button.notification-trigger {
+  background: transparent !important;
+}

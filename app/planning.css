@@ -69,3 +69,6 @@
 .operational-edit-count{position:relative;border:0;background:transparent;color:inherit;padding:4px;cursor:pointer;min-width:32px}.operational-edit-count:hover{outline:1px solid #bf2222;border-radius:6px}.operational-correction-back{position:fixed;inset:0;z-index:190;background:#0007;display:flex;align-items:center;justify-content:center;padding:16px}.operational-correction{width:min(470px,95vw)!important;max-height:90dvh;overflow:auto}.operational-correction input{width:100%}.operational-edit-count sup{font-size:10px;margin-left:2px}
 
 .planning-mail-modal .planning-test-mail{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #a00000;color:#a00000}.planning-test-hint{display:block;text-align:right;margin-top:8px}.planning-mail-modal .modalactions{flex-wrap:wrap}
+
+.planning-grip{touch-action:none;cursor:grab;flex:none}
+.planning-grip:active{cursor:grabbing}

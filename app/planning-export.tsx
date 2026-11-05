@@ -2,17 +2,23 @@
 import {useState} from 'react';
 import {Download} from 'lucide-react';
 import Modal from './ui-modal';
+import type {PlanningColumnLayout} from './planning-column-layout';
 import {addDays,stockholmToday} from './grundschema-types';
 import {flushPlanning} from './planning-client';
 import './planning-export.css';
 function monday(day:string){return addDays(day,-((new Date(day+'T12:00:00Z').getUTCDay()+6)%7))}
-export default function PlanningExport({day=stockholmToday(),app=false}:{day?:string,app?:boolean}){
+export default function PlanningExport({day=stockholmToday(),app=false,layout}:{day?:string,app?:boolean,layout?:PlanningColumnLayout}){
  const [open,setOpen]=useState(false),[period,setPeriod]=useState('week'),[from,setFrom]=useState(monday(day)),[to,setTo]=useState(addDays(monday(day),6)),[scope,setScope]=useState('mine'),[format,setFormat]=useState('pdf'),[busy,setBusy]=useState(false),[error,setError]=useState('');
  function begin(){setFrom(monday(day));setTo(addDays(monday(day),6));setPeriod('week');setError('');setOpen(true)}
  function changePeriod(value:string){setPeriod(value);if(value==='week'){setFrom(monday(day));setTo(addDays(monday(day),6))}if(value==='month'){setFrom(day.slice(0,7)+'-01');const d=new Date(day.slice(0,7)+'-01T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+1);setTo(addDays(d.toISOString().slice(0,10),-1))}}
  async function download(){setBusy(true);setError('');try{
  if(!from||!to||from>to||(Date.parse(to)-Date.parse(from))/86400000>366)throw Error('Välj ett datumintervall på högst 367 dagar.');
- await flushPlanning();const p=new URLSearchParams({from,to,scope,format});const r=await fetch('/api/planning/export?'+p,{headers:app?{'x-tc-app':'planning'}:{},cache:'no-store'});
+ await flushPlanning();const p=new URLSearchParams({from,to,scope,format});const headers=new Headers(app?{'x-tc-app':'planning'}:{});
+ if(format==='pdf'||format==='xlsx'){
+  if(layout)headers.set('x-tc-column-layout',encodeURIComponent(JSON.stringify(layout)));
+  headers.set('x-tc-planning-theme',document.documentElement.dataset.theme==='dark'?'dark':'light');
+ }
+ const r=await fetch('/api/planning/export?'+p,{headers,cache:'no-store'});
  if(!r.ok){const e=await r.json();throw Error(e.error||'Exporten misslyckades.')}
  const blob=await r.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TC-Boden-Planering-'+from+'-'+to+'.'+(format==='apple'||format==='android'?'ics':format);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);setOpen(false);
  }catch(e){setError((e as Error).message)}finally{setBusy(false)}}

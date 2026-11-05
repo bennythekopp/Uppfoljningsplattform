@@ -1,0 +1,1 @@
+V18.1 innehåller V18 och rättar kontrasten på exportknappen och bjällran i planeringsappens topprad. Följ LAS-MIG-V18.md om V18 ännu inte är installerad. V18.1 kräver ingen ytterligare SQL. Publicera filerna och öppna appen igen.

@@ -44,6 +44,7 @@ const policies:Record<string,Record<string,readonly Role[]|'public'>>={
  '/api/notes':{GET:instructors,PUT:instructors},
  '/api/admin/role-preview':{POST:['Administratör']},
  '/api/users/block':{POST:['Administratör']},
+ '/api/planning-guide':{GET:['Administratör','Instruktör','Chef']},
  '/api/planning/export':{GET:studentReaders},
  '/api/users':{GET:['Administratör'],POST:['Administratör'],PUT:['Administratör'],DELETE:['Administratör']},
  '/api/people/move':{POST:instructors},

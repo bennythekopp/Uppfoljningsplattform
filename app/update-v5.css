@@ -67,3 +67,8 @@
 @media screen{
  .tcpa-grid td[style*="--planning-color"] .tcpa-tour-value[style*="--planning-color"]{background-color:transparent!important;background-image:none!important}
 }
+
+.help-guides .help-planning-guide{grid-column:2;width:min(100%,260px);justify-self:center}
+.help-planning-guide img{display:block;width:100%;height:auto}
+.help-planning-guide .secondary{display:flex;text-decoration:none}
+@media(max-width:900px){.help-guides .help-planning-guide{grid-column:auto}}
