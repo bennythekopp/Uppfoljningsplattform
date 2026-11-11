@@ -16,9 +16,14 @@ async function get(req:Request){try{
  const p=new URL(req.url).searchParams,from=planningDate(p.get('from')),to=planningDate(p.get('to')),format=p.get('format'),scope=p.get('scope');
  if(from>to||(Date.parse(to)-Date.parse(from))/86400000>366)throw new PanelError('Välj högst 367 dagar.');
  if(!['pdf','xlsx','apple','android'].includes(format||'')||!['mine','all'].includes(scope||''))throw new PanelError('Välj exportformat och innehåll.');
- const url=new URL('/api/planning',req.url);url.search=new URLSearchParams({year:from.slice(0,4),from,to:addDays(to,1),view:'export'}).toString();
- const response=await planningGET(new Request(url,{headers:req.headers}));if(!response.ok)return response;
- const data:PlanningData=await response.json(),rows=exportRows(data,from,to,actor.email,scope as 'mine'|'all');
+ const parts:{data:PlanningData,rows:ReturnType<typeof exportRows>,from:string,to:string}[]=[];
+ for(let year=Number(from.slice(0,4));year<=Number(to.slice(0,4));year++){
+  const start=from>year+'-01-01'?from:year+'-01-01',end=to<year+'-12-31'?to:year+'-12-31';
+  const url=new URL('/api/planning',req.url);url.search=new URLSearchParams({year:String(year),from:start,to:addDays(end,1),view:'export'}).toString();
+  const response=await planningGET(new Request(url,{headers:req.headers}));if(!response.ok)return response;
+  const data:PlanningData=await response.json();parts.push({data,rows:exportRows(data,start,end,actor.email,scope as 'mine'|'all'),from:start,to:end});
+ }
+ const rows=parts.flatMap(p=>p.rows);
  if(!rows.length)throw new PanelError('Det finns ingen planeringskolumn kopplad till ditt konto. Välj samtliga.');
  if(rows.length>20000)throw new PanelError('För många rader. Välj en kortare period.');
  const name='TC-Boden-Planering-'+from+'-'+to;
@@ -26,7 +31,7 @@ async function get(req:Request){try{
  if(format==='xlsx'||format==='pdf'){
   const raw=req.headers.get('x-tc-column-layout');
   const layout=parseColumnLayout(raw?decodeURIComponent(raw):null);
-  const grid=planningExportGrid(data,rows,from,to,layout,req.headers.get('x-tc-app')==='planning');
+  const grid=parts.filter(p=>p.rows.length).map(p=>planningExportGrid(p.data,p.rows,p.from,p.to,layout,req.headers.get('x-tc-app')==='planning'));
   const dark=req.headers.get('x-tc-planning-theme')==='dark';
   bytes=format==='xlsx'?await gridExcel(grid,dark):await gridPdf(grid,dark);
   type=format==='xlsx'?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'application/pdf';

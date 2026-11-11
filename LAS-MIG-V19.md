@@ -1,4 +1,4 @@
-# TC Boden V19.1
+# TC Boden V19.2
 
 Samlat uppdateringspaket för ett befintligt projekt med V17 eller senare. V18 och V18.1 ingår.
 
@@ -8,7 +8,7 @@ Samlat uppdateringspaket för ett befintligt projekt med V17 eller senare. V18 o
 
 ## Ändringar
 
-V19.1 rättar natttextens och nattpilens kontrast i Grundschema. Vid uppdatering från V19 räcker det att ersätta app/grundschema.css. Ingen ny SQL behövs.
+Nattmarkeringen använder samma textstil och kontrastfärg som övriga turer i Grundschema. Vid uppdatering från V19 eller V19.1 räcker det att ersätta app/grundschema-night.tsx och app/grundschema.css. Ingen ny SQL behövs.
 
 
 - Grundschema visar turens namn på första dagen i en serie och en sammanhängande pil åt höger. En ensam nattpil kan fortsätta in på följande dag.
