@@ -7,12 +7,12 @@ import {baseTour,personPeriodFor,type PlanningColumn,type PlanningPeriod} from '
 import {tourLogValue} from './grundschema-types';
 import {savePlanningCell} from './planning-cell-server';
 import {allowedModules} from './module-access';
-export const suggestionSelect=`SELECT s.id,s.seq,s.day::text AS day,s.column_id AS columnId,s.field,s.previous_value AS previousValue,s.proposed_value AS proposedValue,s.previous_label AS previousLabel,s.proposed_label AS proposedLabel,s.base_revision AS baseRevision,s.previous_color AS previousColor,s.proposed_color AS proposedColor,s.color_revision AS colorRevision,s.author_email AS authorEmail,s.author_name AS authorName,s.created_at AS createdAt,s.status,c.title AS columnName,cc.value AS currentColor,tc.value AS currentTour FROM planning_suggestions s JOIN planning_columns c ON c.id=s.column_id LEFT JOIN planning_cells cc ON cc.day=s.day AND cc.column_id=s.column_id AND cc.field='color' LEFT JOIN planning_cells tc ON tc.day=s.day AND tc.column_id=s.column_id AND tc.field='tour'`;
+export const suggestionSelect=`SELECT s.id,s.seq,s.day::text AS day,s.column_id AS columnId,s.field,s.previous_value AS previousValue,s.proposed_value AS proposedValue,s.previous_label AS previousLabel,s.proposed_label AS proposedLabel,s.base_revision AS baseRevision,s.previous_color AS previousColor,s.proposed_color AS proposedColor,s.color_revision AS colorRevision,s.author_email AS authorEmail,s.author_name AS authorName,s.created_at AS createdAt,s.status,c.title AS columnName,cc.value AS currentColor,tc.value AS currentTour FROM planning_suggestions s JOIN LATERAL tc_planning_columns_for_year(EXTRACT(YEAR FROM s.day)::integer) c ON c.id=s.column_id LEFT JOIN planning_cells cc ON cc.day=s.day AND cc.column_id=s.column_id AND cc.field='color' LEFT JOIN planning_cells tc ON tc.day=s.day AND tc.column_id=s.column_id AND tc.field='tour'`;
 export async function readSuggestions(start?:string,end?:string){
  const query=suggestionSelect+" WHERE s.status='pending' AND c.deleted_at IS NULL";
  return (await (start&&end?db.prepare(query+" AND s.day>=?::date AND s.day<?::date ORDER BY s.seq").bind(start,end):db.prepare(query+" ORDER BY s.day,s.seq")).all()).results;
 }
-export async function mailSettings(){const value=await db.prepare('SELECT enabled,recipient_email AS recipientEmail,recipient_user AS recipientUser,cadence,send_time AS sendTime,revision,last_sent_at AS lastSentAt,last_error AS lastError FROM planning_mail_settings WHERE id=1').first();return {...value,configured:!!process.env.RESEND_API_KEY&&!!process.env.PLANNING_MAIL_FROM,needsReview:!!await db.prepare('SELECT id FROM planning_mail_outbox WHERE sent_at IS NULL AND review_required=true').first()}}
+export async function mailSettings(){const value=await db.prepare('SELECT enabled,recipient_email AS recipientEmail,recipient_user AS recipientUser,cadence,week_day AS weekDay,interval_count AS intervalCount,interval_unit AS intervalUnit,start_date::text AS startDate,send_time AS sendTime,revision,last_sent_at AS lastSentAt,last_error AS lastError FROM planning_mail_settings WHERE id=1').first();return {...value,configured:!!process.env.RESEND_API_KEY&&!!process.env.PLANNING_MAIL_FROM,needsReview:!!await db.prepare('SELECT id FROM planning_mail_outbox WHERE sent_at IS NULL AND review_required=true').first()}}
 async function context(column:PlanningColumn,day:string){const periods=(await db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all<PlanningPeriod>()).results,memberships=(await db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all<any>()).results;return {config:personPeriodFor(periods,column,day,memberships)?.config||{tours:[]},base:baseTour(periods,column,day,memberships)}}
 export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSuggest=false){
  if(b.action==='withdraw'){
@@ -30,7 +30,7 @@ export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSug
  }
  if(b.action==='propose'){
   if(!canSuggest)throw new PanelError('Du saknar behörighet att föreslå ändringar.',403);
-  const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM planning_columns WHERE id=? AND deleted_at IS NULL').bind(id).first<PlanningColumn>();
+  const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM tc_planning_columns_for_year(?) WHERE id=? AND deleted_at IS NULL').bind(Number(day.slice(0,4)),id).first<PlanningColumn>();
   if(!column)throw new PanelError('Kolumnen finns inte längre.',404);
   if(!(column.kind==='shared'?b.field==='shared':['tour','task'].includes(b.field))||typeof b.value!=='string'||b.value.length>4000||!Number.isInteger(b.revision)||b.revision<0)throw new PanelError('Kontrollera förslaget.');
   await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind(JSON.stringify([day,id])).first();
@@ -80,13 +80,15 @@ export async function suggestionAction(u:PanelActor,b:any,canEdit:boolean,canSug
   else {await db.prepare('DELETE FROM planning_mail_outbox WHERE id=?').bind(out.id).run();await db.prepare("UPDATE planning_mail_settings SET last_error='' WHERE id=1").run()}
   await planningLog(u,'Mailkö kontrollerad',{next:b.decision+' · '+out.id});return Response.json({ok:true});
  }
+ const weekDay=b.weekDay??1,intervalCount=b.intervalCount??1,intervalUnit=b.intervalUnit??'days',startDate=planningDate(b.startDate||new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date()));
+ if(!Number.isInteger(weekDay)||weekDay<1||weekDay>7||!Number.isInteger(intervalCount)||intervalCount<1||intervalCount>3650||!['days','weeks'].includes(intervalUnit))throw new PanelError('Kontrollera veckodag och intervall (1–3650).');
  const email=short(b.recipientEmail,254),recipient=short(b.recipientUser,254);
- if(typeof b.enabled!=='boolean'||!['daily','workday'].includes(b.cadence)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.sendTime)||!Number.isInteger(b.revision))throw new PanelError('Kontrollera mailinställningarna.');
+ if(typeof b.enabled!=='boolean'||!['daily','workday','weekly','custom'].includes(b.cadence)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.sendTime)||!Number.isInteger(b.revision))throw new PanelError('Kontrollera mailinställningarna.');
  if(b.enabled||email||recipient){
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email))throw new PanelError('Ange en giltig mailadress.');
   const person=(await staffList()).find(p=>p.email===recipient);if(!person||!(await allowedModules({email:recipient,name:String(person.name),role:'Instruktör'})).includes('planning'))throw new PanelError('Välj en mottagare som har tillgång till Planering.');
  }
  if(b.enabled&&(!process.env.RESEND_API_KEY||!process.env.PLANNING_MAIL_FROM))throw new PanelError('Mailtjänsten behöver konfigureras i Netlify först. Se uppdateringsinstruktionen.');
- const saved=await db.prepare('UPDATE planning_mail_settings SET enabled=?,recipient_email=?,recipient_user=?,cadence=?,send_time=?,enabled_at=CASE WHEN ? AND NOT enabled THEN ? ELSE enabled_at END,revision=revision+1 WHERE id=1 AND revision=? RETURNING id').bind(b.enabled,email,recipient,b.cadence,b.sendTime,b.enabled,Date.now(),b.revision).first();if(!saved)throw new PanelError('Mailinställningarna har ändrats. Läs in igen.',409);
+ const saved=await db.prepare('UPDATE planning_mail_settings SET enabled=?,recipient_email=?,recipient_user=?,cadence=?,send_time=?,week_day=?,interval_count=?,interval_unit=?,start_date=?::date,enabled_at=CASE WHEN ? AND NOT enabled THEN ? ELSE enabled_at END,revision=revision+1 WHERE id=1 AND revision=? RETURNING id').bind(b.enabled,email,recipient,b.cadence,b.sendTime,weekDay,intervalCount,intervalUnit,startDate,b.enabled,Date.now(),b.revision).first();if(!saved)throw new PanelError('Mailinställningarna har ändrats. Läs in igen.',409);
  await planningLog(u,'Mailinställningar ändrade',{next:(b.enabled?'På':'Av')+' · '+b.cadence+' · '+b.sendTime+' · '+email});return Response.json({ok:true});
 }

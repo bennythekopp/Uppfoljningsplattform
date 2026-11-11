@@ -7,7 +7,7 @@ import {findTour,addDays} from './grundschema-types';
 import {planningPermissions} from './planning-permissions';
 import {allowedModules} from './module-access';
 import type {PanelActor} from './panel-server';
-export async function notificationSettings(){return (await db.prepare('SELECT enabled,horizon,revision FROM planning_notification_settings WHERE id=1').first<{enabled:boolean,horizon:NotificationHorizon,revision:number}>())!}
+export async function notificationSettings(){return (await db.prepare('SELECT enabled,horizon,revision,notify_tours AS "notifyTours",notify_tasks AS "notifyTasks" FROM planning_notification_settings WHERE id=1').first<{enabled:boolean,horizon:NotificationHorizon,revision:number,notifyTours:boolean,notifyTasks:boolean}>())!}
 export {pushConfiguration} from '../lib/planning-push';
 export async function planningRecipients(){
  const users=(await db.prepare("SELECT email,name,role FROM users WHERE disabled_at IS NULL AND login_blocked_at IS NULL AND role IN ('Administratör','Instruktör','Chef')").all<PanelActor>()).results;
@@ -18,7 +18,7 @@ async function addWebNotice(eventKey:string,email:string,kind:'schedule'|'propos
  await db.prepare('INSERT INTO planning_notifications(id,event_key,user_email,kind,day,column_id,suggestion_id,payload,created_at) VALUES(?,?,?,?,?::date,?,?,?::jsonb,?) ON CONFLICT(event_key,user_email) DO NOTHING').bind(crypto.randomUUID(),eventKey,email,kind,day,columnId,suggestionId,JSON.stringify(payload),Date.now()).run();
 }
 export async function notifyNewProposal(id:string){
- const s=await db.prepare("SELECT s.day::text AS day,s.column_id AS columnId,s.field,s.previous_label AS previousLabel,s.proposed_label AS proposedLabel,s.previous_value AS previousValue,s.proposed_value AS proposedValue,s.previous_color AS previousColor,s.proposed_color AS proposedColor,s.author_name AS authorName,c.title AS columnName FROM planning_suggestions s JOIN planning_columns c ON c.id=s.column_id WHERE s.id=? AND s.status='pending'").bind(id).first<any>();if(!s)return;
+ const s=await db.prepare("SELECT s.day::text AS day,s.column_id AS columnId,s.field,s.previous_label AS previousLabel,s.proposed_label AS proposedLabel,s.previous_value AS previousValue,s.proposed_value AS proposedValue,s.previous_color AS previousColor,s.proposed_color AS proposedColor,s.author_name AS authorName,c.title AS columnName FROM planning_suggestions s JOIN LATERAL tc_planning_columns_for_year(EXTRACT(YEAR FROM s.day)::integer) c ON c.id=s.column_id WHERE s.id=? AND s.status='pending'").bind(id).first<any>();if(!s)return;
  const permissions=(await db.prepare('SELECT editor_emails AS editorEmails,suggester_emails AS suggesterEmails FROM planning_settings WHERE id=1').first<any>())!;
  const value=(label:string,raw:string,color:string):NotificationValue=>{const match=s.field==='tour'?label.match(/^(.*) · (#[0-9a-f]{6})$/i):null;return {text:match?.[1]||raw,color:color||match?.[2]||''}};
  const payload:PlanningNoticePayload={title:'Nytt ändringsförslag',body:s.authorName+' har lämnat ett ändringsförslag.',columnName:s.columnName,field:s.field,authorName:s.authorName,changes:[{field:s.field,before:value(s.previousLabel,s.previousValue,s.previousColor||''),after:value(s.proposedLabel,s.proposedValue,s.proposedColor??s.previousColor??'')}]};
@@ -44,11 +44,11 @@ export async function scheduleSnapshot(target?:{day:string,columnId:string}):Pro
 }
 export async function notifyScheduleChanges(before:Snapshot[],target?:{day:string,columnId:string}){
  if(!before.length)return;
- const actor=await currentUser();
+ const actor=await currentUser(),settings=await notificationSettings();
  const after=await scheduleSnapshot(target),oldMap=new Map(before.map(v=>[JSON.stringify([v.day,v.columnId]),v]));
  // Suppress both web notices and push queue entries for the person making the change.
  for(const next of after){if(next.email===actor?.email)continue;const old=oldMap.get(JSON.stringify([next.day,next.columnId]));if(!old)continue;
-  const changes=(['tour','task'] as const).filter(f=>JSON.stringify(old[f])!==JSON.stringify(next[f])).map(field=>({field,before:old[field],after:next[field]}));if(!changes.length)continue;
+  const changes=(['tour','task'] as const).filter(f=>(f==='tour'?settings.notifyTours:settings.notifyTasks)!==false).filter(f=>JSON.stringify(old[f])!==JSON.stringify(next[f])).map(field=>({field,before:old[field],after:next[field]}));if(!changes.length)continue;
   const eventKey='schedule:'+crypto.randomUUID(),payload:PlanningNoticePayload={title:'Ditt schema har ändrats',body:changes.map(v=>(v.field==='tour'?'Tur':'Uppgift')+': '+(v.before.text===v.after.text?'Färgen har ändrats':(v.before.text||'Tomt')+' → '+(v.after.text||'Tomt'))).join('\n'),columnName:next.columnName,changes};
   const pref=await db.prepare('SELECT web_enabled AS webEnabled FROM planning_notification_preferences WHERE user_email=?').bind(next.email).first<{webEnabled:boolean}>();
   if(pref?.webEnabled!==false)await addWebNotice(eventKey,next.email,'schedule',next.day,next.columnId,null,payload);

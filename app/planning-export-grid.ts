@@ -63,8 +63,8 @@ function wrap(text:string,fits:(line:string)=>boolean){
  return lines;
 }
 
-export async function gridExcel(grid:Grid,dark:boolean){
- const book=new ExcelJS.Workbook(),sheet=book.addWorksheet('Planering');
+export async function gridExcel(input:Grid|Grid[],dark:boolean){
+ const book=new ExcelJS.Workbook();for(const grid of Array.isArray(input)?input:[input]){const sheet=book.addWorksheet('Planering '+(grid.days[0]?.slice(0,4)||''));
  const argb=(value:string)=>'FF'+value.slice(1);
  const widths=[grid.dateWidth,...grid.groups.flatMap(g=>g.widths)];
  sheet.columns=widths.map(w=>({width:Math.max(4,(w-5)/7)}));
@@ -96,12 +96,13 @@ export async function gridExcel(grid:Grid,dark:boolean){
    sheet.getRow(row++).height=Math.max(25,Math.min(max-part,24)*15+8);
   }
  });
- return new Uint8Array(await book.xlsx.writeBuffer());
+ }return new Uint8Array(await book.xlsx.writeBuffer());
 }
 
-export async function gridPdf(grid:Grid,dark:boolean){
+export async function gridPdf(input:Grid|Grid[],dark:boolean){
  const margin=28,doc=new PDFDocument({size:'A3',layout:'landscape',margin,autoFirstPage:false}),chunks:Buffer[]=[];
  const done=new Promise<Uint8Array>((resolve,reject)=>{doc.on('data',c=>chunks.push(c));doc.on('end',()=>resolve(new Uint8Array(Buffer.concat(chunks))));doc.on('error',reject)});
+ for(const grid of Array.isArray(input)?input:[input]){
  const sections:Group[][]=[];
  let current:Group[]=[],total=grid.dateWidth;
  for(const group of grid.groups){
@@ -161,5 +162,5 @@ export async function gridPdf(grid:Grid,dark:boolean){
    }
   });
  }
- doc.end();return done;
+ }doc.end();return done;
 }

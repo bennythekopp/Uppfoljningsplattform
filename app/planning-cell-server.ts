@@ -6,7 +6,7 @@ import {baseTour,personPeriodFor,type PlanningPeriod,type PlanningColumn} from '
 import {tourLogValue,findTour} from './grundschema-types';
 /** Caller holds a transaction. Used by direct edits and reviewed proposals. */
 export async function savePlanningCell(u:PanelActor,b:any){
-  const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM planning_columns WHERE id=? AND deleted_at IS NULL').bind(id).first<PlanningColumn>();if(!column)throw new PanelError('Kolumnen finns inte längre.',404);
+  const day=planningDate(b.day),id=short(b.columnId,300),column=await db.prepare('SELECT id,title,kind,user_email AS userEmail FROM tc_planning_columns_for_year(?) WHERE id=? AND deleted_at IS NULL').bind(Number(day.slice(0,4)),id).first<PlanningColumn>();if(!column)throw new PanelError('Kolumnen finns inte längre.',404);
   if(!(column.kind==='shared'?['shared','color'].includes(b.field):['tour','task','color'].includes(b.field))||typeof b.value!=='string'||b.value.length>4000||!Number.isInteger(b.revision)||b.revision<0)throw new PanelError('Kontrollera rutans innehåll.');
   if(b.field==='color'&&b.value!==''&&!/^#[0-9a-f]{6}$/i.test(b.value))throw new PanelError('Välj en giltig färg.');
   await db.prepare('SELECT pg_advisory_xact_lock(hashtextextended(?,0))').bind(JSON.stringify([day,id])).first();
