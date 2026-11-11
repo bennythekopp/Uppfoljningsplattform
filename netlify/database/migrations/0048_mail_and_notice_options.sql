@@ -1,0 +1,10 @@
+BEGIN;
+ALTER TABLE planning_mail_settings DROP CONSTRAINT IF EXISTS planning_mail_settings_cadence_check;
+ALTER TABLE planning_mail_settings ADD CONSTRAINT planning_mail_settings_cadence_check CHECK(cadence IN('daily','workday','weekly','custom'));
+ALTER TABLE planning_mail_settings ADD COLUMN IF NOT EXISTS week_day integer NOT NULL DEFAULT 1 CHECK(week_day BETWEEN 1 AND 7);
+ALTER TABLE planning_mail_settings ADD COLUMN IF NOT EXISTS interval_count integer NOT NULL DEFAULT 1 CHECK(interval_count BETWEEN 1 AND 3650);
+ALTER TABLE planning_mail_settings ADD COLUMN IF NOT EXISTS interval_unit text NOT NULL DEFAULT 'days' CHECK(interval_unit IN('days','weeks'));
+ALTER TABLE planning_mail_settings ADD COLUMN IF NOT EXISTS start_date date NOT NULL DEFAULT CURRENT_DATE;
+ALTER TABLE planning_notification_settings ADD COLUMN IF NOT EXISTS notify_tours boolean NOT NULL DEFAULT true;
+ALTER TABLE planning_notification_settings ADD COLUMN IF NOT EXISTS notify_tasks boolean NOT NULL DEFAULT true;
+COMMIT;

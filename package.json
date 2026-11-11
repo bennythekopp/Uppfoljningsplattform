@@ -16,7 +16,8 @@
     "test:backup": "node scripts/test-backup-options.cjs && node scripts/test-backup-integration.cjs",
     "test:mail": "node scripts/test-planning-test-mail.cjs",
     "test:idle": "node scripts/test-idle-v9.cjs",
-    "test:v11": "node scripts/test-v11.cjs && node scripts/test-v11-pull.cjs"
+    "test:v11": "node scripts/test-v11.cjs && node scripts/test-v11-pull.cjs",
+    "test:v20": "node scripts/test-v20.cjs && node scripts/test-v20-navigation.cjs && node scripts/test-v20-documents.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.7",

@@ -39,6 +39,34 @@ async function scheduleTests(){
  await wakeScheduledJobs();await Promise.all([runScheduled('mail',async()=>{sql++;return 999999},7000),runScheduled('mail',async()=>{sql++;return 999999},7000)]);assert.equal(sql,5,'atomic lease allows only one worker');
  await wakeScheduledJobs();await assert.rejects(runScheduled('mail',async()=>{throw Error('provider unavailable')},8000));let retry=0;await runScheduled('mail',async()=>{retry++;return null},9000);assert.equal(retry,0);await runScheduled('mail',async()=>{retry++;return null},8000+15*60000);assert.equal(retry,1,'failed jobs retry after backoff');
  let pushes=0;await runScheduled('push',async()=>{pushes++;return null},1000);for(let i=0;i<60;i++)await runScheduled('push',async()=>{pushes++;return null},2000+i*60000);assert.equal(pushes,1,'empty push job must not wake SQL every minute');await wakePushNotifications();await runScheduled('push',async()=>{pushes++;return null},4000000);assert.equal(pushes,2,'a change wakes the push job');
+ let backups=0;
+ await runScheduled('backup',async()=>{backups++;return {at:null,paused:true}},1000);
+ for(let i=0;i<120;i++){await wakeScheduledJobs();await runScheduled('backup',async()=>{backups++;return null},2000+i*60000)}
+ assert.equal(backups,1,'disconnected backup stays SQL-free even when planning changes');
+ await wakeScheduledJobs(true);await runScheduled('backup',async()=>{backups++;return 99999999},8000000);
+ assert.equal(backups,2,'successful reconnection resumes backups');
+ await wakeScheduledJobs(true);
+ await runScheduled('backup',async()=>{await wakeScheduledJobs(true);return {at:null,paused:true}},8000001);
+ await runScheduled('backup',async()=>{backups++;return null},8000002);
+ assert.equal(backups,3,'reconnection during a running check is not overwritten by its stale pause');
+ // Exercise the actual scheduled function, including its disconnected SQL branch.
+ let connected=false,queries=0,launches=0,released=0;
+ const backupExports={};
+ vm.runInNewContext(ts.transpileModule(fs.readFileSync('netlify/functions/sharepoint-backup.mts','utf8'),{compilerOptions:{target:9,module:1}}).outputText,{
+  exports:backupExports,Date,require:name=>{
+   if(name.endsWith('/backup/db'))return {backupPool:()=>({connect:async()=>({query:async sql=>{queries++;if(sql.startsWith('SELECT *'))return {rows:[{enabled:false}]};return {rowCount:0}},release:()=>released++})})};
+   if(name.endsWith('/backup/googledrive'))return {googleDriveConfig:()=>({configured:true}),backupDestination:async()=>{queries++;return connected?{root:'test'}:null}};
+   if(name.endsWith('/backup/worker'))return {scheduleBackup:async()=>{launches++},launchWorker:async()=>{launches++}};
+   if(name.endsWith('/scheduler-gate'))return {runScheduled};
+   if(name.endsWith('/scheduler-times'))return {nextBackupCheck:()=>null};
+   throw Error('Unexpected import '+name);
+  }
+ });
+ await wakeScheduledJobs(true);await backupExports.default();const pausedQueries=queries;
+ assert.equal(launches,0,'disconnected destination never launches export worker');assert.equal(released,1);
+ for(let i=0;i<120;i++){await wakeScheduledJobs();await backupExports.default()}
+ assert.equal(queries,pausedQueries,'disconnected cron does not query SQL again');
+ connected=true;await wakeScheduledJobs(true);await backupExports.default();assert.equal(launches,1,'connected account schedules again');assert.equal(released,2);
  delete process.env.NETLIFY;
  console.log('PASS: SQL-free idle ticks, disabled schedules, concurrent writes/leases and retry');
 }

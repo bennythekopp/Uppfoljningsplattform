@@ -1,3 +1,4 @@
+import {mailDayDue} from './planning-mail-schedule';
 import type {PoolClient} from 'pg';
 import {baseTour,personPeriodFor,type PlanningPeriod,type PlanningColumn} from '../app/planning-types';
 import {findTour,addDays} from '../app/grundschema-types';
@@ -9,7 +10,7 @@ export function digestMessage(rows:any[],day:string,url:string){const field=(s:s
 export async function runDigest(c:PoolClient,now=new Date(),send:typeof fetch=fetch){
  const q=async(sql:string,values:any[]=[])=> (await c.query(sql,values)).rows;
  const lock=()=>c.query("SELECT pg_advisory_xact_lock(hashtextextended('planning-mail-worker',0))");
- const pending=()=>q("SELECT s.*,s.day::text AS day,c.title AS column_name FROM planning_suggestions s JOIN planning_columns c ON c.id=s.column_id WHERE s.status='pending' AND c.deleted_at IS NULL ORDER BY s.seq FOR SHARE OF s,c");
+ const pending=()=>q("SELECT s.*,s.day::text AS day,c.title AS column_name FROM planning_suggestions s JOIN LATERAL tc_planning_columns_for_year(EXTRACT(YEAR FROM s.day)::integer) c ON c.id=s.column_id WHERE s.status='pending' AND c.deleted_at IS NULL ORDER BY s.seq FOR SHARE OF s");
  const origin=new URL(process.env.APP_ORIGIN||process.env.URL||'https://handledare.netlify.app');
  const message=(rows:any[],day:string,recipient:string)=>{
   if(origin.protocol!=='https:')throw Error('APP_ORIGIN måste vara en HTTPS-adress.');
@@ -42,7 +43,7 @@ export async function runDigest(c:PoolClient,now=new Date(),send:typeof fetch=fe
   }
  }
  if(!out){
-  if(clock.time<s.send_time||s.sent_day===clock.day){await c.query('COMMIT');return}
+  if(clock.time<s.send_time||s.sent_day===clock.day||!mailDayDue(s,clock.day)){await c.query('COMMIT');return}
   if(s.cadence==='workday'){
    const periods=await q('SELECT id,group_id AS "groupId",name,start_date::text AS "startDate",config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id') as PlanningPeriod[],memberships=await q('SELECT user_email AS "userEmail",group_id AS "groupId",row_number AS row,start_date::text AS "startDate",end_date::text AS "endDate" FROM schedule_memberships ORDER BY start_date'),column={userEmail:s.recipient_user} as PlanningColumn;
    const [cell]=await q("SELECT value FROM planning_cells WHERE day=$1 AND column_id=$2 AND field='tour'",[clock.day,'person:'+s.recipient_user]);const code=cell?.value??baseTour(periods,column,clock.day,memberships as any),period=personPeriodFor(periods,column,clock.day,memberships as any);

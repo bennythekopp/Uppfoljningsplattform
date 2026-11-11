@@ -6,11 +6,19 @@ import {createHash,randomUUID} from 'node:crypto';
 function hosted(){return !!(process.env.NETLIFY||process.env.SITE_ID||process.env.NETLIFY_BLOBS_CONTEXT)}
 function store(){return getStore({name:'tc-boden-scheduler-v1',consistency:'strong'})}
 function key(job:string){return (process.env.CONTEXT||'production')+'/'+createHash('sha256').update(process.env.NETLIFY_DB_URL||process.env.DATABASE_URL||'unconfigured').digest('hex').slice(0,24)+'/'+job}
-export async function wakeScheduledJobs(){
+export async function wakeScheduledJobs(resumeBackup=false){
  if(!hosted())return;
- for(const job of ['mail','backup'])await store().setJSON(key(job),{at:0,version:randomUUID()});
+ for(const job of ['mail','backup']){
+  const s=store(),k=key(job);
+  if(job==='backup'&&!resumeBackup){
+   const entry=await s.getWithMetadata(k,{type:'json'});
+   if(entry?.data.paused)return;
+   // A concurrent pause/reconnect must survive an ordinary data change.
+   await s.setJSON(k,{at:0,version:randomUUID()},entry?{onlyIfMatch:entry.etag}:{onlyIfNew:true});
+  }else await s.setJSON(k,{at:0,version:randomUUID()});
+ }
 }
-export async function runScheduled(job:string,work:()=>Promise<number|null>,now=Date.now()){
+export async function runScheduled(job:string,work:()=>Promise<number|null|{at:null,paused:true}>,now=Date.now()){
  // Local development and integration tests retain the ordinary SQL path.
  if(!hosted()){await work();return}
  const s=store(),k=key(job);
@@ -22,8 +30,8 @@ export async function runScheduled(job:string,work:()=>Promise<number|null>,now=
  const claimed=await s.getWithMetadata(k,{type:'json'});
  // Do not overwrite an invalidation from a concurrent settings/data change.
  if(!claimed||claimed.etag!==lease.etag)return;
- let next:number|null=now+15*60000;
- try{next=await work()}finally{await s.setJSON(k,{at:next,version:randomUUID()},{onlyIfMatch:claimed.etag})}
+ let next:number|null|{at:null,paused:true}=now+15*60000;
+ try{next=await work()}finally{await s.setJSON(k,{...(typeof next==='object'&&next!==null?next:{at:next}),version:randomUUID()},{onlyIfMatch:claimed.etag})}
 }
 
 export async function wakePushNotifications(){if(hosted())await store().setJSON(key('push'),{at:0,version:randomUUID()})}
