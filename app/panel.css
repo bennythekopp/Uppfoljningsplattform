@@ -13,3 +13,21 @@
 .panel-open-docs>div:has(>button.active)>button:last-child{color:white}.document-icon-picker button{padding:8px}
 .panel-introduction-module .panel-module-content{display:flex;flex-direction:column;overflow:hidden;min-height:0}.panel-introduction-module .panel-module-content>strong,.panel-introduction-module progress{flex:none}.panel-intro-checklist{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;padding-right:5px}.panel-intro-checklist .panel-task input[type=checkbox]{flex:none;margin-top:3px}.panel-intro-checklist .panel-task p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.panel-intro-checklist .panel-task strong{font-size:13px}
 @media(max-width:750px){.panel-grid .panel-introduction-module{height:var(--panel-height);max-height:none}}
+/* V20 document tabs: one compact tab surface, quiet inline actions. */
+.document-workspace .document-tabs{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:4px 0 8px}
+.document-workspace .document-tab-entry{display:flex;align-items:center;flex:0 0 auto;max-width:300px;min-height:38px;border:1px solid var(--border,#ccc);border-radius:8px;background:var(--surface,#f1f2f3);position:relative;padding:0 4px 0 0;gap:2px}
+.document-workspace .document-tab-entry.is-active{background:var(--surface-2,#fff);box-shadow:inset 0 -3px #b00000}
+.document-workspace .document-tab-entry .document-tab-name{background:transparent!important;border:0!important;color:inherit!important;border-radius:0;padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:45px}
+.document-workspace .document-tab-entry.is-active .document-tab-name{font-weight:650}
+.document-workspace .document-tab-controls{display:flex;gap:0;align-items:center}
+.document-workspace .document-tab-controls button{padding:5px;width:28px;height:30px;min-height:30px;background:transparent;border:0;border-radius:5px;color:inherit}
+.document-workspace .document-tab-controls button:hover{background:#8882}
+.document-workspace .document-tabs>button{height:38px;min-width:38px;padding:6px}
+[data-theme=dark] .document-workspace .document-tab-entry,.dark .document-tab-entry{background:#292e31;border-color:#50565b}
+[data-theme=dark] .document-workspace .document-tab-entry.is-active,.dark .document-tab-entry.is-active{background:#373d41}
+.document-media{position:relative;display:inline-flex}.document-media-picker{position:absolute;z-index:70;top:100%;left:0;width:min(380px,85vw);max-height:65dvh;overflow:auto;padding:12px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid #888;border-radius:10px;box-shadow:0 8px 30px #0004}.document-media-picker header,.document-media-picker nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.document-media-picker input,.document-media-picker select{width:100%;margin-bottom:8px}.document-media-grid,.document-emoji-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.document-media-grid button{display:flex;flex-direction:column}.document-media-grid img{width:42px;height:42px;object-fit:contain}.document-emoji-grid button{font-size:25px}.document-media-picker h4{margin:8px 0}.document-formatbar label:has(input[aria-label="Bildbredd i pixlar"]){display:flex;gap:4px;align-items:center}.document-formatbar input[aria-label="Bildbredd i pixlar"]{width:78px}.notice-field-options label{display:flex;align-items:center;justify-content:space-between;gap:20px}
+html[data-theme=dark] .document-media-picker{background:#24282b;color:#f1f2f3;border-color:#50565b}
+.document-media-picker input,.document-media-picker select{display:block}
+@media(max-width:750px){.document-workspace .document-tab-controls button{min-width:34px;min-height:36px}.document-workspace .document-tab-entry{max-width:250px}}
+
+.document-formatbar .document-media-picker select{max-width:none;width:100%}

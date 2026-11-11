@@ -94,13 +94,18 @@ function foreignMutation(req:Request){
  return !allowed.has(origin);
 }
 async function securityEvent(req:Request,route:string,actor:Actor|null,action:string,reason:string){
+ let attempted='';
+ if(route==='/api/login'&&['Misslyckad inloggning','Inloggning spärrad','Åtkomst nekad'].includes(action)){
+  const input=await req.clone().json().catch(()=>null);
+  if(typeof input?.username==='string')attempted=input.username.replace(/[\x00-\x1f\x7f]/g,'').slice(0,80);
+ }
  const now=Date.now();
- // No request body, query, password, cookie, token, or raw IP is stored.
+ // Only the attempted username is read for failed logins; never passwords, tokens or raw IP.
  // Identical events from one account/connection are grouped per minute to
  // bound unauthenticated log flooding. ON CONFLICT is atomic across functions.
- const id='security-'+await sha256(JSON.stringify([Math.floor(now/60000),actor?.accountEmail||actor?.email||'',actor?.previewRole||'',loginIP(req),req.method,route,action,reason]));
+ const id='security-'+await sha256(JSON.stringify([Math.floor(now/60000),actor?.accountEmail||actor?.email||'',actor?.previewRole||'',loginIP(req),req.method,route,action,reason,attempted]));
  await db.prepare('INSERT INTO activity_log(id,occurred_at,actor_email,actor_name,actor_role,action,area,target) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
-  .bind(id,now,actor?.accountEmail||actor?.email||'',actor?.accountName||actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+' · '+req.method+' '+route).run();
+  .bind(id,now,actor?.accountEmail||actor?.email||'',actor?.accountName||actor?.name||'Ej inloggad',actor?.accountRole||actor?.role||'',action,'Säkerhet',(actor?.previewRole?'Förhandsvisning som '+actor.previewRole+' · ':'')+reason+(attempted?' · Försökt användarnamn: '+attempted:'')+' · '+req.method+' '+route).run();
 }
 export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise<Actor|null>):Handler{
  return async(req:Request)=>withRequestAuth(async()=>{
@@ -129,13 +134,14 @@ export function secureApi(route:string,handler:Handler,authenticate?:()=>Promise
    const affectsSchedule=!['GET','HEAD','OPTIONS'].includes(req.method)&&['/api/planning','/api/grundschema','/api/admin/backups','/api/admin/backups/googledrive','/api/users','/api/module-access'].includes(route)||route==='/api/admin/backups/googledrive/callback';
    // Failure to update wake metadata must be visible and must never silently skip jobs.
    if(affectsSchedule)await wakeScheduledJobs();
+   const auditRequest=route==='/api/login'?req.clone():req;
    let response:Response;
    try{response=await handler(req)}finally{if(affectsSchedule)await wakeScheduledJobs()}
 
    if(route==='/api/login'&&(response.status===401||response.status===429)){
-    await securityEvent(req,route,null,response.status===429?'Inloggning spärrad':'Misslyckad inloggning',response.status===429?'För många inloggningsförsök':'Felaktiga inloggningsuppgifter');
+    await securityEvent(auditRequest,route,null,response.status===429?'Inloggning spärrad':'Misslyckad inloggning',response.status===429?'För många inloggningsförsök':'Felaktiga inloggningsuppgifter');
    }else if(response.status===403){
-    await securityEvent(req,route,actor,'Åtkomst nekad','Begäran avvisades av behörighetskontrollen');
+    await securityEvent(auditRequest,route,actor,'Åtkomst nekad','Begäran avvisades av behörighetskontrollen');
    }else if(route==='/api/setup'&&req.method==='POST'&&response.ok){
     await securityEvent(req,route,null,'Administratör skapad','Första administratörskontot skapades');
    }

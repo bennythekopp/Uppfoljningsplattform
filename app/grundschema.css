@@ -21,8 +21,8 @@
 .gs-pattern td:has(.gs-night),.gs-calendar td:has(.gs-night){position:relative}
 .gs-night{position:absolute;inset:0;z-index:1;display:flex;align-items:center;pointer-events:none;font-size:inherit}
 .gs-night-half{right:50%}
-.gs-night strong{padding-inline:4px;max-width:85%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gs-night i{flex:1;min-width:4px;height:1px;background:currentColor;position:relative}
+.gs-night-label{font:inherit;padding-inline:3px;max-width:85%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-night i{flex:1;min-width:4px;height:1px;color:inherit;background:currentColor;position:relative}
 .gs-night:not(.gs-night-out) i{margin-right:7px}
 .gs-night b{position:absolute;right:0;top:50%;width:6px;height:6px;transform:translateY(-50%) rotate(45deg);border:solid currentColor;border-width:1px 1px 0 0}
 .gs-pattern td:focus-within .gs-night{display:none}

@@ -27,7 +27,7 @@ async function get(req:Request){const u=(await currentUser())!,url=new URL(req.u
  const compact=view==='compact'&&!op,adminDetails=u.role==='Administratör'&&!view;
  const proposals=!compact&&view!=='export';
  const columnFilter=compact?' AND user_email=?':'';
- const cellFilter=compact?' AND column_id IN (SELECT id FROM planning_columns WHERE user_email=? AND deleted_at IS NULL)':'';
+ const cellFilter=compact?' AND column_id=?':'';
  const owner=compact?[u.email]:[];
  let range=planningYearRange(year);
  if(url.searchParams.has('from')||url.searchParams.has('to')){
@@ -37,11 +37,11 @@ async function get(req:Request){const u=(await currentUser())!,url=new URL(req.u
  }
  const start=op?addDays((year-1)+'-08-01',-1):addDays(range.start,-1),end=op?(year+1)+'-01-01':range.end;
  const [columns,cells,periods,memberships]=await Promise.all([
- db.prepare('SELECT id,title,kind,user_email AS userEmail,position,revision,width,width_revision AS widthRevision FROM planning_columns WHERE deleted_at IS NULL'+columnFilter+' ORDER BY position,lower(title),id').bind(...owner).all(),
- db.prepare('SELECT day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM planning_cells WHERE day>=?::date AND day<?::date'+cellFilter).bind(start,end,...owner).all(),
+ db.prepare('SELECT id,title,kind,user_email AS userEmail,position,revision,width,width_revision AS widthRevision FROM tc_planning_columns_for_year(?) WHERE deleted_at IS NULL'+columnFilter+' ORDER BY position,lower(title),id').bind(year,...owner).all(),
+ db.prepare('SELECT day::text AS day,column_id AS columnId,field,value,revision,updated_at AS updatedAt,updated_by AS updatedBy FROM planning_cells WHERE day>=?::date AND day<?::date'+cellFilter).bind(start,end,...(compact?['person:'+u.email]:[])).all(),
  db.prepare('SELECT id,group_id AS groupId,name,start_date::text AS startDate,list_change AS listChange,config,assignments FROM planning_schedule_periods ORDER BY start_date,created_at,id').all(),
  db.prepare('SELECT id,user_email AS userEmail,group_id AS groupId,row_number AS row,start_date::text AS startDate,end_date::text AS endDate FROM schedule_memberships ORDER BY start_date').all()]);
- return Response.json({operationalOverrides:op?(await db.prepare('SELECT column_id AS columnId,month,count,revision FROM planning_operational_overrides WHERE month>=? AND month<?').bind((year-1)+'-08',(year+1)+'-01').all()).results:undefined,operational:op?await operationalSettings():undefined,suggestions:proposals?await readSuggestions(range.start,range.end):[],suggestionCount:proposals?Number((await db.prepare("SELECT COUNT(*) AS count FROM planning_suggestions s JOIN planning_columns c ON c.id=s.column_id WHERE s.status='pending' AND c.deleted_at IS NULL").first<{count:number}>())?.count||0):0,canSuggest:s.canSuggest,mailSettings:adminDetails?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:adminDetails?s.editorEmails:[],suggesterEmails:adminDetails?s.suggesterEmails:[],taskWidth:s.taskWidth,taskWidthRevision:s.taskWidthRevision,permissionUsers:adminDetails?(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Instruktör','Chef') AND disabled_at IS NULL ORDER BY lower(name)").all()).results:[],users:adminDetails?await staffList():[]});}
+ return Response.json({operationalOverrides:op?(await db.prepare('SELECT column_id AS columnId,month,count,revision FROM planning_operational_overrides WHERE month>=? AND month<?').bind((year-1)+'-08',(year+1)+'-01').all()).results:undefined,operational:op?await operationalSettings():undefined,suggestions:proposals?await readSuggestions(range.start,range.end):[],suggestionCount:proposals?Number((await db.prepare("SELECT COUNT(*) AS count FROM planning_suggestions s JOIN LATERAL tc_planning_columns_for_year(EXTRACT(YEAR FROM s.day)::integer) c ON c.id=s.column_id WHERE s.status='pending' AND c.deleted_at IS NULL").first<{count:number}>())?.count||0):0,canSuggest:s.canSuggest,mailSettings:adminDetails?await mailSettings():undefined,columns:columns.results,cells:cells.results,periods:periods.results,memberships:memberships.results,canEdit:s.canEdit,settingsRevision:s.revision,editorEmails:adminDetails?s.editorEmails:[],suggesterEmails:adminDetails?s.suggesterEmails:[],taskWidth:s.taskWidth,taskWidthRevision:s.taskWidthRevision,permissionUsers:adminDetails?(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Administratör','Instruktör','Chef') AND disabled_at IS NULL ORDER BY lower(name)").all()).results:[],users:adminDetails?await staffList():[]});}
 async function postOriginal(req:Request){const u=(await currentUser())!,b=await panelBody(req,40000);return databaseTransaction(async()=>{
  if((u.sessionScope==='planning'||req.headers.get('x-tc-app')==='planning')&&!['propose','withdraw'].includes(b.action))throw new PanelError('Planeringsappen kan bara lämna eller ta tillbaka egna ändringsförslag.',403);
  const s=await settings(u,['editors','width'].includes(b.action)?'update':'share');if(b.action==='operational-count')return saveOperationalCount(u,b);if(b.action==='operational-settings')return saveOperational(u,b);if(['propose','withdraw','review','mail-settings','mail-resolve'].includes(b.action))return suggestionAction(u,b,s.canEdit,s.canSuggest);if(!s.canEdit)throw new PanelError('Du har läsbehörighet till planeringen.',403);
@@ -58,9 +58,9 @@ async function postOriginal(req:Request){const u=(await currentUser())!,b=await 
   if(u.role!=='Administratör')throw new PanelError('Bara administratörer kan ändra behörigheter.',403);
   const lists=[b.emails,b.suggesterEmails];
   if(lists.some(list=>!Array.isArray(list)||list.length>1000||list.some((v:unknown)=>typeof v!=='string')||new Set(list).size!==list.length)||!Number.isInteger(b.revision))throw new PanelError('Välj användare.');
-  const allowed=(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Instruktör','Chef') AND disabled_at IS NULL").all<{email:string,name:string,role:PanelActor['role']}>()).results;
+  const allowed=(await db.prepare("SELECT email,name,role FROM users WHERE role IN ('Administratör','Instruktör','Chef') AND disabled_at IS NULL").all<{email:string,name:string,role:PanelActor['role']}>()).results;
   for(const [emails,editable] of [[b.emails,true],[b.suggesterEmails,false]] as [string[],boolean][]){for(const email of emails){
-   const p=allowed.find(p=>p.email===email);if(!p||editable&&p.role!=='Instruktör')throw new PanelError('Välj en giltig roll för behörigheten.');
+   const p=allowed.find(p=>p.email===email);if(!p||editable&&!['Administratör','Instruktör'].includes(p.role))throw new PanelError('Välj en giltig roll för behörigheten.');
    // Existing assignments may remain for temporarily hidden modules; granting a new one requires visibility.
    if(!(editable?s.editorEmails:s.suggesterEmails).includes(email)&&!(await allowedModules(p)).includes('planning'))throw new PanelError('Ge användaren synlighet till Planering innan du tilldelar behörighet.');
   }}

@@ -22,3 +22,5 @@ export default function NotificationToggle({app=false}:{app?:boolean}){
  }
  return <div className="notification-preference"><div className="user-settings-row"><span>Notiser på/av</span><button type="button" role="switch" aria-label={app?'Schemaändringsnotiser på telefonen':'Schemaändringsnotiser i bjällran'} aria-checked={on} disabled={busy} onClick={()=>void change()} className={'notice-switch '+(on?'on':'')}><span/></button></div>{error&&<small role="alert" className="formerror">{error}</small>}{hint&&<small>{hint}</small>}</div>
 }
+
+export function NotificationSwitch({enabled,disabled,onChange}:{enabled:boolean,disabled?:boolean,onChange:()=>void}){return <button type="button" role="switch" aria-checked={enabled} disabled={disabled} onClick={onChange} className={"notice-switch "+(enabled?"on":"")}><span/></button>}

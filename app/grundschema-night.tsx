@@ -29,7 +29,7 @@ export function patternNight(config:ScheduleConfig,row:number,day:number){
 export function ScheduleNight({night}:{night:ReturnType<typeof scheduleNight>}){
  if(!night.starts&&!night.incoming)return null;
  return <span className={'gs-night '+(night.incoming?'gs-night-in ':'')+(night.outgoing?'gs-night-out ':'')+(night.half?'gs-night-half':'')} aria-hidden="true" style={night.style}>
-  {night.starts&&!night.incoming&&<strong>{night.label}</strong>}
+  {night.starts&&!night.incoming&&<span className="gs-night-label">{night.label}</span>}
   <i>{night.incoming&&!night.outgoing&&<b/>}</i>
  </span>;
 }
