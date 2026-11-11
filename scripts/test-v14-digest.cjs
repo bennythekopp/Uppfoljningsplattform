@@ -2,7 +2,7 @@ const fs=require('fs'),assert=require('node:assert/strict'),path=require('path')
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:1,target:9,esModuleInterop:true}}).outputText,f);
 const {runDigest}=require('../lib/planning-mail.ts');
 (async()=>{
- const e=new PGlite();for(const f of fs.readdirSync(path.join(__dirname,'../netlify/database/migrations')).sort().filter(f=>!f.startsWith('0034')))await e.exec(fs.readFileSync(path.join(__dirname,'../netlify/database/migrations',f),'utf8').replace("PERFORM pg_advisory_xact_lock(hashtextextended('schedule-membership:'||NEW.user_email,0));",'PERFORM 1;'));
+ const e=new PGlite();for(const f of fs.readdirSync(path.join(__dirname,'../netlify/database/migrations')).sort())await e.exec(fs.readFileSync(path.join(__dirname,'../netlify/database/migrations',f),'utf8').replace("PERFORM pg_advisory_xact_lock(hashtextextended('schedule-membership:'||NEW.user_email,0));",'PERFORM 1;'));
  const c={query:(sql,args)=>sql.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):e.query(sql,args)};
  process.env.RESEND_API_KEY='isolated-test-key';process.env.PLANNING_MAIL_FROM='test@example.com';process.env.APP_ORIGIN='https://tcboden.se';
  await e.exec("INSERT INTO users(email,username,name,role,created_at) VALUES('admin@test','admin','Admin','Administratör',0);UPDATE planning_mail_settings SET enabled=true,recipient_email='recipient@example.com',recipient_user='admin@test',send_time='07:00',cadence='daily';");
