@@ -1,3 +1,5 @@
+Senaste samlade version: V21. Läs LAS-MIG-V21.md först, inklusive databasuppdatering 0050 och begränsningen för visuell verifiering.
+
 # Senaste kompletta version: V20
 
 Läs **LAS-MIG-V20.md** först. Kör nya databasuppdateringar 0048 och 0049 efter 0047 före publicering. Nedanstående text avser den tidigare kompletta versionen.

@@ -12,9 +12,11 @@ async function version(row:Row,u:PanelActor,label:string){await db.prepare('INSE
 async function get(req:Request){const url=new URL(req.url),id=short(url.searchParams.get('id'));const row=await document(id);
  if(url.searchParams.get('versions'))return Response.json((await db.prepare('SELECT id,title,created_at AS createdAt,creator_name AS creatorName,label FROM panel_document_versions WHERE document_id=? ORDER BY created_at DESC LIMIT 200').bind(id).all()).results);
  if(url.searchParams.get('version')){const v=await db.prepare('SELECT state,title FROM panel_document_versions WHERE id=? AND document_id=?').bind(url.searchParams.get('version'),id).first();if(!v)throw new PanelError('Versionen finns inte',404);return Response.json(v)}
+ const presenceNow=(await db.prepare('SELECT name,user_email AS email FROM panel_document_presence WHERE document_id=? AND seen_at>?').bind(id,Date.now()-150000).all()).results;
+ if(url.searchParams.get('revision')===String(row.revision)&&url.searchParams.get('epoch')===String(row.epoch))return Response.json({unchanged:true,presence:presenceNow});
  const probe=decode(row.state),needsTabUpgrade=probe.getMap('meta').get('tabsVersion')!==1;probe.destroy();
  const comments=(await db.prepare('SELECT id,tab_id AS tabId,body,quote,suggestion,status,created_at AS createdAt,created_by AS createdBy,creator_name AS creatorName,revision FROM panel_document_comments WHERE document_id=? ORDER BY created_at').bind(id).all()).results;
- const presence=(await db.prepare('SELECT name,user_email AS email FROM panel_document_presence WHERE document_id=? AND seen_at>?').bind(id,Date.now()-45000).all()).results;
+ const presence=presenceNow;
  let state=row.state;const vector=url.searchParams.get('vector');if(vector){if(vector.length>20000||!/^[A-Za-z0-9+/]*={0,2}$/.test(vector))throw new PanelError('Ogiltig synkroniseringsnyckel');const doc=decode(row.state);try{state=Buffer.from(Y.encodeStateAsUpdate(doc,Buffer.from(vector,'base64'))).toString('base64')}catch{throw new PanelError('Ogiltig synkroniseringsnyckel')}finally{doc.destroy()}}
  return Response.json({id,title:row.title,epoch:row.epoch,revision:row.revision,state,comments,presence,needsTabUpgrade});}
 async function create(req:Request){const u=(await currentUser())!,b=await panelBody(req),id=crypto.randomUUID();return databaseTransaction(async()=>{
@@ -37,12 +39,12 @@ async function sync(req:Request){const u=(await currentUser())!,b=await panelBod
  }
  }finally{doc.destroy();incoming.destroy()}}
  await db.prepare('INSERT INTO panel_document_presence(document_id,user_email,name,seen_at) VALUES(?,?,?,?) ON CONFLICT(document_id,user_email) DO UPDATE SET name=EXCLUDED.name,seen_at=EXCLUDED.seen_at').bind(row.id,u.email,u.name,Date.now()).run();
- await db.prepare('DELETE FROM panel_document_presence WHERE seen_at<?').bind(Date.now()-86400000).run();return Response.json({ok:true});});}
+ return Response.json({ok:true});});}
 async function patch(req:Request){const u=(await currentUser())!,b=await panelBody(req);return databaseTransaction(async()=>{
  const row=await document(short(b.id),true);
  if(b.action==='normalize-tabs'){
  const doc=decode(row.state);try{if(doc.getMap('meta').get('tabsVersion')!==1){
- const active=await db.prepare('SELECT user_email FROM panel_document_presence WHERE document_id=? AND user_email<>? AND seen_at>?').bind(row.id,u.email,Date.now()-45000).first();if(active)throw new PanelError('En annan användare har dokumentet öppet. Försök igen när dokumentet har stängts.',409);
+ const active=await db.prepare('SELECT user_email FROM panel_document_presence WHERE document_id=? AND user_email<>? AND seen_at>?').bind(row.id,u.email,Date.now()-150000).first();if(active)throw new PanelError('En annan användare har dokumentet öppet. Försök igen när dokumentet har stängts.',409);
  await version(row,u,'Före sammanslagning till Översikt');const tabs=doc.getArray<any>('tabs'),rows=tabs.toArray(),overview=rows.find(t=>t.title==='Översikt')||{id:crypto.randomUUID(),title:'Översikt'},target=doc.getXmlFragment('tab-'+overview.id);
  for(const tab of rows){if(tab.id===overview.id)continue;const source=doc.getXmlFragment('tab-'+tab.id);if(hasTabContent(source)){const heading=new Y.XmlElement('heading');heading.setAttribute('level',2 as any);const text=new Y.XmlText();text.insert(0,tab.title);heading.insert(0,[text]);target.push([heading,...source.toArray().filter(n=>n instanceof Y.XmlElement||n instanceof Y.XmlText).map(n=>n.clone())])}await db.prepare('UPDATE panel_document_comments SET tab_id=? WHERE document_id=? AND tab_id=?').bind(overview.id,row.id,tab.id).run()}
  tabs.delete(0,tabs.length);tabs.push([{...overview,title:'Översikt'}]);doc.getMap('meta').set('tabsVersion',1);const state=Buffer.from(Y.encodeStateAsUpdate(doc)).toString('base64');if(state.length>3500000)throw new PanelError('Dokumentet är för stort för sammanslagning',413);await db.prepare('UPDATE panel_documents SET state=?,epoch=epoch+1,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(state,Date.now(),u.email,row.id).run();await panelLog(u,'Dokumentflikar sammanslagna',row.title);
@@ -51,7 +53,7 @@ async function patch(req:Request){const u=(await currentUser())!,b=await panelBo
  else if(b.action==='version'){await version(row,u,short(b.label)||'Manuellt sparad version');await panelLog(u,'Dokumentversion sparad',row.title)}
  else if(b.action==='restore'){
  if(b.epoch!==row.epoch||b.revision!==row.revision)throw new PanelError('Dokumentet har ändrats. Läs in senaste versionen och försök igen.',409);
- const active=await db.prepare('SELECT user_email FROM panel_document_presence WHERE document_id=? AND user_email<>? AND seen_at>?').bind(row.id,u.email,Date.now()-45000).first();if(active)throw new PanelError('Andra användare har dokumentet öppet. Be dem stänga det innan du återställer.',409);
+ const active=await db.prepare('SELECT user_email FROM panel_document_presence WHERE document_id=? AND user_email<>? AND seen_at>?').bind(row.id,u.email,Date.now()-150000).first();if(active)throw new PanelError('Andra användare har dokumentet öppet. Be dem stänga det innan du återställer.',409);
  const v=await db.prepare('SELECT state,title FROM panel_document_versions WHERE id=? AND document_id=?').bind(short(b.versionId),row.id).first<{state:string,title:string}>();if(!v)throw new PanelError('Versionen finns inte',404);await version(row,u,'Före återställning');await db.prepare('UPDATE panel_documents SET state=?,title=?,epoch=epoch+1,revision=revision+1,updated_at=?,updated_by=? WHERE id=?').bind(v.state,v.title,Date.now(),u.email,row.id).run();await panelLog(u,'Dokumentversion återställd',row.title);
  }
  else if(b.action==='delete'){if(b.revision!==row.revision)throw new PanelError('Dokumentet har ändrats. Uppdatera innan du tar bort det.',409);await version(row,u,'Före borttagning');await db.prepare('UPDATE panel_documents SET deleted_at=?,epoch=epoch+1 WHERE id=?').bind(Date.now(),row.id).run();await panelLog(u,'Dokument borttaget',row.title)}

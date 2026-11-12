@@ -18,6 +18,7 @@ function decode(value:string){
 async function read(req:Request){
  const actor=(await currentUser())!,scope=new URL(req.url).searchParams.get('scope')||'',note=key(scope,actor.email);
  const row=await db.prepare('SELECT state,revision,updated_at FROM panel_notes WHERE id=? AND owner_email IS NOT DISTINCT FROM ?').bind(note.id,note.owner).first<NoteRow>();
+ if(new URL(req.url).searchParams.get('revision')===String(row?.revision||0))return Response.json({unchanged:true,revision:row?.revision||0});
  const doc=row?decode(row.state):new Y.Doc();
  try{
   let state:Uint8Array;const vector=new URL(req.url).searchParams.get('vector');
