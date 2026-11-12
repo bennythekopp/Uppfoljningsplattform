@@ -121,7 +121,8 @@ export function paginateReport(report:HTMLElement,size={width:190,height:275}){
   if(block.newPage&&page.children.length)advance();
   if(block.heading)block.element.dataset.pdfKeepNext='true';
   if(tryAppend(block.element))continue;
-  if(block.element.matches('.printmoment')||block.element.querySelector('.printmoment')){
+  if(report.classList.contains('document-report')&&measuredHeight>page.getBoundingClientRect().height-2){splitLarge(block.element);continue}
+  if(!report.classList.contains('document-report')&&(block.element.matches('.printmoment')||block.element.querySelector('.printmoment'))){
    if(page.children.length)advance();
    if(!tryAppend(block.element))fitWholeMoment(block.element);
    continue;
