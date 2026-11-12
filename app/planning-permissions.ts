@@ -1,4 +1,4 @@
 export function planningPermissions(user:{role:string,email:string},settings:{editorEmails:string[],suggesterEmails:string[]}){
- const canEdit=user.role==='Administratör'||user.role==='Instruktör'&&settings.editorEmails.includes(user.email);
- return {canEdit,canSuggest:canEdit||user.role==='Administratör'||['Instruktör','Chef'].includes(user.role)&&settings.suggesterEmails.includes(user.email)};
+ const canEdit=['Administratör','Instruktör'].includes(user.role)&&settings.editorEmails.includes(user.email);
+ return {canEdit,canSuggest:canEdit||['Administratör','Instruktör','Chef'].includes(user.role)&&settings.suggesterEmails.includes(user.email)};
 }
