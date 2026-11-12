@@ -9,7 +9,7 @@ const fs=require('fs'),assert=require('node:assert/strict'),Module=require('modu
  }
  function actor(email){token=hash(email)}
  async function call(api,method='GET',body,query='',app=false){requestHeaders=new Headers(app?{'x-tc-app':'planning'}:{});const response=await api[method](new Request(process.env.APP_ORIGIN+'/api/test'+query,{method,headers:{origin:process.env.APP_ORIGIN,...Object.fromEntries(requestHeaders),...(body?{'content-type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}));return {status:response.status,...await response.json()}}
- await engine.query("UPDATE panel_module_access SET restricted=false WHERE kind='planning'");await engine.query(`UPDATE planning_settings SET editor_emails='["editor@test"]'::jsonb,suggester_emails='[]'::jsonb`);
+ await engine.query("UPDATE panel_module_access SET restricted=false WHERE kind='planning'");await engine.query(`UPDATE planning_settings SET editor_emails='["admin@test","editor@test"]'::jsonb,suggester_emails='[]'::jsonb`);
  const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date()),year=Number(day.slice(0,4));
  actor('admin@test');let data=await call(planning,'GET',undefined,'?year='+year);assert.ok(data.permissionUsers.some(u=>u.role==='Administratör'));
  actor('editor@test');let editorData=await call(planning,'GET',undefined,'?year='+year);assert.equal(editorData.canSuggest,true);

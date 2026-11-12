@@ -17,7 +17,8 @@
     "test:mail": "node scripts/test-planning-test-mail.cjs",
     "test:idle": "node scripts/test-idle-v9.cjs",
     "test:v11": "node scripts/test-v11.cjs && node scripts/test-v11-pull.cjs",
-    "test:v20": "node scripts/test-v20.cjs && node scripts/test-v20-navigation.cjs && node scripts/test-v20-documents.cjs"
+    "test:v20": "node scripts/test-v20.cjs && node scripts/test-v20-navigation.cjs && node scripts/test-v20-documents.cjs",
+    "test:v21": "node scripts/test-v21-clients.cjs && node scripts/test-v21-permissions.cjs && node scripts/test-v21-word.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.7",
