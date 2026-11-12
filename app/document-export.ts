@@ -1,8 +1,7 @@
 'use client';
 import {readDraft,draftKey} from './document-drafts';
-import {generateHTML,type JSONContent} from '@tiptap/core';
+import {type JSONContent} from '@tiptap/core';
 import {yXmlFragmentToProsemirrorJSON} from '@tiptap/y-tiptap';
-import {documentExtensions} from './document-extensions';
 import {pdfFileName} from './pdf-print';
 import {pageSettings,pageGeometry} from './document-page-settings';
 import {outputDocument} from './document-output';
@@ -34,7 +33,5 @@ export async function exportDocument(s:DocSession,format:'pdf'|'print'|'word',on
   })}
   const word=new Document({creator:'TC Boden',title,sections:[{properties:{page:{size:{width:Math.round(geometry.width*1440/25.4),height:Math.round(geometry.height*1440/25.4)},margin:{top:Math.round(Math.max(settings.top,settings.header?15:0)*1440/25.4),right:Math.round(settings.right*1440/25.4),bottom:Math.round(Math.max(settings.bottom,settings.footer||settings.pageNumbers?15:0)*1440/25.4),left:Math.round(settings.left*1440/25.4)}}},headers:{default:new d.Header({children:[new Paragraph({text:settings.header})]})},footers:{default:new d.Footer({children:[new Paragraph({children:[new TextRun(settings.footer),...(settings.pageNumbers?[new TextRun(' · '),new TextRun({children:[d.PageNumber.CURRENT]})]:[])]})]})},children:tabs.flatMap((tab,i)=>[...(i?[new Paragraph({children:[new d.PageBreak()]})]:[]),...blocks(tab.json.content||[])])}]});download(await Packer.toBlob(word),pdfFileName(title,'Dokument').replace(/\.pdf$/,'.docx'));return;
  }
- const report=document.createElement('article');report.className='printreport document-report';
- for(const tab of tabs){const section=document.createElement('section');section.className='printcategory document-prose';if(report.children.length)section.style.breakBefore='page';const body=document.createElement('div');body.innerHTML=generateHTML(tab.json,documentExtensions());for(const child of Array.from(body.children)){const moment=document.createElement('section');moment.className='printmoment document-print-block';moment.append(child);section.append(moment)}report.append(section)}
- await outputDocument(report,settings,format==='pdf'?pdfFileName(title,'Dokument'):null);
+ await outputDocument(tabs,settings,format==='pdf'?pdfFileName(title,'Dokument'):null);
 }
